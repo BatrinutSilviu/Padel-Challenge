@@ -8,15 +8,8 @@ export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log("Login:", { email, password });
-    // Handle login logic here
-  };
-
     const loginMutation = trpc.auth.login.useMutation({
         onSuccess: (data) => {
-            console.log('Login successful:', data);
             localStorage.setItem('token', data.token);
             window.location.href = '/home';
         },
@@ -28,8 +21,6 @@ export function LoginForm() {
     const handleLogin = async (e) => {
         e.preventDefault();
         setError('');
-        console.log("hopaaaaa");
-        // Call the backend
         loginMutation.mutate({
             email,
             password
