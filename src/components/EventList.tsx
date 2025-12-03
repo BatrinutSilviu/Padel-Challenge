@@ -184,6 +184,12 @@ function EventCard({
       >
         View Details
       </button>
+        <button
+            onClick={() => onSelectEvent(event.id)}
+            className="w-full px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors my-4"
+        >
+            Enroll
+        </button>
     </div>
   );
 }

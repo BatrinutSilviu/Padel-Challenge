@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { Mail, Lock, Eye, EyeOff } from "lucide-react";
+import {trpc} from "../trpc";
 
 export function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -12,8 +14,30 @@ export function LoginForm() {
     // Handle login logic here
   };
 
+    const loginMutation = trpc.auth.login.useMutation({
+        onSuccess: (data) => {
+            console.log('Login successful:', data);
+            localStorage.setItem('token', data.token);
+            window.location.href = '/home';
+        },
+        onError: (error) => {
+            setError(error.message);
+        }
+    });
+
+    const handleLogin = async (e) => {
+        e.preventDefault();
+        setError('');
+        console.log("hopaaaaa");
+        // Call the backend
+        loginMutation.mutate({
+            email,
+            password
+        });
+    };
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleLogin} className="space-y-4">
       {/* Email Input */}
       <div>
         <label htmlFor="email" className="block text-gray-700 mb-2">
