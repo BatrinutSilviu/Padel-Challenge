@@ -27,7 +27,7 @@ export function AuthPage() {
                 <line x1="8" y1="12" x2="16" y2="12" />
               </svg>
             </div>
-            <h1 className="text-emerald-900 mb-2">Tennis Doubles</h1>
+            <h1 className="text-emerald-900 mb-2">Padel Challenge</h1>
             <p className="text-gray-600">
               {isLogin
                 ? "Welcome back! Sign in to your account"
