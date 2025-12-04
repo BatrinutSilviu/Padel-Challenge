@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Mail, Lock, User, Eye, EyeOff } from "lucide-react";
+import {trpc} from "../trpc";
 
 export function SignupForm() {
   const [name, setName] = useState("");
@@ -8,19 +9,44 @@ export function SignupForm() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (password !== confirmPassword) {
-      alert("Passwords don't match!");
-      return;
-    }
-    console.log("Signup:", { name, email, password });
-    // Handle signup logic here
-  };
+    const handleRegister = async (e) => {
+        e.preventDefault();
+        setError('');
+
+        // Validate passwords match
+        if (password !== confirmPassword) {
+            setError('Passwords do not match');
+            return;
+        }
+
+        // Validate password strength (optional)
+        if (password.length < 8) {
+            setError('Password must be at least 8 characters');
+            return;
+        }
+
+        registerMutation.mutate({
+            email,
+            password,
+            name
+        });
+    };
+
+    const registerMutation = trpc.auth.register.useMutation({
+        onSuccess: (data) => {
+            localStorage.setItem('token', data.token);
+            window.location.href = '/login';
+
+        },
+        onError: (error) => {
+            setError(error.message);
+        }
+    });
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleRegister} className="space-y-4">
       {/* Name Input */}
       <div>
         <label htmlFor="name" className="block text-gray-700 mb-2">
