@@ -9,11 +9,22 @@ const DIVISION_NAMES: Record<number, string> = {
 export function PlayerPage() {
     const { id } = useParams<{ id: string }>();
     const { data: player, isPending, error } = trpc.player.getById.useQuery({ id: id! });
+    const { data: allPlayers } = trpc.player.list.useQuery();
 
     if (isPending) return <LoadingPage />;
     if (error || !player) return <div className="p-8 text-red-600">Player not found.</div>;
 
     const completedResults = player.participations.filter(p => p.finalRank !== null);
+
+    // data is sorted by division ASC then avgPoints DESC — overall rank is just the index
+    const divisionRank = allPlayers
+        ? allPlayers.filter(p => p.division === player.division)
+            .findIndex(p => p.id === player.id) + 1
+        : null;
+
+    const overallRank = allPlayers
+        ? allPlayers.findIndex(p => p.id === player.id) + 1
+        : null;
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -28,23 +39,34 @@ export function PlayerPage() {
                 </Link>
 
                 <div className="bg-white rounded-xl border border-gray-200 p-5 sm:p-6">
-                    <h1 className="text-xl sm:text-2xl font-bold text-gray-800">{player.name}</h1>
+                    <div className="flex items-center gap-3 flex-wrap">
+                        <h1 className="text-xl sm:text-2xl font-bold text-gray-800">{player.name}</h1>
+                        <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${
+                            player.gender === "FEMALE"
+                                ? "bg-pink-100 text-pink-700"
+                                : "bg-blue-100 text-blue-700"
+                        }`}>
+                            {player.gender === "FEMALE" ? "♀ Female" : "♂ Male"}
+                        </span>
+                    </div>
                     <p className="text-gray-500 mt-1">
                         Division {player.division} — {DIVISION_NAMES[player.division]}
                     </p>
-                    {completedResults.length > 0 && (
-                        <div className="flex gap-4 sm:gap-6 mt-4 pt-4 border-t border-gray-100">
+                    <div className="flex flex-wrap gap-4 sm:gap-6 mt-4 pt-4 border-t border-gray-100">
+                        {divisionRank && <Stat label="Division Rank" value={`#${divisionRank}`} />}
+                        {overallRank && <Stat label="Overall Rank" value={`#${overallRank}`} />}
+                        {completedResults.length > 0 && <>
                             <Stat label="Tournaments" value={completedResults.length} />
                             <Stat
                                 label="Avg Points"
                                 value={Math.round(completedResults.reduce((s, p) => s + p.totalPoints, 0) / completedResults.length)}
                             />
                             <Stat
-                                label="Best Rank"
+                                label="Best Finish"
                                 value={`#${Math.min(...completedResults.map(p => p.finalRank!))}`}
                             />
-                        </div>
-                    )}
+                        </>}
+                    </div>
                 </div>
 
                 <section>

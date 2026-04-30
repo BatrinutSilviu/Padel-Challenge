@@ -58,5 +58,6 @@
       port: 5173,
       strictPort: true,
       open: true,
+      allowedHosts: true,
     },
   });

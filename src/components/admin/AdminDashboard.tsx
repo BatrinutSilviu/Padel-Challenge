@@ -214,6 +214,7 @@ function PlayersTab() {
     const qc = useQueryClient();
     const [name, setName] = useState("");
     const [division, setDivision] = useState(6);
+    const [gender, setGender] = useState<"MALE" | "FEMALE">("MALE");
     const [error, setError] = useState("");
 
     const players = trpc.player.list.useQuery();
@@ -221,6 +222,7 @@ function PlayersTab() {
         onSuccess: () => {
             qc.invalidateQueries({ queryKey: getQueryKey(trpc.player.list) });
             setName("");
+            setGender("MALE");
             setError("");
         },
         onError: (e) => setError(e.message),
@@ -232,7 +234,7 @@ function PlayersTab() {
     function handleAdd(e: React.FormEvent) {
         e.preventDefault();
         if (!name.trim()) return setError("Name is required.");
-        create.mutate({ name: name.trim(), division });
+        create.mutate({ name: name.trim(), division, gender });
     }
 
     return (
@@ -254,6 +256,14 @@ function PlayersTab() {
                         {[1, 2, 3, 4, 5, 6].map(d => (
                             <option key={d} value={d}>Div {d} — {DIVISION_NAMES[d]}</option>
                         ))}
+                    </select>
+                    <select
+                        value={gender}
+                        onChange={e => setGender(e.target.value as "MALE" | "FEMALE")}
+                        className={input}
+                    >
+                        <option value="MALE">Male</option>
+                        <option value="FEMALE">Female</option>
                     </select>
                     <button
                         type="submit"

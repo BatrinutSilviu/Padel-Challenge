@@ -96,17 +96,38 @@ function initials(name: string) {
 
 function PlayersTab() {
     const { data, isPending } = trpc.player.list.useQuery();
+    const [genderFilter, setGenderFilter] = useState<"ALL" | "MALE" | "FEMALE">("ALL");
 
     if (isPending) return <p className="text-gray-500">Loading…</p>;
     if (!data?.length) return <p className="text-gray-500">No players yet.</p>;
 
+    const filtered = genderFilter === "ALL" ? data : data.filter(p => p.gender === genderFilter);
+
+    // Overall rank: division 1 best → division 6 worst, within each division by avgPoints desc
+    // data is already sorted this way by the backend — use full list for rank, not filtered
+    const overallRanks = new Map(data.map((p, i) => [p.id, i + 1]));
+
     const groups = [1, 2, 3, 4, 5, 6].map(d => ({
         division: d,
-        players: data.filter(p => p.division === d),
+        players: filtered.filter(p => p.division === d),
     })).filter(g => g.players.length > 0);
 
     return (
         <div className="space-y-4">
+            <div className="flex gap-1 bg-white border border-gray-200 rounded-xl p-1 w-fit">
+                {(["ALL", "MALE", "FEMALE"] as const).map(g => (
+                    <button
+                        key={g}
+                        onClick={() => setGenderFilter(g)}
+                        className={`px-4 py-1.5 md:px-5 md:py-2 rounded-lg text-sm md:text-base font-medium transition-colors ${
+                            genderFilter === g ? "bg-[#FF4200] text-white" : "text-gray-600 hover:text-gray-900"
+                        }`}
+                    >
+                        {g === "ALL" ? "All" : g === "MALE" ? "♂ Male" : "♀ Female"}
+                    </button>
+                ))}
+            </div>
+
             {groups.map(({ division, players }) => {
                 const colors = DIVISION_COLORS[division];
                 return (
@@ -125,36 +146,43 @@ function PlayersTab() {
                         </Link>
 
                         <div>
-                            {players.map((player, rank) => (
-                                <Link
-                                    key={player.id}
-                                    to={`/player/${player.id}`}
-                                    className="flex items-center gap-3 px-4 py-3 border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors"
-                                >
-                                    <span className={`text-sm font-bold w-6 text-center shrink-0 ${
-                                        rank === 0 ? "text-amber-500" :
-                                        rank === 1 ? "text-gray-400" :
-                                        rank === 2 ? "text-orange-400" : "text-gray-300"
-                                    }`}>
-                                        {rank === 0 ? "🥇" : rank === 1 ? "🥈" : rank === 2 ? "🥉" : rank + 1}
-                                    </span>
+                            {players.map((player, divRank) => {
+                                const overallRank = overallRanks.get(player.id)!;
+                                return (
+                                    <Link
+                                        key={player.id}
+                                        to={`/player/${player.id}`}
+                                        className="flex items-center gap-3 px-4 py-3 border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors"
+                                    >
+                                        {/* Division rank */}
+                                        <span className={`text-sm font-bold w-6 text-center shrink-0 ${
+                                            divRank === 0 ? "text-amber-500" :
+                                            divRank === 1 ? "text-gray-400" :
+                                            divRank === 2 ? "text-orange-400" : "text-gray-300"
+                                        }`}>
+                                            {divRank === 0 ? "🥇" : divRank === 1 ? "🥈" : divRank === 2 ? "🥉" : divRank + 1}
+                                        </span>
 
-                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${colors.bg} ${colors.text}`}>
-                                        {initials(player.name)}
-                                    </div>
-
-                                    <span className="flex-1 font-medium text-gray-800 text-sm truncate">{player.name}</span>
-
-                                    {player.avgPoints > 0 ? (
-                                        <div className="text-right shrink-0">
-                                            <span className="text-sm font-semibold text-gray-700">{player.avgPoints}</span>
-                                            <span className="text-xs text-gray-400 ml-1">avg</span>
+                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${colors.bg} ${colors.text}`}>
+                                            {initials(player.name)}
                                         </div>
-                                    ) : (
-                                        <span className="text-sm text-gray-300 shrink-0">—</span>
-                                    )}
-                                </Link>
-                            ))}
+
+                                        <div className="flex-1 min-w-0">
+                                            <span className="font-medium text-gray-800 text-sm truncate block">{player.name}</span>
+                                            <span className="text-xs text-gray-400">Overall #{overallRank}</span>
+                                        </div>
+
+                                        {player.avgPoints > 0 ? (
+                                            <div className="text-right shrink-0">
+                                                <span className="text-sm font-semibold text-gray-700">{player.avgPoints}</span>
+                                                <span className="text-xs text-gray-400 ml-1">avg</span>
+                                            </div>
+                                        ) : (
+                                            <span className="text-sm text-gray-300 shrink-0">—</span>
+                                        )}
+                                    </Link>
+                                );
+                            })}
                         </div>
                     </div>
                 );
