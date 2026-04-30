@@ -52,31 +52,44 @@ export function DivisionPage() {
                                 <Link
                                     key={player.id}
                                     to={`/player/${player.id}`}
-                                    className="flex items-center justify-between px-4 py-3 border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors gap-2"
+                                    className="flex flex-col sm:flex-row sm:items-center sm:justify-between px-4 py-3 border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors gap-1 sm:gap-2"
                                 >
-                                    <div className="flex items-center gap-2 min-w-0">
-                                        <span className="text-sm text-gray-400 w-5 shrink-0">{i + 1}</span>
-                                        <span className="font-medium text-gray-800 truncate">{player.name}</span>
-                                        {streak === "promotion" && (
-                                            <span title="Promotion streak" className="text-[#FF4200] text-base shrink-0">▲</span>
-                                        )}
-                                        {streak === "relegation" && (
-                                            <span title="Relegation streak" className="text-red-500 text-base shrink-0">▼</span>
-                                        )}
-                                    </div>
-                                    <div className="flex items-center gap-2 sm:gap-4 shrink-0">
-                                        <div className="text-right">
+                                    {/* Top row: rank + name + streak + pts */}
+                                    <div className="flex items-center justify-between sm:justify-start gap-2 min-w-0">
+                                        <div className="flex items-center gap-2 min-w-0">
+                                            <span className="text-sm text-gray-400 w-5 shrink-0">{i + 1}</span>
+                                            <span className="font-medium text-gray-800 truncate">{player.name}</span>
+                                            {streak === "promotion" && (
+                                                <span title="Promotion streak" className="text-[#FF4200] text-base shrink-0">▲</span>
+                                            )}
+                                            {streak === "relegation" && (
+                                                <span title="Relegation streak" className="text-red-500 text-base shrink-0">▼</span>
+                                            )}
+                                        </div>
+                                        {/* pts visible on mobile inline with name row */}
+                                        <div className="text-right shrink-0 sm:hidden">
                                             <span className="text-sm font-semibold text-gray-700">{total}</span>
                                             <span className="text-xs text-gray-400 ml-1">pts</span>
                                         </div>
-                                        <div className="text-right hidden sm:block">
-                                            <span className="text-sm font-semibold text-gray-500">{avg}</span>
-                                            <span className="text-xs text-gray-400 ml-1">avg</span>
-                                        </div>
-                                        <div className="hidden sm:flex gap-1">
+                                    </div>
+
+                                    {/* Bottom row on mobile: badges + avg */}
+                                    <div className="flex items-center justify-between pl-7 sm:pl-0 sm:justify-end gap-3 sm:gap-4">
+                                        <div className="flex gap-1 flex-wrap">
                                             {player.participations.map(p => (
                                                 <RankBadge key={p.id} rank={p.finalRank} />
                                             ))}
+                                        </div>
+                                        <div className="flex items-center gap-3 shrink-0">
+                                            <div className="text-right">
+                                                <span className="text-sm font-semibold text-gray-500">{avg}</span>
+                                                <span className="text-xs text-gray-400 ml-1">avg</span>
+                                            </div>
+                                            {/* pts on desktop only here */}
+                                            <div className="text-right hidden sm:block">
+                                                <span className="text-sm font-semibold text-gray-700">{total}</span>
+                                                <span className="text-xs text-gray-400 ml-1">pts</span>
+                                            </div>
                                         </div>
                                     </div>
                                 </Link>
