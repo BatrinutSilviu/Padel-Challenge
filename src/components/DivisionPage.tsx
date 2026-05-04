@@ -37,8 +37,10 @@ export function DivisionPage() {
                     {standings.data?.length === 0 && <p className="text-gray-500">No players in this division.</p>}
                     <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
                         {[...(standings.data ?? [])].sort((a, b) => {
-                            const pts = (p: typeof a) => p.participations.reduce((s, x) => s + x.totalPoints, 0);
-                            return pts(b) - pts(a);
+                            const avg = (p: typeof a) => p.participations.length > 0
+                                ? p.participations.reduce((s, x) => s + x.totalPoints, 0) / p.participations.length
+                                : 0;
+                            return avg(b) - avg(a);
                         }).map((player, i) => {
                             const streak = getStreak(player.participations);
                             const total = player.participations.reduce((s, p) => s + p.totalPoints, 0);

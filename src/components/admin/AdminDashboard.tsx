@@ -210,11 +210,11 @@ function NewTournamentTab({ onCreated }: { onCreated: () => void }) {
 
 function RecalculateDivisionsButton() {
     const qc = useQueryClient();
-    const [result, setResult] = useState<{ name: string; from: number; to: number }[] | null>(null);
+    const [result, setResult] = useState<{ promoted: { name: string; from: number; to: number }[]; relegated: { name: string; from: number; to: number }[] } | null>(null);
     const recalc = trpc.player.recalculateDivisions.useMutation({
         onSuccess: (data) => {
             qc.invalidateQueries({ queryKey: getQueryKey(trpc.player.list) });
-            setResult(data.promoted);
+            setResult(data);
         },
     });
 
@@ -223,7 +223,7 @@ function RecalculateDivisionsButton() {
             <div className="flex items-center justify-between gap-3">
                 <div>
                     <p className="text-sm font-semibold text-gray-800">Recalculate Divisions</p>
-                    <p className="text-xs text-gray-400 mt-0.5">Promote players who qualify: top-3 finish in 3 of last 5 tournaments and avg points in top 10%.</p>
+                    <p className="text-xs text-gray-400 mt-0.5">Apply promotion/relegation rules to all players based on their last 5 results.</p>
                 </div>
                 <button
                     onClick={() => { setResult(null); recalc.mutate(); }}
@@ -234,13 +234,14 @@ function RecalculateDivisionsButton() {
                 </button>
             </div>
             {result !== null && (
-                result.length === 0
-                    ? <p className="text-sm text-gray-500">No players eligible for promotion.</p>
+                result.promoted.length === 0 && result.relegated.length === 0
+                    ? <p className="text-sm text-gray-500">No changes — no players eligible for promotion or relegation.</p>
                     : <ul className="text-sm space-y-1">
-                        {result.map(p => (
-                            <li key={p.name} className="text-green-700">
-                                ▲ {p.name}: {divisionLabel(p.from)} → {divisionLabel(p.to)}
-                            </li>
+                        {result.promoted.map(p => (
+                            <li key={p.name} className="text-green-700">▲ {p.name}: {divisionLabel(p.from)} → {divisionLabel(p.to)}</li>
+                        ))}
+                        {result.relegated.map(p => (
+                            <li key={p.name} className="text-red-600">▼ {p.name}: {divisionLabel(p.from)} → {divisionLabel(p.to)}</li>
                         ))}
                     </ul>
             )}
