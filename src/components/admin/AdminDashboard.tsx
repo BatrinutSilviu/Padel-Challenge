@@ -208,6 +208,46 @@ function NewTournamentTab({ onCreated }: { onCreated: () => void }) {
     );
 }
 
+function RecalculateDivisionsButton() {
+    const qc = useQueryClient();
+    const [result, setResult] = useState<{ name: string; from: number; to: number }[] | null>(null);
+    const recalc = trpc.player.recalculateDivisions.useMutation({
+        onSuccess: (data) => {
+            qc.invalidateQueries({ queryKey: getQueryKey(trpc.player.list) });
+            setResult(data.promoted);
+        },
+    });
+
+    return (
+        <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-3">
+            <div className="flex items-center justify-between gap-3">
+                <div>
+                    <p className="text-sm font-semibold text-gray-800">Recalculate Divisions</p>
+                    <p className="text-xs text-gray-400 mt-0.5">Promote players who qualify: top-3 finish in 3 of last 5 tournaments and avg points in top 10%.</p>
+                </div>
+                <button
+                    onClick={() => { setResult(null); recalc.mutate(); }}
+                    disabled={recalc.isPending}
+                    className="shrink-0 bg-[#FF4200] text-white rounded-lg px-4 py-2 text-sm font-medium hover:bg-[#CC3500] disabled:opacity-50 transition-colors"
+                >
+                    {recalc.isPending ? "Running…" : "Run"}
+                </button>
+            </div>
+            {result !== null && (
+                result.length === 0
+                    ? <p className="text-sm text-gray-500">No players eligible for promotion.</p>
+                    : <ul className="text-sm space-y-1">
+                        {result.map(p => (
+                            <li key={p.name} className="text-green-700">
+                                ▲ {p.name}: {divisionLabel(p.from)} → {divisionLabel(p.to)}
+                            </li>
+                        ))}
+                    </ul>
+            )}
+        </div>
+    );
+}
+
 function PlayersTab() {
     const qc = useQueryClient();
     const [name, setName] = useState("");
@@ -237,6 +277,7 @@ function PlayersTab() {
 
     return (
         <div className="space-y-6 max-w-2xl">
+            <RecalculateDivisionsButton />
             <form onSubmit={handleAdd} className="bg-white rounded-xl border border-gray-200 p-5 space-y-4">
                 <h2 className="text-base font-semibold text-gray-800">Add Player</h2>
                 <div className="flex flex-col sm:flex-row gap-3">
