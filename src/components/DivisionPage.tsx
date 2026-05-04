@@ -56,7 +56,7 @@ export function DivisionPage() {
                                         <div className="flex items-center gap-2 min-w-0">
                                             <span className="text-sm text-gray-400 w-5 shrink-0">{i + 1}</span>
                                             <span className="font-medium text-gray-800 truncate">{player.name}</span>
-                                            {player.division !== division && !(player.division < division && player.participations.some(p => p.finalRank !== null && p.finalRank >= 6)) && (
+                                            {player.division !== division && player.division < division && !player.homeDivBottomFinish && !player.participations.some(p => p.finalRank !== null && p.finalRank >= 6) && (
                                                 <span className="text-xs text-gray-400 border border-gray-200 px-1.5 py-0.5 rounded shrink-0">
                                                     {divisionLabel(player.division)}
                                                 </span>
