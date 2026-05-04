@@ -56,6 +56,11 @@ export function DivisionPage() {
                                         <div className="flex items-center gap-2 min-w-0">
                                             <span className="text-sm text-gray-400 w-5 shrink-0">{i + 1}</span>
                                             <span className="font-medium text-gray-800 truncate">{player.name}</span>
+                                            {player.division !== division && (
+                                                <span className="text-xs text-gray-400 border border-gray-200 px-1.5 py-0.5 rounded shrink-0">
+                                                    {divisionLabel(player.division)}
+                                                </span>
+                                            )}
                                             {streak === "promotion" && (
                                                 <span title="Promotion streak" className="text-[#FF4200] text-base shrink-0">▲</span>
                                             )}
