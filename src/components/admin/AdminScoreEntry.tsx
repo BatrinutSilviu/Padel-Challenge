@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { NavBar } from "../NavBar";
 import { trpc } from "../../trpc";
+import { divisionLabel } from "../../lib/divisions";
 import { useQueryClient } from "@tanstack/react-query";
 import { getQueryKey } from "@trpc/react-query";
 
@@ -67,7 +68,7 @@ export function AdminScoreEntry() {
                         <Link to="/admin" className="text-sm text-[#FF4200] hover:underline">← Admin</Link>
                         <div className="flex items-center gap-2 mt-1">
                             <h1 className="text-lg sm:text-xl font-bold text-gray-800">{tournament.name}</h1>
-                            <span className="text-sm text-gray-400">Div {tournament.division}</span>
+                            <span className="text-sm text-gray-400">{divisionLabel(tournament.division)}</span>
                         </div>
                     </div>
                     {!isCompleted && (

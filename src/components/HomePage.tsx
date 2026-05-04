@@ -3,14 +3,7 @@ import { trpc } from "../trpc";
 import { NavBar } from "./NavBar";
 import { useState } from "react";
 
-const DIVISION_NAMES: Record<number, string> = {
-    1: "Elite",
-    2: "Premier",
-    3: "Gold",
-    4: "Silver",
-    5: "Bronze",
-    6: "Beginner",
-};
+import { DIVISION_NAMES, DIVISION_BADGES, DIVISION_COLORS, divisionLabel } from "../lib/divisions";
 
 type Tab = "divisions" | "players" | "tournaments";
 
@@ -45,14 +38,6 @@ export function HomePage() {
     );
 }
 
-const DIVISION_BADGES: Record<number, { label: string; className: string }> = {
-    1: { label: "Elite",   className: "bg-amber-100 text-amber-700 border border-amber-300" },
-    2: { label: "Premier", className: "bg-slate-100 text-slate-600 border border-slate-300" },
-    3: { label: "Gold",    className: "bg-yellow-100 text-yellow-700 border border-yellow-300" },
-    4: { label: "Silver",  className: "bg-gray-100 text-gray-500 border border-gray-300" },
-    5: { label: "Bronze",   className: "bg-orange-100 text-orange-700 border border-orange-300" },
-    6: { label: "Beginner", className: "bg-green-100 text-green-700 border border-green-300" },
-};
 
 function DivisionsTab() {
     const { data, isPending } = trpc.division.list.useQuery();
@@ -68,7 +53,7 @@ function DivisionsTab() {
                         className="bg-white rounded-xl border border-gray-200 p-5 hover:border-[#FF4200] hover:shadow-md transition-all"
                     >
                         <div className="flex items-center justify-between mb-1">
-                            <span className="text-lg font-semibold text-gray-800">Division {division}</span>
+                            <span className="text-lg font-semibold text-gray-800">{divisionLabel(division)}</span>
                             <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${badge.className}`}>
                                 {badge.label}
                             </span>
@@ -81,14 +66,6 @@ function DivisionsTab() {
     );
 }
 
-const DIVISION_COLORS: Record<number, { bg: string; text: string; border: string }> = {
-    1: { bg: "bg-amber-50",   text: "text-amber-700",  border: "border-amber-200" },
-    2: { bg: "bg-slate-50",   text: "text-slate-600",  border: "border-slate-200" },
-    3: { bg: "bg-yellow-50",  text: "text-yellow-700", border: "border-yellow-200" },
-    4: { bg: "bg-gray-50",    text: "text-gray-600",   border: "border-gray-200" },
-    5: { bg: "bg-orange-50",  text: "text-orange-700", border: "border-orange-200" },
-    6: { bg: "bg-green-50",   text: "text-green-700",  border: "border-green-200" },
-};
 
 function initials(name: string) {
     return name.split(" ").map(w => w[0]).slice(0, 2).join("").toUpperCase();
@@ -137,10 +114,8 @@ function PlayersTab() {
                             className={`flex items-center justify-between px-4 py-3 ${colors.bg} border-b ${colors.border} hover:opacity-80 transition-opacity`}
                         >
                             <div className="flex items-center gap-2">
-                                <span className={`font-semibold ${colors.text}`}>Division {division}</span>
-                                <span className={`text-xs font-medium px-2 py-0.5 rounded-full border ${colors.border} ${colors.text}`}>
-                                    {DIVISION_NAMES[division]}
-                                </span>
+                                <span className={`font-semibold ${colors.text}`}>{divisionLabel(division)}</span>
+                                <span className={`text-xs font-medium px-2 py-0.5 rounded-full border ${colors.border} ${colors.text}`}>{DIVISION_NAMES[division]}</span>
                             </div>
                             <span className="text-xs text-gray-400">{players.length} players</span>
                         </Link>
@@ -205,7 +180,7 @@ function TournamentsTab() {
                 >
                     <div className="min-w-0">
                         <span className="font-medium text-gray-800 block truncate">{t.name}</span>
-                        <span className="text-xs text-gray-500">Division {t.division}</span>
+                        <span className="text-xs text-gray-500">{divisionLabel(t.division)}</span>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
                         <span className="text-xs text-gray-400 hidden sm:inline">{new Date(t.date).toLocaleDateString()}</span>

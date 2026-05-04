@@ -1,10 +1,7 @@
 import { useParams, Link } from "react-router-dom";
 import { trpc } from "../trpc";
 import { NavBar } from "./NavBar";
-
-const DIVISION_NAMES: Record<number, string> = {
-    1: "Elite", 2: "Premier", 3: "Gold", 4: "Silver", 5: "Bronze", 6: "Beginner",
-};
+import { DIVISION_NAMES, divisionLabel } from "../lib/divisions";
 
 export function PlayerPage() {
     const { id } = useParams<{ id: string }>();
@@ -35,7 +32,7 @@ export function PlayerPage() {
                     className="inline-flex items-center gap-1.5 text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors"
                 >
                     <span className="text-base leading-none">←</span>
-                    Division {player.division}
+                    {divisionLabel(player.division)}
                 </Link>
 
                 <div className="bg-white rounded-xl border border-gray-200 p-5 sm:p-6">
@@ -50,7 +47,7 @@ export function PlayerPage() {
                         </span>
                     </div>
                     <p className="text-gray-500 mt-1">
-                        Division {player.division} — {DIVISION_NAMES[player.division]}
+                        {player.division === 6 ? "Beginner" : `Division ${player.division} — ${DIVISION_NAMES[player.division]}`}
                     </p>
                     <div className="flex flex-wrap gap-4 sm:gap-6 mt-4 pt-4 border-t border-gray-100">
                         {divisionRank && <Stat label="Division Rank" value={`#${divisionRank}`} />}
@@ -96,7 +93,7 @@ export function PlayerPage() {
                                         <td className="px-4 py-2 text-gray-500 hidden sm:table-cell">
                                             {new Date(p.tournament.date).toLocaleDateString()}
                                         </td>
-                                        <td className="px-3 py-2 text-center text-gray-500 hidden sm:table-cell">{p.tournament.division}</td>
+                                        <td className="px-3 py-2 text-center text-gray-500 hidden sm:table-cell">{divisionLabel(p.tournament.division)}</td>
                                         <td className="px-4 py-2 text-right">
                                             {p.finalRank !== null ? (
                                                 <span className={rankColor(p.finalRank)}>#{p.finalRank}</span>

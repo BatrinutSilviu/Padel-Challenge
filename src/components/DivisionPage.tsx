@@ -1,10 +1,7 @@
 import { useParams, Link } from "react-router-dom";
 import { trpc } from "../trpc";
 import { NavBar } from "./NavBar";
-
-const DIVISION_NAMES: Record<number, string> = {
-    1: "Elite", 2: "Premier", 3: "Gold", 4: "Silver", 5: "Bronze", 6: "Beginner",
-};
+import { DIVISION_NAMES, divisionLabel } from "../lib/divisions";
 
 export function DivisionPage() {
     const { id } = useParams<{ id: string }>();
@@ -30,7 +27,7 @@ export function DivisionPage() {
                         Home
                     </Link>
                     <h1 className="text-xl sm:text-2xl font-bold text-gray-800">
-                        Division {division} — {DIVISION_NAMES[division]}
+                        {division === 6 ? "Beginner" : `Division ${division} — ${DIVISION_NAMES[division]}`}
                     </h1>
                 </div>
 

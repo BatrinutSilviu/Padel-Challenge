@@ -4,12 +4,10 @@ import { NavBar } from "../NavBar";
 import { trpc } from "../../trpc";
 import { useQueryClient } from "@tanstack/react-query";
 import { getQueryKey } from "@trpc/react-query";
+import { DIVISION_NAMES, divisionLabel } from "../../lib/divisions";
 
 type Tab = "players" | "tournaments" | "new-tournament";
 
-const DIVISION_NAMES: Record<number, string> = {
-    1: "Elite", 2: "Premier", 3: "Gold", 4: "Silver", 5: "Bronze", 6: "Beginner",
-};
 
 export function AdminDashboard({ onLogout }: { onLogout: () => void }) {
     const [tab, setTab] = useState<Tab>("tournaments");
@@ -64,7 +62,7 @@ function TournamentsTab() {
                         <div key={t.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white rounded-lg border border-yellow-200 px-4 py-3">
                             <div className="min-w-0">
                                 <span className="font-medium text-gray-800 block truncate">{t.name}</span>
-                                <span className="text-xs text-gray-400">Div {t.division} · {new Date(t.date).toLocaleDateString()}</span>
+                                <span className="text-xs text-gray-400">{divisionLabel(t.division)} · {new Date(t.date).toLocaleDateString()}</span>
                             </div>
                             <Link
                                 to={`/admin/tournament/${t.id}`}
@@ -84,7 +82,7 @@ function TournamentsTab() {
                         <div key={t.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-white rounded-lg border border-gray-200 px-4 py-3">
                             <div className="min-w-0">
                                 <span className="font-medium text-gray-800 block truncate">{t.name}</span>
-                                <span className="text-xs text-gray-400">Div {t.division} · {new Date(t.date).toLocaleDateString()}</span>
+                                <span className="text-xs text-gray-400">{divisionLabel(t.division)} · {new Date(t.date).toLocaleDateString()}</span>
                             </div>
                             <div className="flex items-center gap-2 self-start sm:self-auto shrink-0">
                                 <StatusBadge status={t.status} />
@@ -165,7 +163,7 @@ function NewTournamentTab({ onCreated }: { onCreated: () => void }) {
                                     : "border-gray-300 text-gray-600 hover:border-[#FF4200]"
                             }`}
                         >
-                            {d} — {DIVISION_NAMES[d]}
+                            {d === 6 ? "Beginner" : `${d} — ${DIVISION_NAMES[d]}`}
                         </button>
                     ))}
                 </div>
@@ -174,7 +172,7 @@ function NewTournamentTab({ onCreated }: { onCreated: () => void }) {
             <Field label={`Players (${selectedIds.length}/8 selected)`}>
                 {players.isPending && <p className="text-gray-500 text-sm">Loading…</p>}
                 {divisionPlayers.length < 8 && !players.isPending && (
-                    <p className="text-amber-600 text-sm">Division {division} only has {divisionPlayers.length} players — need 8.</p>
+                    <p className="text-amber-600 text-sm">{divisionLabel(division)} only has {divisionPlayers.length} players — need 8.</p>
                 )}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 mt-1">
                     {divisionPlayers.map(p => {
@@ -254,7 +252,7 @@ function PlayersTab() {
                         className={input}
                     >
                         {[1, 2, 3, 4, 5, 6].map(d => (
-                            <option key={d} value={d}>Div {d} — {DIVISION_NAMES[d]}</option>
+                            <option key={d} value={d}>{d === 6 ? "Beginner" : `Div ${d} — ${DIVISION_NAMES[d]}`}</option>
                         ))}
                     </select>
                     <select
@@ -291,9 +289,9 @@ function PlayersTab() {
                             <tr key={p.id} className="border-b border-gray-100 last:border-0">
                                 <td className="px-4 py-2 font-medium text-gray-800">
                                     <div>{p.name}</div>
-                                    <div className="text-xs text-gray-400 sm:hidden">Div {p.division} — {DIVISION_NAMES[p.division]}</div>
+                                    <div className="text-xs text-gray-400 sm:hidden">{p.division === 6 ? "Beginner" : `Div ${p.division} — ${DIVISION_NAMES[p.division]}`}</div>
                                 </td>
-                                <td className="px-4 py-2 text-gray-500 hidden sm:table-cell">Div {p.division} — {DIVISION_NAMES[p.division]}</td>
+                                <td className="px-4 py-2 text-gray-500 hidden sm:table-cell">{p.division === 6 ? "Beginner" : `Div ${p.division} — ${DIVISION_NAMES[p.division]}`}</td>
                                 <td className="px-4 py-2">
                                     <button
                                         onClick={() => remove.mutate({ id: p.id })}

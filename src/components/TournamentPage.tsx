@@ -1,6 +1,7 @@
 import { useParams, Link } from "react-router-dom";
 import { trpc } from "../trpc";
 import { NavBar } from "./NavBar";
+import { divisionLabel } from "../lib/divisions";
 import { useState } from "react";
 
 export function TournamentPage() {
@@ -20,7 +21,7 @@ export function TournamentPage() {
                     className="inline-flex items-center gap-1.5 text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors"
                 >
                     <span className="text-base leading-none">←</span>
-                    Division {tournament.division}
+                    {divisionLabel(tournament.division)}
                 </Link>
 
                 <div className="bg-white rounded-xl border border-gray-200 p-5 sm:p-6">
@@ -29,7 +30,7 @@ export function TournamentPage() {
                             <h1 className="text-xl sm:text-2xl font-bold text-gray-800">{tournament.name}</h1>
                             <p className="text-gray-500 mt-1 text-sm">
                                 {new Date(tournament.date).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}
-                                {" · "}Division {tournament.division}
+                                {" · "}{divisionLabel(tournament.division)}
                                 {" · "}{tournament.participants.length} players
                             </p>
                         </div>
