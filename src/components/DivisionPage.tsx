@@ -1,7 +1,7 @@
 import { useParams, Link } from "react-router-dom";
 import { trpc } from "../trpc";
 import { NavBar } from "./NavBar";
-import { DIVISION_NAMES, divisionLabel } from "../lib/divisions";
+import { DIVISION_NAMES, DIVISION_BADGES, divisionLabel } from "../lib/divisions";
 
 export function DivisionPage() {
     const { id } = useParams<{ id: string }>();
@@ -42,7 +42,6 @@ export function DivisionPage() {
                                 : 0;
                             return avg(b) - avg(a);
                         }).map((player, i) => {
-                            const streak = getStreak(player.participations);
                             const total = player.participations.reduce((s, p) => s + p.totalPoints, 0);
                             const avg = player.participations.length > 0
                                 ? Math.round(total / player.participations.length)
@@ -58,16 +57,26 @@ export function DivisionPage() {
                                         <div className="flex items-center gap-2 min-w-0">
                                             <span className="text-sm text-gray-400 w-5 shrink-0">{i + 1}</span>
                                             <span className="font-medium text-gray-800 truncate">{player.name}</span>
-                                            {player.division !== division && player.division < division && !player.homeDivBottomFinish && !player.participations.some(p => p.finalRank !== null && p.finalRank >= 6) && (
-                                                <span className="text-xs text-gray-400 border border-gray-200 px-1.5 py-0.5 rounded shrink-0">
+                                            {player.division !== division && (
+                                                <span className={`text-xs font-semibold px-2 py-0.5 rounded-full shrink-0 ${DIVISION_BADGES[player.division].className}`}>
                                                     {divisionLabel(player.division)}
                                                 </span>
                                             )}
-                                            {streak === "promotion" && (
-                                                <span title="Promotion streak" className="text-[#FF4200] text-base shrink-0">▲</span>
+                                            {player.promotionEligible && (
+                                                <>
+                                                    <span title="Eligible for promotion" className="text-base shrink-0 text-green-500">▲</span>
+                                                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full shrink-0 ${DIVISION_BADGES[division - 1].className}`}>
+                                                        {divisionLabel(division - 1)}
+                                                    </span>
+                                                </>
                                             )}
-                                            {streak === "relegation" && (
-                                                <span title="Relegation streak" className="text-red-500 text-base shrink-0">▼</span>
+                                            {player.relegationEligible && (
+                                                <>
+                                                    <span title="Eligible for relegation" className="text-base shrink-0 text-red-500">▼</span>
+                                                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full shrink-0 ${DIVISION_BADGES[division + 1].className}`}>
+                                                        {divisionLabel(division + 1)}
+                                                    </span>
+                                                </>
                                             )}
                                         </div>
                                         {/* pts visible on mobile inline with name row */}
@@ -100,7 +109,7 @@ export function DivisionPage() {
                             );
                         })}
                     </div>
-                    <p className="text-xs text-gray-400 mt-2">Points from last 5 tournaments. ▲ = top 3 in last 3 → promotion, ▼ = bottom 3 in last 3 → relegation.</p>
+                    <p className="text-xs text-gray-400 mt-2">Points from last 5 tournaments. ▲ = eligible for promotion (3 consecutive top-3 finishes, or 3+ top-3 in last 5 with avg ≥ 80th percentile). ▼ = eligible for relegation (3 consecutive bottom-3 finishes, or 3+ bottom-3 in last 5 with avg ≤ 20th percentile).</p>
                 </section>
 
                 <section>
@@ -128,17 +137,6 @@ export function DivisionPage() {
             </main>
         </div>
     );
-}
-
-type Participation = { finalRank: number | null };
-
-function getStreak(participations: Participation[]): "promotion" | "relegation" | null {
-    if (participations.length < 3) return null;
-    const ranks = participations.slice(0, 3).map(p => p.finalRank);
-    if (ranks.some(r => r === null)) return null;
-    if ((ranks as number[]).every(r => r <= 3)) return "promotion";
-    if ((ranks as number[]).every(r => r >= 6)) return "relegation";
-    return null;
 }
 
 function RankBadge({ rank }: { rank: number | null }) {
