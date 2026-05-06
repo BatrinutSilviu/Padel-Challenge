@@ -5,7 +5,7 @@ export function NavBar() {
         <header className="bg-[#333366] text-white shadow-md">
             <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
                 <Link to="/" className="flex items-center gap-2 hover:opacity-85 transition-opacity">
-                    <img src="/active.png" alt="Act!ve" className="h-6 w-auto" />
+                    <img src="/active.png" alt="Act!ve" className="h-4 w-auto" />
                     <span className="text-2xl font-bold tracking-tight text-white leading-none">Padel</span>
                 </Link>
                 <Link
