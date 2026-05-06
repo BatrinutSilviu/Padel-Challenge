@@ -57,7 +57,7 @@ export function DivisionPage() {
                                         <div className="flex items-center gap-2 min-w-0">
                                             <span className="text-sm text-gray-400 w-5 shrink-0">{i + 1}</span>
                                             <span className="font-medium text-gray-800 truncate">{player.name}</span>
-                                            {player.division !== division && (
+                                            {player.division !== division && !player.homeDivBottomFinish && (
                                                 <span className={`text-xs font-semibold px-2 py-0.5 rounded-full shrink-0 ${DIVISION_BADGES[player.division].className}`}>
                                                     {divisionLabel(player.division)}
                                                 </span>
