@@ -2,6 +2,7 @@ import { useParams, Link } from "react-router-dom";
 import { trpc } from "../trpc";
 import { NavBar } from "./NavBar";
 import { divisionLabel } from "../lib/divisions";
+import { tournamentTypeLabel } from "../lib/tournaments";
 import { useState } from "react";
 
 export function TournamentPage() {
@@ -31,6 +32,7 @@ export function TournamentPage() {
                             <p className="text-gray-500 mt-1 text-sm">
                                 {new Date(tournament.date).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}
                                 {" · "}{divisionLabel(tournament.division)}
+                                {" · "}{tournamentTypeLabel(tournament.type)}
                                 {" · "}{tournament.participants.length} players
                             </p>
                         </div>

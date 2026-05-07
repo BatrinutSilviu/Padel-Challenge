@@ -57,6 +57,9 @@ export function DivisionPage() {
                                         <div className="flex items-center gap-2 min-w-0">
                                             <span className="text-sm text-gray-400 w-5 shrink-0">{i + 1}</span>
                                             <span className="font-medium text-gray-800 truncate">{player.name}</span>
+                                            {player.isChampionsWinner && (
+                                                <span title="Americano Champions winner" className="text-base shrink-0">👑</span>
+                                            )}
                                             {player.division !== division && !player.homeDivBottomFinish && (
                                                 <span className={`text-xs font-semibold px-2 py-0.5 rounded-full shrink-0 ${DIVISION_BADGES[player.division].className}`}>
                                                     {divisionLabel(player.division)}
@@ -109,7 +112,7 @@ export function DivisionPage() {
                             );
                         })}
                     </div>
-                    <p className="text-xs text-gray-400 mt-2">Points from last 5 tournaments. ▲ = eligible for promotion (3 consecutive top-3 finishes, or 3+ top-3 in last 5 with avg ≥ 80th percentile). ▼ = eligible for relegation (3 consecutive bottom-3 finishes, or 3+ bottom-3 in last 5 with avg ≤ 20th percentile).</p>
+                    <p className="text-xs text-gray-400 mt-2">Points from last 5 tournaments. ▲ = eligible for promotion (3 consecutive top-3 finishes, or 3+ top-3 in last 5 with avg ≥ 80th percentile). ▼ = eligible for relegation (3 consecutive bottom-3 finishes, or 3+ bottom-3 in last 5 with avg ≤ 20th percentile). 👑 = won an Americano Champions tournament (not counted in standings).</p>
                 </section>
 
                 <section>

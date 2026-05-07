@@ -5,6 +5,7 @@ import { trpc } from "../../trpc";
 import { useQueryClient } from "@tanstack/react-query";
 import { getQueryKey } from "@trpc/react-query";
 import { DIVISION_NAMES, divisionLabel } from "../../lib/divisions";
+import { TournamentType, TOURNAMENT_TYPE_LABELS } from "../../lib/tournaments";
 
 type Tab = "players" | "tournaments" | "new-tournament";
 
@@ -62,7 +63,7 @@ function TournamentsTab() {
                         <div key={t.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white rounded-lg border border-yellow-200 px-4 py-3">
                             <div className="min-w-0">
                                 <span className="font-medium text-gray-800 block truncate">{t.name}</span>
-                                <span className="text-xs text-gray-400">{divisionLabel(t.division)} · {new Date(t.date).toLocaleDateString()}</span>
+                                <span className="text-xs text-gray-400">{divisionLabel(t.division)} · {new Date(t.date).toLocaleDateString()} · {TOURNAMENT_TYPE_LABELS[t.type as TournamentType] ?? t.type}</span>
                             </div>
                             <Link
                                 to={`/admin/tournament/${t.id}`}
@@ -82,7 +83,7 @@ function TournamentsTab() {
                         <div key={t.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-white rounded-lg border border-gray-200 px-4 py-3">
                             <div className="min-w-0">
                                 <span className="font-medium text-gray-800 block truncate">{t.name}</span>
-                                <span className="text-xs text-gray-400">{divisionLabel(t.division)} · {new Date(t.date).toLocaleDateString()}</span>
+                                <span className="text-xs text-gray-400">{divisionLabel(t.division)} · {new Date(t.date).toLocaleDateString()} · {TOURNAMENT_TYPE_LABELS[t.type as TournamentType] ?? t.type}</span>
                             </div>
                             <div className="flex items-center gap-2 self-start sm:self-auto shrink-0">
                                 <StatusBadge status={t.status} />
@@ -107,6 +108,7 @@ function NewTournamentTab({ onCreated }: { onCreated: () => void }) {
     const [division, setDivision] = useState(1);
     const [name, setName] = useState("");
     const [date, setDate] = useState(() => new Date().toISOString().split("T")[0]);
+    const [type, setType] = useState<TournamentType>("AMERICANO");
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
     const [error, setError] = useState("");
 
@@ -129,7 +131,7 @@ function NewTournamentTab({ onCreated }: { onCreated: () => void }) {
         setError("");
         if (!name.trim()) return setError("Tournament name is required.");
         if (selectedIds.length !== 8) return setError("Select exactly 8 players.");
-        create.mutate({ name: name.trim(), date, division, playerIds: selectedIds });
+        create.mutate({ name: name.trim(), date, division, type, playerIds: selectedIds });
     }
 
     return (
@@ -164,6 +166,25 @@ function NewTournamentTab({ onCreated }: { onCreated: () => void }) {
                             }`}
                         >
                             {d === 6 ? "Beginner" : `${d} — ${DIVISION_NAMES[d]}`}
+                        </button>
+                    ))}
+                </div>
+            </Field>
+
+            <Field label="Type">
+                <div className="flex flex-wrap gap-2">
+                    {(["AMERICANO", "AMERICANO_CHAMPIONS", "CHALLENGER"] as TournamentType[]).map(t => (
+                        <button
+                            key={t}
+                            type="button"
+                            onClick={() => setType(t)}
+                            className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${
+                                type === t
+                                    ? "bg-[#FF4200] text-white border-[#FF4200]"
+                                    : "border-gray-300 text-gray-600 hover:border-[#FF4200]"
+                            }`}
+                        >
+                            {TOURNAMENT_TYPE_LABELS[t]}
                         </button>
                     ))}
                 </div>
