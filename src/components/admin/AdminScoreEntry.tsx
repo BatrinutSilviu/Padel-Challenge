@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { NavBar } from "../NavBar";
 import { trpc } from "../../trpc";
@@ -12,22 +12,22 @@ export function AdminScoreEntry() {
     const qc = useQueryClient();
     const [confirmComplete, setConfirmComplete] = useState(false);
     const [scoredIds, setScoredIds] = useState<Set<string>>(() => new Set());
+    const [pendingSaves, setPendingSaves] = useState(0);
+    const [recalcSuccess, setRecalcSuccess] = useState(false);
 
-    const { data: tournament, isPending, error } = trpc.tournament.getById.useQuery(
-        { id: id! },
-        {
-            onSuccess(data) {
-                setScoredIds(prev => {
-                    if (prev.size > 0) return prev;
-                    const ids = data.rounds
-                        .flatMap(r => r.matches)
-                        .filter(m => m.team1Score + m.team2Score === 32)
-                        .map(m => m.id);
-                    return new Set(ids);
-                });
-            },
-        }
-    );
+    const { data: tournament, isPending, error } = trpc.tournament.getById.useQuery({ id: id! });
+
+    useEffect(() => {
+        if (!tournament) return;
+        setScoredIds(prev => {
+            if (prev.size > 0) return prev;
+            const ids = tournament.rounds
+                .flatMap(r => r.matches)
+                .filter(m => m.team1Score + m.team2Score === 32)
+                .map(m => m.id);
+            return new Set(ids);
+        });
+    }, [tournament]);
 
     const complete = trpc.tournament.complete.useMutation({
         onSuccess: () => {
@@ -40,9 +40,16 @@ export function AdminScoreEntry() {
     const recalculate = trpc.tournament.recalculate.useMutation({
         onSuccess: () => {
             qc.invalidateQueries({ queryKey: getQueryKey(trpc.tournament.getById, { id: id! }) });
-            navigate(`/tournament/${id}`);
+            qc.invalidateQueries({ queryKey: getQueryKey(trpc.tournament.list) });
+            setRecalcSuccess(true);
         },
     });
+
+    const handleSaveStart = useCallback(() => setPendingSaves(n => n + 1), []);
+    const handleSaveEnd = useCallback(() => setPendingSaves(n => n - 1), []);
+    const handleSaved = useCallback((matchId: string) => {
+        setScoredIds(prev => new Set([...prev, matchId]));
+    }, []);
 
     if (isPending) return <LoadingPage />;
     if (error || !tournament) return <div className="p-8 text-red-600">Tournament not found.</div>;
@@ -51,6 +58,7 @@ export function AdminScoreEntry() {
     const totalMatches = tournament.rounds.flatMap(r => r.matches).length;
     const scoredCount = scoredIds.size;
     const allScored = scoredCount === totalMatches;
+    const isSaving = pendingSaves > 0;
 
     function handleComplete() {
         if (!allScored) { setConfirmComplete(true); return; }
@@ -71,29 +79,30 @@ export function AdminScoreEntry() {
                             <span className="text-sm text-gray-400">{divisionLabel(tournament.division)}</span>
                         </div>
                     </div>
-                    {!isCompleted && (
-                        <button
-                            onClick={handleComplete}
-                            disabled={complete.isPending}
-                            className="bg-[#FF4200] text-white rounded-lg px-4 py-2 text-sm font-semibold hover:bg-[#CC3500] disabled:opacity-50 transition-colors self-start sm:self-auto"
-                        >
-                            {complete.isPending ? "Completing…" : "Complete Tournament"}
-                        </button>
-                    )}
-                    {isCompleted && (
-                        <div className="flex items-center gap-3 self-start sm:self-auto">
+                    <div className="flex items-center gap-3 self-start sm:self-auto flex-wrap">
+                        {!isCompleted && (
+                            <button
+                                onClick={handleComplete}
+                                disabled={complete.isPending}
+                                className="bg-[#FF4200] text-white rounded-lg px-4 py-2 text-sm font-semibold hover:bg-[#CC3500] disabled:opacity-50 transition-colors"
+                            >
+                                {complete.isPending ? "Completing…" : "Complete Tournament"}
+                            </button>
+                        )}
+                        {isCompleted && (
                             <Link to={`/tournament/${id}`} className="text-sm text-[#FF4200] hover:underline">
                                 View results →
                             </Link>
-                            <button
-                                onClick={() => recalculate.mutate({ id: id! })}
-                                disabled={recalculate.isPending}
-                                className="bg-amber-500 text-white rounded-lg px-4 py-2 text-sm font-semibold hover:bg-amber-600 disabled:opacity-50 transition-colors"
-                            >
-                                {recalculate.isPending ? "Recalculating…" : "Recalculate Results"}
-                            </button>
-                        </div>
-                    )}
+                        )}
+                        <button
+                            onClick={() => { setRecalcSuccess(false); recalculate.mutate({ id: id! }); }}
+                            disabled={recalculate.isPending || isSaving}
+                            title={isSaving ? "Waiting for scores to save…" : undefined}
+                            className="bg-amber-500 text-white rounded-lg px-4 py-2 text-sm font-semibold hover:bg-amber-600 disabled:opacity-50 transition-colors"
+                        >
+                            {recalculate.isPending ? "Recalculating…" : isSaving ? "Saving scores…" : "Recalculate Results"}
+                        </button>
+                    </div>
                 </div>
 
                 {/* Progress bar */}
@@ -107,16 +116,26 @@ export function AdminScoreEntry() {
                     <div className="w-full bg-gray-100 rounded-full h-2">
                         <div
                             className={`h-2 rounded-full transition-all ${allScored ? "bg-[#FF4200]" : "bg-[#FF6D00]"}`}
-                            style={{ width: `${(scoredCount / totalMatches) * 100}%` }}
+                            style={{ width: `${totalMatches > 0 ? (scoredCount / totalMatches) * 100 : 0}%` }}
                         />
                     </div>
                     {!isCompleted && allScored && (
                         <p className="text-xs text-[#FF4200]">All scores saved — ready to complete.</p>
                     )}
-                    {isCompleted && (
-                        <p className="text-xs text-amber-600">Tournament completed. Edit scores above then click Recalculate Results.</p>
-                    )}
                 </div>
+
+                {/* Recalculate success banner */}
+                {recalcSuccess && (
+                    <div className="bg-green-50 border border-green-200 rounded-xl px-4 py-3 flex items-center justify-between gap-3">
+                        <p className="text-sm text-green-700 font-medium">Results recalculated successfully.</p>
+                        <div className="flex items-center gap-3 shrink-0">
+                            <Link to={`/tournament/${id}`} className="text-sm text-green-700 font-semibold hover:underline">
+                                View results →
+                            </Link>
+                            <button onClick={() => setRecalcSuccess(false)} className="text-green-500 hover:text-green-700 text-lg leading-none">×</button>
+                        </div>
+                    </div>
+                )}
 
                 {/* Confirm dialog */}
                 {confirmComplete && (
@@ -169,7 +188,9 @@ export function AdminScoreEntry() {
                                         key={match.id}
                                         match={match}
                                         courtNumber={i + 1}
-                                        onSaved={(matchId) => setScoredIds(prev => new Set([...prev, matchId]))}
+                                        onSaveStart={handleSaveStart}
+                                        onSaveEnd={handleSaveEnd}
+                                        onSaved={handleSaved}
                                     />
                                 ))}
                             </div>
@@ -194,16 +215,21 @@ type MatchData = {
 function MatchScoreRow({
     match,
     courtNumber,
+    onSaveStart,
+    onSaveEnd,
     onSaved,
 }: {
     match: MatchData;
     courtNumber: number;
+    onSaveStart: () => void;
+    onSaveEnd: () => void;
     onSaved: (matchId: string) => void;
 }) {
-    const [score1, setScore1] = useState(String(match.team1Score || ""));
-    const [score2, setScore2] = useState(String(match.team2Score || ""));
+    const isScored = match.team1Score + match.team2Score === 32;
+    const [score1, setScore1] = useState(isScored ? String(match.team1Score) : "");
+    const [score2, setScore2] = useState(isScored ? String(match.team2Score) : "");
     const [saving, setSaving] = useState(false);
-    const [saved, setSaved] = useState(match.team1Score + match.team2Score === 32);
+    const [saved, setSaved] = useState(isScored);
     const [error, setError] = useState("");
 
     const update = trpc.tournament.updateMatchScore.useMutation({
@@ -211,15 +237,21 @@ function MatchScoreRow({
             setSaving(false);
             setSaved(true);
             onSaved(match.id);
+            onSaveEnd();
             setError("");
         },
-        onError: (e) => { setSaving(false); setError(e.message); },
+        onError: (e) => {
+            setSaving(false);
+            onSaveEnd();
+            setError(e.message);
+        },
     });
 
     function autoSave(s1: number, s2: number) {
         if (s1 + s2 !== 32 || s1 < 0 || s2 < 0) return;
         setSaving(true);
         setSaved(false);
+        onSaveStart();
         update.mutate({ matchId: match.id, team1Score: s1, team2Score: s2 });
     }
 

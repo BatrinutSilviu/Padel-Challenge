@@ -48,9 +48,19 @@ export function AdminDashboard({ onLogout }: { onLogout: () => void }) {
 }
 
 function TournamentsTab() {
+    const qc = useQueryClient();
     const { data, isPending } = trpc.tournament.list.useQuery();
     const active = data?.filter(t => t.status === "IN_PROGRESS") ?? [];
     const others = data?.filter(t => t.status !== "IN_PROGRESS") ?? [];
+
+    const deleteTournament = trpc.tournament.delete.useMutation({
+        onSuccess: () => qc.invalidateQueries({ queryKey: getQueryKey(trpc.tournament.list) }),
+    });
+
+    function handleDelete(id: string, name: string) {
+        if (!confirm(`Delete "${name}"? This cannot be undone.`)) return;
+        deleteTournament.mutate({ id });
+    }
 
     return (
         <div className="space-y-6">
@@ -65,12 +75,22 @@ function TournamentsTab() {
                                 <span className="font-medium text-gray-800 block truncate">{t.name}</span>
                                 <span className="text-xs text-gray-400">{divisionLabel(t.division)} · {new Date(t.date).toLocaleDateString()} · {TOURNAMENT_TYPE_LABELS[t.type as TournamentType] ?? t.type}</span>
                             </div>
-                            <Link
-                                to={`/admin/tournament/${t.id}`}
-                                className="text-sm bg-[#FF4200] text-white px-4 py-2 rounded-lg hover:bg-[#CC3500] transition-colors self-start sm:self-auto shrink-0"
-                            >
-                                Enter Scores
-                            </Link>
+                            <div className="flex items-center gap-2 self-start sm:self-auto shrink-0">
+                                <Link
+                                    to={`/admin/tournament/${t.id}`}
+                                    className="inline-flex items-center gap-1.5 text-sm font-medium bg-[#FF4200] text-white px-4 py-2 rounded-lg hover:bg-[#CC3500] transition-colors"
+                                >
+                                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487a2.25 2.25 0 1 1 3.182 3.182L7.5 20.213l-4 1 1-4 12.362-12.726z"/></svg>
+                                    Enter Scores
+                                </Link>
+                                <button
+                                    onClick={() => handleDelete(t.id, t.name)}
+                                    className="inline-flex items-center gap-1.5 text-sm font-medium border border-red-200 text-red-500 px-3 py-2 rounded-lg hover:bg-red-50 hover:border-red-400 transition-colors"
+                                >
+                                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"/></svg>
+                                    Delete
+                                </button>
+                            </div>
                         </div>
                     ))}
                 </div>
@@ -87,14 +107,20 @@ function TournamentsTab() {
                             </div>
                             <div className="flex items-center gap-2 self-start sm:self-auto shrink-0">
                                 <StatusBadge status={t.status} />
-                                {t.status === "COMPLETED" && (
-                                    <Link
-                                        to={`/admin/tournament/${t.id}`}
-                                        className="text-xs text-[#FF4200] hover:underline"
-                                    >
-                                        Edit scores
-                                    </Link>
-                                )}
+                                <Link
+                                    to={`/admin/tournament/${t.id}`}
+                                    className="inline-flex items-center gap-1.5 text-sm font-medium border border-[#FF4200] text-[#FF4200] px-3 py-2 rounded-lg hover:bg-[#FF4200]/5 transition-colors"
+                                >
+                                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487a2.25 2.25 0 1 1 3.182 3.182L7.5 20.213l-4 1 1-4 12.362-12.726z"/></svg>
+                                    {t.status === "COMPLETED" ? "Edit scores" : "Enter scores"}
+                                </Link>
+                                <button
+                                    onClick={() => handleDelete(t.id, t.name)}
+                                    className="inline-flex items-center gap-1.5 text-sm font-medium border border-red-200 text-red-500 px-3 py-2 rounded-lg hover:bg-red-50 hover:border-red-400 transition-colors"
+                                >
+                                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"/></svg>
+                                    Delete
+                                </button>
                             </div>
                         </div>
                     ))}
@@ -112,8 +138,8 @@ function NewTournamentTab({ onCreated }: { onCreated: () => void }) {
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
     const [error, setError] = useState("");
 
-    const players = trpc.player.list.useQuery();
-    const divisionPlayers = players.data?.filter(p => p.division === division) ?? [];
+    const divisionPlayersQuery = trpc.division.players.useQuery({ division });
+    const divisionPlayers = divisionPlayersQuery.data ?? [];
 
     const create = trpc.tournament.create.useMutation({
         onSuccess: onCreated,
@@ -191,8 +217,8 @@ function NewTournamentTab({ onCreated }: { onCreated: () => void }) {
             </Field>
 
             <Field label={`Players (${selectedIds.length}/8 selected)`}>
-                {players.isPending && <p className="text-gray-500 text-sm">Loading…</p>}
-                {divisionPlayers.length < 8 && !players.isPending && (
+                {divisionPlayersQuery.isPending && <p className="text-gray-500 text-sm">Loading…</p>}
+                {divisionPlayers.length < 8 && !divisionPlayersQuery.isPending && (
                     <p className="text-amber-600 text-sm">{divisionLabel(division)} only has {divisionPlayers.length} players — need 8.</p>
                 )}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 mt-1">
