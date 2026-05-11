@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { NavBar } from "../NavBar";
 import { trpc } from "../../trpc";
 import { useQueryClient } from "@tanstack/react-query";
@@ -11,7 +11,9 @@ type Tab = "players" | "tournaments" | "new-tournament";
 
 
 export function AdminDashboard({ onLogout }: { onLogout: () => void }) {
-    const [tab, setTab] = useState<Tab>("tournaments");
+    const [searchParams, setSearchParams] = useSearchParams();
+    const tab = (searchParams.get("tab") as Tab) ?? "tournaments";
+    const setTab = (t: Tab) => setSearchParams({ tab: t });
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -255,46 +257,6 @@ function NewTournamentTab({ onCreated }: { onCreated: () => void }) {
     );
 }
 
-function RecalculateDivisionsButton() {
-    const qc = useQueryClient();
-    const [result, setResult] = useState<{ promoted: { name: string; from: number; to: number }[]; relegated: { name: string; from: number; to: number }[] } | null>(null);
-    const recalc = trpc.player.recalculateDivisions.useMutation({
-        onSuccess: (data) => {
-            qc.invalidateQueries({ queryKey: getQueryKey(trpc.player.list) });
-            setResult(data);
-        },
-    });
-
-    return (
-        <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-3">
-            <div className="flex items-center justify-between gap-3">
-                <div>
-                    <p className="text-sm font-semibold text-gray-800">Recalculate Divisions</p>
-                    <p className="text-xs text-gray-400 mt-0.5">Apply promotion/relegation rules to all players based on their last 5 results.</p>
-                </div>
-                <button
-                    onClick={() => { setResult(null); recalc.mutate(); }}
-                    disabled={recalc.isPending}
-                    className="shrink-0 bg-[#FF4200] text-white rounded-lg px-4 py-2 text-sm font-medium hover:bg-[#CC3500] disabled:opacity-50 transition-colors"
-                >
-                    {recalc.isPending ? "Running…" : "Run"}
-                </button>
-            </div>
-            {result !== null && (
-                result.promoted.length === 0 && result.relegated.length === 0
-                    ? <p className="text-sm text-gray-500">No changes — no players eligible for promotion or relegation.</p>
-                    : <ul className="text-sm space-y-1">
-                        {result.promoted.map(p => (
-                            <li key={p.name} className="text-green-700">▲ {p.name}: {divisionLabel(p.from)} → {divisionLabel(p.to)}</li>
-                        ))}
-                        {result.relegated.map(p => (
-                            <li key={p.name} className="text-red-600">▼ {p.name}: {divisionLabel(p.from)} → {divisionLabel(p.to)}</li>
-                        ))}
-                    </ul>
-            )}
-        </div>
-    );
-}
 
 function PlayersTab() {
     const qc = useQueryClient();
@@ -325,7 +287,6 @@ function PlayersTab() {
 
     return (
         <div className="space-y-6 max-w-2xl">
-            <RecalculateDivisionsButton />
             <form onSubmit={handleAdd} className="bg-white rounded-xl border border-gray-200 p-5 space-y-4">
                 <h2 className="text-base font-semibold text-gray-800">Add Player</h2>
                 <div className="flex flex-col sm:flex-row gap-3">
@@ -381,13 +342,16 @@ function PlayersTab() {
                                     <div className="text-xs text-gray-400 sm:hidden">{p.division === 6 ? "Beginner" : `Div ${p.division} — ${DIVISION_NAMES[p.division]}`}</div>
                                 </td>
                                 <td className="px-4 py-2 text-gray-500 hidden sm:table-cell">{p.division === 6 ? "Beginner" : `Div ${p.division} — ${DIVISION_NAMES[p.division]}`}</td>
-                                <td className="px-4 py-2">
+                                <td className="px-4 py-2 text-right">
                                     <button
-                                        onClick={() => remove.mutate({ id: p.id })}
-                                        className="text-gray-300 hover:text-red-500 transition-colors text-base leading-none"
+                                        onClick={() => { if (confirm(`Delete "${p.name}"? This cannot be undone.`)) remove.mutate({ id: p.id }); }}
+                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-600 hover:text-white text-xs font-medium transition-colors"
                                         title="Delete player"
                                     >
-                                        ✕
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                                        </svg>
+                                        Delete
                                     </button>
                                 </td>
                             </tr>

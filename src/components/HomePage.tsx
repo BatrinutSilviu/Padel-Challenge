@@ -1,14 +1,17 @@
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { trpc } from "../trpc";
 import { NavBar } from "./NavBar";
 import { useState } from "react";
 
 import { DIVISION_NAMES, DIVISION_BADGES, DIVISION_COLORS, divisionLabel } from "../lib/divisions";
+import { TournamentType, TOURNAMENT_TYPE_LABELS } from "../lib/tournaments";
 
 type Tab = "divisions" | "players" | "tournaments";
 
 export function HomePage() {
-    const [tab, setTab] = useState<Tab>("divisions");
+    const [searchParams, setSearchParams] = useSearchParams();
+    const tab = (searchParams.get("tab") as Tab) ?? "divisions";
+    const setTab = (t: Tab) => setSearchParams({ tab: t });
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -74,11 +77,14 @@ function initials(name: string) {
 function PlayersTab() {
     const { data, isPending } = trpc.player.list.useQuery();
     const [genderFilter, setGenderFilter] = useState<"ALL" | "MALE" | "FEMALE">("ALL");
+    const [search, setSearch] = useState("");
 
     if (isPending) return <p className="text-gray-500">Loading…</p>;
     if (!data?.length) return <p className="text-gray-500">No players yet.</p>;
 
-    const filtered = genderFilter === "ALL" ? data : data.filter(p => p.gender === genderFilter);
+    const filtered = data
+        .filter(p => genderFilter === "ALL" || p.gender === genderFilter)
+        .filter(p => p.name.toLowerCase().includes(search.toLowerCase()));
 
     // Overall rank: division 1 best → division 6 worst, within each division by avgPoints desc
     // data is already sorted this way by the backend — use full list for rank, not filtered
@@ -89,8 +95,29 @@ function PlayersTab() {
         players: filtered.filter(p => p.division === d),
     })).filter(g => g.players.length > 0);
 
+
     return (
         <div className="space-y-4">
+            <div className="relative group">
+                <svg xmlns="http://www.w3.org/2000/svg" className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-[#FF4200] transition-colors pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
+                </svg>
+                <input
+                    type="text"
+                    value={search}
+                    onChange={e => setSearch(e.target.value)}
+                    placeholder="Search players…"
+                    className="w-full pl-11 pr-10 py-3 bg-white border-2 border-gray-200 rounded-2xl text-sm text-gray-800 placeholder-gray-400 shadow-sm focus:outline-none focus:border-[#FF4200] transition-colors"
+                />
+                {search && (
+                    <button
+                        onClick={() => setSearch("")}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 flex items-center justify-center rounded-full bg-gray-200 hover:bg-gray-300 text-gray-500 transition-colors text-xs"
+                    >
+                        ✕
+                    </button>
+                )}
+            </div>
             <div className="flex gap-1 bg-white border border-gray-200 rounded-xl p-1 w-fit">
                 {(["ALL", "MALE", "FEMALE"] as const).map(g => (
                     <button
@@ -104,6 +131,8 @@ function PlayersTab() {
                     </button>
                 ))}
             </div>
+
+            {groups.length === 0 && <p className="text-gray-500">No players found.</p>}
 
             {groups.map(({ division, players }) => {
                 const colors = DIVISION_COLORS[division];
@@ -168,11 +197,61 @@ function PlayersTab() {
 
 function TournamentsTab() {
     const { data, isPending } = trpc.tournament.list.useQuery();
+    const [divisionFilter, setDivisionFilter] = useState<number | "ALL">("ALL");
+    const [typeFilter, setTypeFilter] = useState<TournamentType | "ALL">("ALL");
+
+    const filtered = (data ?? [])
+        .filter(t => divisionFilter === "ALL" || t.division === divisionFilter)
+        .filter(t => typeFilter === "ALL" || t.type === typeFilter);
+
+    const activeDivisions = [...new Set((data ?? []).map(t => t.division))].sort((a, b) => a - b);
+
     return (
-        <div className="space-y-2">
-            {isPending && <p className="text-gray-500">Loading…</p>}
-            {data?.length === 0 && <p className="text-gray-500">No tournaments yet.</p>}
-            {data?.map(t => (
+        <div className="space-y-4">
+            <div className="bg-white border border-gray-200 rounded-2xl p-4 space-y-3">
+                <div className="flex flex-col gap-2">
+                    <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Division</span>
+                    <div className="flex flex-wrap gap-1.5">
+                        <button
+                            onClick={() => setDivisionFilter("ALL")}
+                            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${divisionFilter === "ALL" ? "bg-[#FF4200] text-white shadow-sm" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}
+                        >
+                            All
+                        </button>
+                        {activeDivisions.map(d => (
+                            <button
+                                key={d}
+                                onClick={() => setDivisionFilter(d)}
+                                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${divisionFilter === d ? "bg-[#FF4200] text-white shadow-sm" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}
+                            >
+                                {divisionLabel(d)}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                <div className="border-t border-gray-100" />
+
+                <div className="flex flex-col gap-2">
+                    <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Type</span>
+                    <div className="flex flex-wrap gap-1.5">
+                        {(["ALL", "AMERICANO", "AMERICANO_CHAMPIONS", "CHALLENGER"] as const).map(type => (
+                            <button
+                                key={type}
+                                onClick={() => setTypeFilter(type)}
+                                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${typeFilter === type ? "bg-[#FF4200] text-white shadow-sm" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}
+                            >
+                                {type === "ALL" ? "All" : TOURNAMENT_TYPE_LABELS[type]}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            </div>
+
+            <div className="space-y-2">
+                {isPending && <p className="text-gray-500">Loading…</p>}
+                {!isPending && filtered.length === 0 && <p className="text-gray-500">No tournaments found.</p>}
+                {filtered.map(t => (
                 <Link
                     key={t.id}
                     to={`/tournament/${t.id}`}
@@ -180,14 +259,15 @@ function TournamentsTab() {
                 >
                     <div className="min-w-0">
                         <span className="font-medium text-gray-800 block truncate">{t.name}</span>
-                        <span className="text-xs text-gray-500">{divisionLabel(t.division)}</span>
+                        <span className="text-xs text-gray-500">{divisionLabel(t.division)} · {TOURNAMENT_TYPE_LABELS[t.type as TournamentType] ?? t.type}</span>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
                         <span className="text-xs text-gray-400 hidden sm:inline">{new Date(t.date).toLocaleDateString()}</span>
                         <StatusBadge status={t.status} />
                     </div>
                 </Link>
-            ))}
+                ))}
+            </div>
         </div>
     );
 }
