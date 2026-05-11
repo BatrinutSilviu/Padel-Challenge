@@ -5,6 +5,7 @@ import { useState } from "react";
 
 import { DIVISION_NAMES, DIVISION_BADGES, DIVISION_COLORS, divisionLabel } from "../lib/divisions";
 import { TournamentType, TOURNAMENT_TYPE_LABELS } from "../lib/tournaments";
+import { BADGE_META, BadgeType } from "../lib/badges";
 
 type Tab = "divisions" | "players" | "tournaments";
 
@@ -86,9 +87,13 @@ function PlayersTab() {
         .filter(p => genderFilter === "ALL" || p.gender === genderFilter)
         .filter(p => p.name.toLowerCase().includes(search.toLowerCase()));
 
-    // Overall rank: division 1 best → division 6 worst, within each division by avgPoints desc
-    // data is already sorted this way by the backend — use full list for rank, not filtered
-    const overallRanks = new Map(data.map((p, i) => [p.id, i + 1]));
+    // Competition ranking: tied players (same avgPoints + avgWonRounds) share the same rank.
+    const overallRanks = new Map<string, number>();
+    data.forEach((p, i) => {
+        const prev = data[i - 1];
+        const tied = prev && p.avgPoints === prev.avgPoints && p.avgWonRounds === prev.avgWonRounds;
+        overallRanks.set(p.id, tied ? overallRanks.get(prev.id)! : i + 1);
+    });
 
     const groups = [1, 2, 3, 4, 5, 6].map(d => ({
         division: d,
@@ -150,8 +155,12 @@ function PlayersTab() {
                         </Link>
 
                         <div>
-                            {players.map((player, divRank) => {
+                            {players.map((player, i) => {
                                 const overallRank = overallRanks.get(player.id)!;
+                                const prev = players[i - 1];
+                                const divRank = prev && prev.avgPoints === player.avgPoints && prev.avgWonRounds === player.avgWonRounds
+                                    ? players.findIndex(p => p.avgPoints === player.avgPoints && p.avgWonRounds === player.avgWonRounds)
+                                    : i;
                                 return (
                                     <Link
                                         key={player.id}
@@ -172,7 +181,12 @@ function PlayersTab() {
                                         </div>
 
                                         <div className="flex-1 min-w-0">
-                                            <span className="font-medium text-gray-800 text-sm truncate block">{player.name}</span>
+                                            <div className="flex items-center gap-1.5 min-w-0">
+                                                <span className="font-medium text-gray-800 text-sm truncate">{player.name}</span>
+                                                {(player.badges as BadgeType[]).map(badge => (
+                                                    <span key={badge} title={BADGE_META[badge].description} className="text-sm shrink-0">{BADGE_META[badge].emoji}</span>
+                                                ))}
+                                            </div>
                                             <span className="text-xs text-gray-400">Overall #{overallRank}</span>
                                         </div>
 

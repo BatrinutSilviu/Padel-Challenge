@@ -2,6 +2,7 @@ import { useParams, Link } from "react-router-dom";
 import { trpc } from "../trpc";
 import { NavBar } from "./NavBar";
 import { DIVISION_NAMES, DIVISION_BADGES, divisionLabel } from "../lib/divisions";
+import { BADGE_META, BadgeType } from "../lib/badges";
 
 export function DivisionPage() {
     const { id } = useParams<{ id: string }>();
@@ -21,9 +22,11 @@ export function DivisionPage() {
                 <div className="space-y-2">
                     <Link
                         to="/"
-                        className="inline-flex items-center gap-1.5 text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors"
+                        className="inline-flex items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-lg bg-white border border-gray-200 text-gray-600 hover:border-[#FF4200] hover:text-[#FF4200] shadow-sm transition-colors w-fit"
                     >
-                        <span className="text-base leading-none">←</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd" />
+                        </svg>
                         Home
                     </Link>
                     <h1 className="text-xl sm:text-2xl font-bold text-gray-800">
@@ -36,16 +39,25 @@ export function DivisionPage() {
                     {standings.isPending && <p className="text-gray-500">Loading…</p>}
                     {standings.data?.length === 0 && <p className="text-gray-500">No players in this division.</p>}
                     <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-                        {[...(standings.data ?? [])].sort((a, b) => {
-                            const avg = (p: typeof a) => p.participations.length > 0
-                                ? p.participations.reduce((s, x) => s + x.totalPoints, 0) / p.participations.length
-                                : 0;
-                            return avg(b) - avg(a);
-                        }).map((player, i) => {
+                        {(() => {
+                            const playerAvg = (p: NonNullable<typeof standings.data>[number]) =>
+                                p.participations.length > 0
+                                    ? p.participations.reduce((s, x) => s + x.totalPoints, 0) / p.participations.length
+                                    : 0;
+                            const sorted = [...(standings.data ?? [])].sort((a, b) =>
+                                playerAvg(b) - playerAvg(a)
+                                || b.avgWonRounds - a.avgWonRounds
+                                || a.name.localeCompare(b.name)
+                            );
+                            return sorted.map((player, i) => {
                             const total = player.participations.reduce((s, p) => s + p.totalPoints, 0);
                             const avg = player.participations.length > 0
                                 ? Math.round(total / player.participations.length)
                                 : 0;
+                            const prev = sorted[i - 1];
+                            const rank = prev && playerAvg(prev) === playerAvg(player) && prev.avgWonRounds === player.avgWonRounds
+                                ? sorted.findIndex(p => playerAvg(p) === playerAvg(player) && p.avgWonRounds === player.avgWonRounds) + 1
+                                : i + 1;
                             return (
                                 <Link
                                     key={player.id}
@@ -55,11 +67,11 @@ export function DivisionPage() {
                                     {/* Top row: rank + name + streak + pts */}
                                     <div className="flex items-center justify-between sm:justify-start gap-2 min-w-0">
                                         <div className="flex items-center gap-2 min-w-0">
-                                            <span className="text-sm text-gray-400 w-5 shrink-0">{i + 1}</span>
+                                            <span className="text-sm text-gray-400 w-5 shrink-0">{rank}</span>
                                             <span className="font-medium text-gray-800 truncate">{player.name}</span>
-                                            {player.isChampionsWinner && (
-                                                <span title="Americano Champions winner" className="text-base shrink-0">👑</span>
-                                            )}
+                                            {(player.badges as BadgeType[]).map(badge => (
+                                                <span key={badge} title={BADGE_META[badge].description} className="text-base shrink-0">{BADGE_META[badge].emoji}</span>
+                                            ))}
                                             {player.division !== division && !player.homeDivBottomFinish && (
                                                 <span className={`text-xs font-semibold px-2 py-0.5 rounded-full shrink-0 ${DIVISION_BADGES[player.division].className}`}>
                                                     {divisionLabel(player.division)}
@@ -110,9 +122,14 @@ export function DivisionPage() {
                                     </div>
                                 </Link>
                             );
-                        })}
+                        });
+                        })()}
                     </div>
-                    <p className="text-xs text-gray-400 mt-2">Points from last 5 tournaments. ▲ = eligible for promotion (3 consecutive top-3 finishes, or 3+ top-3 in last 5 with avg ≥ 80th percentile). ▼ = eligible for relegation (3 consecutive bottom-3 finishes, or 3+ bottom-3 in last 5 with avg ≤ 20th percentile). 👑 = won an Americano Champions tournament (not counted in standings).</p>
+                    <div className="text-xs text-gray-400 mt-2 space-y-0.5">
+                        <p>▲ Promotion eligible — 3 consecutive top-3 or 3+ top-3 in last 5 with avg ≥ 80th percentile.</p>
+                        <p>▼ Relegation eligible — 3 consecutive bottom-3 or 3+ bottom-3 in last 5 with avg ≤ 20th percentile.</p>
+                        <p>Americano Champions results are not counted in standings.</p>
+                    </div>
                 </section>
 
                 <section>

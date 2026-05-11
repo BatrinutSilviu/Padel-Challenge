@@ -5,6 +5,7 @@ import { TournamentPage } from "./components/TournamentPage";
 import { PlayerPage } from "./components/PlayerPage";
 import { AdminPage } from "./components/admin/AdminPage";
 import { AdminScoreEntry } from "./components/admin/AdminScoreEntry";
+import { BadgesPage } from "./components/BadgesPage";
 
 export default function App() {
     return (
@@ -13,6 +14,7 @@ export default function App() {
             <Route path="/division/:id" element={<DivisionPage />} />
             <Route path="/tournament/:id" element={<TournamentPage />} />
             <Route path="/player/:id" element={<PlayerPage />} />
+            <Route path="/badges" element={<BadgesPage />} />
             <Route path="/admin" element={<AdminPage />} />
             <Route path="/admin/tournament/:id" element={<AdminScoreEntry />} />
             <Route path="*" element={<Navigate to="/" replace />} />

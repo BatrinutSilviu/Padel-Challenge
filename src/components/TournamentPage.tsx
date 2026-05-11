@@ -19,9 +19,11 @@ export function TournamentPage() {
             <main className="max-w-5xl mx-auto px-3 sm:px-4 py-6 sm:py-8 space-y-6 sm:space-y-8">
                 <Link
                     to={`/division/${tournament.division}`}
-                    className="inline-flex items-center gap-1.5 text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors"
+                    className="inline-flex items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-lg bg-white border border-gray-200 text-gray-600 hover:border-[#FF4200] hover:text-[#FF4200] shadow-sm transition-colors w-fit"
                 >
-                    <span className="text-base leading-none">←</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd" />
+                    </svg>
                     {divisionLabel(tournament.division)}
                 </Link>
 
@@ -43,8 +45,8 @@ export function TournamentPage() {
                 {tournament.status === "COMPLETED" && tournament.participants.length > 0 && (
                     <section>
                         <h2 className="text-lg font-semibold text-gray-700 mb-3">Final Standings</h2>
-                        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-                            <table className="w-full text-sm">
+                        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden overflow-x-auto">
+                            <table className="w-full text-sm min-w-[280px]">
                                 <thead className="bg-gray-50 border-b border-gray-200">
                                     <tr>
                                         <th className="text-left px-4 py-2 text-gray-600 font-medium w-12">Rank</th>
@@ -90,29 +92,19 @@ export function TournamentPage() {
                                         {round.matches.map((match, i) => (
                                             <div key={match.id} className="px-4 py-4">
                                                 <p className="text-xs text-gray-400 mb-3">Court {i + 1}</p>
-                                                <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3">
-                                                    <div className="sm:flex-1 text-center sm:text-right w-full">
-                                                        <span className="font-medium text-gray-800 text-sm">
-                                                            <Link to={`/player/${match.team1Player1.id}`} className="hover:text-[#FF4200]">{match.team1Player1.name}</Link>
-                                                            {" & "}
-                                                            <Link to={`/player/${match.team1Player2.id}`} className="hover:text-[#FF4200]">{match.team1Player2.name}</Link>
-                                                        </span>
+                                                <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+                                                    <div className="text-right">
+                                                        <Link to={`/player/${match.team1Player1.id}`} className="font-medium text-gray-800 hover:text-[#FF4200] text-sm block truncate">{match.team1Player1.name}</Link>
+                                                        <Link to={`/player/${match.team1Player2.id}`} className="font-medium text-gray-800 hover:text-[#FF4200] text-sm block truncate">{match.team1Player2.name}</Link>
                                                     </div>
-                                                    <div className="flex items-center gap-1 text-lg font-bold min-w-[60px] justify-center shrink-0">
-                                                        <span className={match.team1Score > match.team2Score ? "text-[#FF4200]" : "text-gray-400"}>
-                                                            {match.team1Score}
-                                                        </span>
+                                                    <div className="flex items-center gap-1 text-lg font-bold justify-center shrink-0">
+                                                        <span className={match.team1Score > match.team2Score ? "text-[#FF4200]" : "text-gray-400"}>{match.team1Score}</span>
                                                         <span className="text-gray-300">:</span>
-                                                        <span className={match.team2Score > match.team1Score ? "text-[#FF4200]" : "text-gray-400"}>
-                                                            {match.team2Score}
-                                                        </span>
+                                                        <span className={match.team2Score > match.team1Score ? "text-[#FF4200]" : "text-gray-400"}>{match.team2Score}</span>
                                                     </div>
-                                                    <div className="sm:flex-1 text-center sm:text-left w-full">
-                                                        <span className="font-medium text-gray-800 text-sm">
-                                                            <Link to={`/player/${match.team2Player1.id}`} className="hover:text-[#FF4200]">{match.team2Player1.name}</Link>
-                                                            {" & "}
-                                                            <Link to={`/player/${match.team2Player2.id}`} className="hover:text-[#FF4200]">{match.team2Player2.name}</Link>
-                                                        </span>
+                                                    <div className="text-left">
+                                                        <Link to={`/player/${match.team2Player1.id}`} className="font-medium text-gray-800 hover:text-[#FF4200] text-sm block truncate">{match.team2Player1.name}</Link>
+                                                        <Link to={`/player/${match.team2Player2.id}`} className="font-medium text-gray-800 hover:text-[#FF4200] text-sm block truncate">{match.team2Player2.name}</Link>
                                                     </div>
                                                 </div>
                                             </div>

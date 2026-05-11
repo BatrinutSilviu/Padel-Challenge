@@ -2,6 +2,7 @@ import { useParams, Link } from "react-router-dom";
 import { trpc } from "../trpc";
 import { NavBar } from "./NavBar";
 import { DIVISION_NAMES, divisionLabel } from "../lib/divisions";
+import { BADGE_META, BadgeType } from "../lib/badges";
 
 export function PlayerPage() {
     const { id } = useParams<{ id: string }>();
@@ -13,15 +14,20 @@ export function PlayerPage() {
 
     const completedResults = player.participations.filter(p => p.finalRank !== null);
 
-    // data is sorted by division ASC then avgPoints DESC — overall rank is just the index
-    const divisionRank = allPlayers
-        ? allPlayers.filter(p => p.division === player.division)
-            .findIndex(p => p.id === player.id) + 1
-        : null;
+    const competitionRank = (sorted: typeof allPlayers, id: string) => {
+        if (!sorted) return null;
+        const idx = sorted.findIndex(p => p.id === id);
+        if (idx === -1) return null;
+        const t = sorted[idx];
+        const first = sorted.findIndex(p => p.avgPoints === t.avgPoints && p.avgWonRounds === t.avgWonRounds);
+        return first + 1;
+    };
 
-    const overallRank = allPlayers
-        ? allPlayers.findIndex(p => p.id === player.id) + 1
-        : null;
+    const divisionRank = competitionRank(
+        allPlayers?.filter(p => p.division === player.division) ?? null,
+        player.id,
+    );
+    const overallRank = competitionRank(allPlayers ?? null, player.id);
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -29,9 +35,11 @@ export function PlayerPage() {
             <main className="max-w-3xl mx-auto px-3 sm:px-4 py-6 sm:py-8 space-y-6 sm:space-y-8">
                 <Link
                     to={`/division/${player.division}`}
-                    className="inline-flex items-center gap-1.5 text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors"
+                    className="inline-flex items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-lg bg-white border border-gray-200 text-gray-600 hover:border-[#FF4200] hover:text-[#FF4200] shadow-sm transition-colors w-fit"
                 >
-                    <span className="text-base leading-none">←</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd" />
+                    </svg>
                     {divisionLabel(player.division)}
                 </Link>
 
@@ -65,6 +73,26 @@ export function PlayerPage() {
                         </>}
                     </div>
                 </div>
+
+                {player.badges.length > 0 && (
+                    <section>
+                        <h2 className="text-lg font-semibold text-gray-700 mb-3">Achievements</h2>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            {(player.badges as BadgeType[]).map(badge => {
+                                const meta = BADGE_META[badge];
+                                return (
+                                    <div key={badge} className={`flex items-center gap-3 px-4 py-3 rounded-xl border ${meta.className}`}>
+                                        <span className="text-2xl shrink-0">{meta.emoji}</span>
+                                        <div className="min-w-0">
+                                            <p className="text-sm font-semibold leading-tight">{meta.label}</p>
+                                            <p className="text-xs opacity-70 leading-tight">{meta.description}</p>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </section>
+                )}
 
                 <section>
                     <h2 className="text-lg font-semibold text-gray-700 mb-3">Tournament History</h2>
