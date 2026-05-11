@@ -11,9 +11,9 @@ export function NavBar() {
                 <div className="flex items-center gap-1 sm:gap-2">
                     <Link
                         to="/badges"
-                        className="text-sm font-medium px-2.5 py-2 sm:px-3 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-colors whitespace-nowrap"
+                        className="text-sm font-medium px-2.5 py-2 sm:px-3 rounded-lg bg-white/10 text-white hover:bg-white/20 transition-colors whitespace-nowrap"
                     >
-                        🏅 <span className="hidden sm:inline">Badges</span>
+                        🏅 Badges
                     </Link>
                     <Link
                         to="/admin"
