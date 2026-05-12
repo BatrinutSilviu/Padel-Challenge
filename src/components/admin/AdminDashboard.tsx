@@ -201,7 +201,7 @@ function NewTournamentTab({ onCreated }: { onCreated: () => void }) {
 
             <Field label="Type">
                 <div className="flex flex-wrap gap-2">
-                    {(["AMERICANO", "AMERICANO_CHAMPIONS", "CHALLENGER"] as TournamentType[]).map(t => (
+                    {(["AMERICANO", "AMERICANO_CHAMPIONS", "AMERICANO_GIRLS", "CHALLENGER"] as TournamentType[]).map(t => (
                         <button
                             key={t}
                             type="button"
@@ -264,6 +264,7 @@ function PlayersTab() {
     const [division, setDivision] = useState(6);
     const [gender, setGender] = useState<"MALE" | "FEMALE">("MALE");
     const [error, setError] = useState("");
+    const [eloMsg, setEloMsg] = useState("");
 
     const players = trpc.player.list.useQuery();
     const create = trpc.player.create.useMutation({
@@ -277,6 +278,14 @@ function PlayersTab() {
     });
     const remove = trpc.player.delete.useMutation({
         onSuccess: () => qc.invalidateQueries({ queryKey: getQueryKey(trpc.player.list) }),
+    });
+    const recalcElo = trpc.player.recalculateElo.useMutation({
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: getQueryKey(trpc.player.list) });
+            setEloMsg("ELO recalculated successfully.");
+            setTimeout(() => setEloMsg(""), 4000);
+        },
+        onError: (e) => setEloMsg(`Error: ${e.message}`),
     });
 
     function handleAdd(e: React.FormEvent) {
@@ -358,6 +367,26 @@ function PlayersTab() {
                         ))}
                     </tbody>
                 </table>
+            </div>
+            <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-3">
+                <h2 className="text-base font-semibold text-gray-800">Admin Tools</h2>
+                <div className="flex flex-col sm:flex-row gap-3 items-start">
+                    <button
+                        onClick={() => {
+                            if (!confirm("Recalculate ELO for all players from scratch? This replays all completed tournaments in order.")) return;
+                            recalcElo.mutate();
+                        }}
+                        disabled={recalcElo.isPending}
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium border border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 hover:border-indigo-400 disabled:opacity-50 transition-colors"
+                    >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                        {recalcElo.isPending ? "Recalculating…" : "Recalculate ELO"}
+                    </button>
+                    {eloMsg && <p className={`text-sm self-center ${eloMsg.startsWith("Error") ? "text-red-500" : "text-green-600"}`}>{eloMsg}</p>}
+                </div>
+                <p className="text-xs text-gray-400">Resets all ELO ratings to 1000 and replays every completed tournament in chronological order.</p>
             </div>
         </div>
     );

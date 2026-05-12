@@ -10,6 +10,12 @@ const BADGE_ORDER: BadgeType[] = [
     'QUEEN_OF_COURT',
     'ON_FIRE',
     'MOST_TOURNAMENTS',
+    'MOST_POINTS',
+    'MOST_TOP3',
+    'AMERICANO_5',
+    'AMERICANO_10',
+    'AMERICANO_20',
+    'AMERICANO_50',
 ];
 
 export function BadgesPage() {

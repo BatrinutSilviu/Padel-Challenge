@@ -1,4 +1,4 @@
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { trpc } from "../trpc";
 import { NavBar } from "./NavBar";
 import { DIVISION_NAMES, divisionLabel } from "../lib/divisions";
@@ -6,6 +6,7 @@ import { BADGE_META, BadgeType } from "../lib/badges";
 
 export function PlayerPage() {
     const { id } = useParams<{ id: string }>();
+    const navigate = useNavigate();
     const { data: player, isPending, error } = trpc.player.getById.useQuery({ id: id! });
     const { data: allPlayers } = trpc.player.list.useQuery();
 
@@ -33,15 +34,15 @@ export function PlayerPage() {
         <div className="min-h-screen bg-gray-50">
             <NavBar />
             <main className="max-w-3xl mx-auto px-3 sm:px-4 py-6 sm:py-8 space-y-6 sm:space-y-8">
-                <Link
-                    to={`/division/${player.division}`}
+                <button
+                    onClick={() => navigate(-1)}
                     className="inline-flex items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-lg bg-white border border-gray-200 text-gray-600 hover:border-[#FF4200] hover:text-[#FF4200] shadow-sm transition-colors w-fit"
                 >
                     <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
                         <path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd" />
                     </svg>
-                    {divisionLabel(player.division)}
-                </Link>
+                    Back
+                </button>
 
                 <div className="bg-white rounded-xl border border-gray-200 p-5 sm:p-6">
                     <div className="flex items-center gap-3 flex-wrap">
@@ -60,8 +61,10 @@ export function PlayerPage() {
                     <div className="flex flex-wrap gap-4 sm:gap-6 mt-4 pt-4 border-t border-gray-100">
                         {divisionRank && <Stat label="Division Rank" value={`#${divisionRank}`} />}
                         {overallRank && <Stat label="Overall Rank" value={`#${overallRank}`} />}
+                        <Stat label="ELO" value={player.elo} highlight />
                         {completedResults.length > 0 && <>
                             <Stat label="Tournaments" value={completedResults.length} />
+                            <Stat label="Total Points" value={completedResults.reduce((s, p) => s + p.totalPoints, 0)} />
                             <Stat
                                 label="Avg Points"
                                 value={Math.round(completedResults.reduce((s, p) => s + p.totalPoints, 0) / completedResults.length)}
@@ -143,11 +146,11 @@ export function PlayerPage() {
     );
 }
 
-function Stat({ label, value }: { label: string; value: string | number }) {
+function Stat({ label, value, highlight }: { label: string; value: string | number; highlight?: boolean }) {
     return (
         <div>
             <p className="text-xs text-gray-500">{label}</p>
-            <p className="text-xl font-bold text-gray-800">{value}</p>
+            <p className={`text-xl font-bold ${highlight ? "text-[#FF4200]" : "text-gray-800"}`}>{value}</p>
         </div>
     );
 }

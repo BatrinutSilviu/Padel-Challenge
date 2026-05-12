@@ -87,15 +87,15 @@ function PlayersTab() {
         .filter(p => genderFilter === "ALL" || p.gender === genderFilter)
         .filter(p => p.name.toLowerCase().includes(search.toLowerCase()));
 
-    // Competition ranking: tied players (same avgPoints + avgWonRounds) share the same rank.
+    // Overall ranking by ELO; tied players share the same rank.
     const overallRanks = new Map<string, number>();
     data.forEach((p, i) => {
         const prev = data[i - 1];
-        const tied = prev && p.avgPoints === prev.avgPoints && p.avgWonRounds === prev.avgWonRounds;
+        const tied = prev && p.elo === prev.elo;
         overallRanks.set(p.id, tied ? overallRanks.get(prev.id)! : i + 1);
     });
 
-    const groups = [1, 2, 3, 4, 5, 6].map(d => ({
+    const groups = [1, 2, 3, 4, 5, 6, 7].map(d => ({
         division: d,
         players: filtered.filter(p => p.division === d),
     })).filter(g => g.players.length > 0);
@@ -158,8 +158,8 @@ function PlayersTab() {
                             {players.map((player, i) => {
                                 const overallRank = overallRanks.get(player.id)!;
                                 const prev = players[i - 1];
-                                const divRank = prev && prev.avgPoints === player.avgPoints && prev.avgWonRounds === player.avgWonRounds
-                                    ? players.findIndex(p => p.avgPoints === player.avgPoints && p.avgWonRounds === player.avgWonRounds)
+                                const divRank = prev && prev.elo === player.elo
+                                    ? players.findIndex(p => p.elo === player.elo)
                                     : i;
                                 return (
                                     <Link
@@ -187,17 +187,21 @@ function PlayersTab() {
                                                     <span key={badge} title={BADGE_META[badge].description} className="text-sm shrink-0">{BADGE_META[badge].emoji}</span>
                                                 ))}
                                             </div>
-                                            <span className="text-xs text-gray-400">Overall #{overallRank}</span>
+                                            {division !== 7 && <span className="text-xs text-gray-400">Overall #{overallRank}</span>}
                                         </div>
 
-                                        {player.avgPoints > 0 ? (
-                                            <div className="text-right shrink-0">
-                                                <span className="text-sm font-semibold text-gray-700">{player.avgPoints}</span>
-                                                <span className="text-xs text-gray-400 ml-1">avg</span>
+                                        <div className="flex items-center gap-3 shrink-0">
+                                            {player.avgPoints > 0 && (
+                                                <div className="text-right hidden sm:block">
+                                                    <span className="text-sm font-semibold text-gray-500">{player.avgPoints}</span>
+                                                    <span className="text-xs text-gray-400 ml-1">avg</span>
+                                                </div>
+                                            )}
+                                            <div className="text-right">
+                                                <span className="text-sm font-semibold text-[#FF4200]">{player.elo}</span>
+                                                <span className="text-xs text-gray-400 ml-1">ELO</span>
                                             </div>
-                                        ) : (
-                                            <span className="text-sm text-gray-300 shrink-0">—</span>
-                                        )}
+                                        </div>
                                     </Link>
                                 );
                             })}
@@ -249,7 +253,7 @@ function TournamentsTab() {
                 <div className="flex flex-col gap-2">
                     <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Type</span>
                     <div className="flex flex-wrap gap-1.5">
-                        {(["ALL", "AMERICANO", "AMERICANO_CHAMPIONS", "CHALLENGER"] as const).map(type => (
+                        {(["ALL", "AMERICANO", "AMERICANO_CHAMPIONS", "AMERICANO_GIRLS", "CHALLENGER"] as const).map(type => (
                             <button
                                 key={type}
                                 onClick={() => setTypeFilter(type)}

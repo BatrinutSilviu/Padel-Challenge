@@ -1,4 +1,4 @@
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { trpc } from "../trpc";
 import { NavBar } from "./NavBar";
 import { divisionLabel } from "../lib/divisions";
@@ -7,6 +7,7 @@ import { useState } from "react";
 
 export function TournamentPage() {
     const { id } = useParams<{ id: string }>();
+    const navigate = useNavigate();
     const { data: tournament, isPending, error } = trpc.tournament.getById.useQuery({ id: id! });
     const [expandedRound, setExpandedRound] = useState<number | null>(null);
 
@@ -17,15 +18,15 @@ export function TournamentPage() {
         <div className="min-h-screen bg-gray-50">
             <NavBar />
             <main className="max-w-5xl mx-auto px-3 sm:px-4 py-6 sm:py-8 space-y-6 sm:space-y-8">
-                <Link
-                    to={`/division/${tournament.division}`}
+                <button
+                    onClick={() => navigate(-1)}
                     className="inline-flex items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-lg bg-white border border-gray-200 text-gray-600 hover:border-[#FF4200] hover:text-[#FF4200] shadow-sm transition-colors w-fit"
                 >
                     <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
                         <path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd" />
                     </svg>
-                    {divisionLabel(tournament.division)}
-                </Link>
+                    Back
+                </button>
 
                 <div className="bg-white rounded-xl border border-gray-200 p-5 sm:p-6">
                     <div className="flex items-start justify-between gap-3">

@@ -1,5 +1,5 @@
 export const DIVISION_NAMES: Record<number, string> = {
-    1: "Elite", 2: "Premier", 3: "Gold", 4: "Silver", 5: "Bronze", 6: "Beginner",
+    1: "Elite", 2: "Premier", 3: "Gold", 4: "Silver", 5: "Bronze", 6: "Beginner", 7: "Girls",
 };
 
 export const DIVISION_BADGES: Record<number, { label: string; className: string }> = {
@@ -9,6 +9,7 @@ export const DIVISION_BADGES: Record<number, { label: string; className: string 
     4: { label: "Silver",   className: "bg-gray-100 text-gray-500 border border-gray-300" },
     5: { label: "Bronze",   className: "bg-orange-100 text-orange-700 border border-orange-300" },
     6: { label: "Beginner", className: "bg-green-100 text-green-700 border border-green-300" },
+    7: { label: "Girls",    className: "bg-pink-100 text-pink-700 border border-pink-300" },
 };
 
 export const DIVISION_COLORS: Record<number, { bg: string; text: string; border: string }> = {
@@ -18,8 +19,9 @@ export const DIVISION_COLORS: Record<number, { bg: string; text: string; border:
     4: { bg: "bg-gray-50",   text: "text-gray-600",   border: "border-gray-200" },
     5: { bg: "bg-orange-50", text: "text-orange-700", border: "border-orange-200" },
     6: { bg: "bg-green-50",  text: "text-green-700",  border: "border-green-200" },
+    7: { bg: "bg-pink-50",   text: "text-pink-700",   border: "border-pink-200" },
 };
 
 export function divisionLabel(division: number): string {
-    return division === 6 ? "Beginner" : `Division ${division}`;
+    return DIVISION_NAMES[division] ?? `Division ${division}`;
 }

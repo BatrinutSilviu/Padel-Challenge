@@ -11,7 +11,7 @@ export function DivisionPage() {
     const standings = trpc.division.standings.useQuery({ division });
     const tournaments = trpc.tournament.list.useQuery({ division });
 
-    if (isNaN(division) || division < 1 || division > 6) {
+    if (isNaN(division) || division < 1 || division > 7) {
         return <div className="p-8 text-red-600">Invalid division.</div>;
     }
 
@@ -30,7 +30,10 @@ export function DivisionPage() {
                         Home
                     </Link>
                     <h1 className="text-xl sm:text-2xl font-bold text-gray-800">
-                        {division === 6 ? "Beginner" : `Division ${division} — ${DIVISION_NAMES[division]}`}
+                        Division {division}
+                        {DIVISION_NAMES[division] && (
+                            <span className="text-gray-400 font-normal ml-2">— {DIVISION_NAMES[division]}</span>
+                        )}
                     </h1>
                 </div>
 
@@ -40,24 +43,18 @@ export function DivisionPage() {
                     {standings.data?.length === 0 && <p className="text-gray-500">No players in this division.</p>}
                     <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
                         {(() => {
-                            const playerAvg = (p: NonNullable<typeof standings.data>[number]) =>
-                                p.participations.length > 0
-                                    ? p.participations.reduce((s, x) => s + x.totalPoints, 0) / p.participations.length
-                                    : 0;
-                            const sorted = [...(standings.data ?? [])].sort((a, b) =>
-                                playerAvg(b) - playerAvg(a)
-                                || b.avgWonRounds - a.avgWonRounds
-                                || a.name.localeCompare(b.name)
-                            );
+                            const byElo = (a: typeof standings.data[number], b: typeof standings.data[number]) =>
+                                b.elo - a.elo || a.name.localeCompare(b.name);
+
+                            const sorted = (standings.data ?? []).slice().sort(byElo);
+
                             return sorted.map((player, i) => {
                             const total = player.participations.reduce((s, p) => s + p.totalPoints, 0);
                             const avg = player.participations.length > 0
                                 ? Math.round(total / player.participations.length)
                                 : 0;
                             const prev = sorted[i - 1];
-                            const rank = prev && playerAvg(prev) === playerAvg(player) && prev.avgWonRounds === player.avgWonRounds
-                                ? sorted.findIndex(p => playerAvg(p) === playerAvg(player) && p.avgWonRounds === player.avgWonRounds) + 1
-                                : i + 1;
+                            const rank = prev && prev.elo === player.elo ? sorted.findIndex(p => p.elo === player.elo) + 1 : i + 1;
                             return (
                                 <Link
                                     key={player.id}
@@ -67,21 +64,26 @@ export function DivisionPage() {
                                     {/* Top row: rank + name + streak + pts */}
                                     <div className="flex items-center justify-between sm:justify-start gap-2 min-w-0">
                                         <div className="flex items-center gap-2 min-w-0">
-                                            <span className="text-sm text-gray-400 w-5 shrink-0">{rank}</span>
+                                            <span className="text-sm text-gray-400 w-5 shrink-0">{rank ?? "—"}</span>
                                             <span className="font-medium text-gray-800 truncate">{player.name}</span>
                                             {(player.badges as BadgeType[]).map(badge => (
                                                 <span key={badge} title={BADGE_META[badge].description} className="text-base shrink-0">{BADGE_META[badge].emoji}</span>
                                             ))}
-                                            {player.division !== division && !player.homeDivBottomFinish && (
-                                                <span className={`text-xs font-semibold px-2 py-0.5 rounded-full shrink-0 ${DIVISION_BADGES[player.division].className}`}>
-                                                    {divisionLabel(player.division)}
-                                                </span>
+                                            {player.division !== division && player.division !== 7 && !player.homeDivBottomFinish && (
+                                                <>
+                                                    {player.crossDivBadFinish && (
+                                                        <span title="Bottom-3 finish in this division" className="text-base shrink-0 text-red-500">▼</span>
+                                                    )}
+                                                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full shrink-0 ${DIVISION_BADGES[player.division].className}`}>
+                                                        Division {player.division}
+                                                    </span>
+                                                </>
                                             )}
                                             {player.promotionEligible && (
                                                 <>
                                                     <span title="Eligible for promotion" className="text-base shrink-0 text-green-500">▲</span>
                                                     <span className={`text-xs font-semibold px-2 py-0.5 rounded-full shrink-0 ${DIVISION_BADGES[division - 1].className}`}>
-                                                        {divisionLabel(division - 1)}
+                                                        Division {division - 1}
                                                     </span>
                                                 </>
                                             )}
@@ -89,15 +91,10 @@ export function DivisionPage() {
                                                 <>
                                                     <span title="Eligible for relegation" className="text-base shrink-0 text-red-500">▼</span>
                                                     <span className={`text-xs font-semibold px-2 py-0.5 rounded-full shrink-0 ${DIVISION_BADGES[division + 1].className}`}>
-                                                        {divisionLabel(division + 1)}
+                                                        Division {division + 1}
                                                     </span>
                                                 </>
                                             )}
-                                        </div>
-                                        {/* pts visible on mobile inline with name row */}
-                                        <div className="text-right shrink-0 sm:hidden">
-                                            <span className="text-sm font-semibold text-gray-700">{total}</span>
-                                            <span className="text-xs text-gray-400 ml-1">pts</span>
                                         </div>
                                     </div>
 
@@ -109,14 +106,13 @@ export function DivisionPage() {
                                             ))}
                                         </div>
                                         <div className="flex items-center gap-3 shrink-0">
-                                            <div className="text-right">
+                                            <div className="text-right hidden sm:block">
                                                 <span className="text-sm font-semibold text-gray-500">{avg}</span>
                                                 <span className="text-xs text-gray-400 ml-1">avg</span>
                                             </div>
-                                            {/* pts on desktop only here */}
-                                            <div className="text-right hidden sm:block">
-                                                <span className="text-sm font-semibold text-gray-700">{total}</span>
-                                                <span className="text-xs text-gray-400 ml-1">pts</span>
+                                            <div className="text-right">
+                                                <span className="text-sm font-semibold text-[#FF4200]">{player.elo}</span>
+                                                <span className="text-xs text-gray-400 ml-1">ELO</span>
                                             </div>
                                         </div>
                                     </div>
