@@ -212,6 +212,26 @@ type MatchData = {
     team2Player2: { id: string; name: string };
 };
 
+function readLocalScore(matchId: string): { s1: number; s2: number } | null {
+    try {
+        const raw = localStorage.getItem(`padel-score-${matchId}`);
+        if (!raw) return null;
+        const { s1, s2 } = JSON.parse(raw);
+        if (typeof s1 === "number" && typeof s2 === "number" && s1 + s2 === 32 && s1 >= 0 && s2 >= 0) {
+            return { s1, s2 };
+        }
+    } catch {}
+    return null;
+}
+
+function writeLocalScore(matchId: string, s1: number, s2: number) {
+    try { localStorage.setItem(`padel-score-${matchId}`, JSON.stringify({ s1, s2 })); } catch {}
+}
+
+function clearLocalScore(matchId: string) {
+    try { localStorage.removeItem(`padel-score-${matchId}`); } catch {}
+}
+
 function MatchScoreRow({
     match,
     courtNumber,
@@ -226,8 +246,18 @@ function MatchScoreRow({
     onSaved: (matchId: string) => void;
 }) {
     const isScored = match.team1Score + match.team2Score === 32;
-    const [score1, setScore1] = useState(isScored ? String(match.team1Score) : "");
-    const [score2, setScore2] = useState(isScored ? String(match.team2Score) : "");
+
+    // Initialise from DB score if already saved, otherwise recover from localStorage.
+    const [score1, setScore1] = useState(() => {
+        if (isScored) return String(match.team1Score);
+        const pending = readLocalScore(match.id);
+        return pending ? String(pending.s1) : "";
+    });
+    const [score2, setScore2] = useState(() => {
+        if (isScored) return String(match.team2Score);
+        const pending = readLocalScore(match.id);
+        return pending ? String(pending.s2) : "";
+    });
     const [saving, setSaving] = useState(false);
     const [saved, setSaved] = useState(isScored);
     const [error, setError] = useState("");
@@ -236,6 +266,7 @@ function MatchScoreRow({
         onSuccess: () => {
             setSaving(false);
             setSaved(true);
+            clearLocalScore(match.id);
             onSaved(match.id);
             onSaveEnd();
             setError("");
@@ -249,11 +280,25 @@ function MatchScoreRow({
 
     function autoSave(s1: number, s2: number) {
         if (s1 + s2 !== 32 || s1 < 0 || s2 < 0) return;
+        // Write to localStorage before the API call so a crash or network failure
+        // can't lose this score — it will be retried on the next page load.
+        writeLocalScore(match.id, s1, s2);
         setSaving(true);
         setSaved(false);
         onSaveStart();
         update.mutate({ matchId: match.id, team1Score: s1, team2Score: s2 });
     }
+
+    // On mount: if this match is already confirmed in the DB, clear any stale
+    // localStorage entry.  If it isn't confirmed but we recovered a valid score
+    // from localStorage, retry the save immediately.
+    useEffect(() => {
+        if (isScored) { clearLocalScore(match.id); return; }
+        const s1 = parseInt(score1);
+        const s2 = parseInt(score2);
+        if (!isNaN(s1) && !isNaN(s2) && s1 + s2 === 32) autoSave(s1, s2);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []); // intentionally runs once on mount for crash-recovery
 
     function handleScore1Change(val: string) {
         const n = parseInt(val);
@@ -326,7 +371,19 @@ function MatchScoreRow({
                     </p>
                 </div>
             </div>
-            {error && <p className="text-xs text-red-500 mt-2 text-center">{error}</p>}
+            {error && (
+                <div className="flex items-center justify-center gap-2 mt-2">
+                    <p className="text-xs text-red-500">{error}</p>
+                    {isValid && (
+                        <button
+                            onClick={() => { setError(""); autoSave(s1, s2); }}
+                            className="text-xs font-semibold text-[#FF4200] hover:underline shrink-0"
+                        >
+                            Retry
+                        </button>
+                    )}
+                </div>
+            )}
         </div>
     );
 }
