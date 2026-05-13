@@ -1,7 +1,7 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { trpc } from "../trpc";
 import { NavBar } from "./NavBar";
-import { DIVISION_NAMES, divisionLabel } from "../lib/divisions";
+import { DIVISION_NAMES } from "../lib/divisions";
 import { BADGE_META, BadgeType } from "../lib/badges";
 
 export function PlayerPage() {
@@ -124,7 +124,9 @@ export function PlayerPage() {
                                         <td className="px-4 py-2 text-gray-500 hidden sm:table-cell">
                                             {new Date(p.tournament.date).toLocaleDateString()}
                                         </td>
-                                        <td className="px-3 py-2 text-center text-gray-500 hidden sm:table-cell">{divisionLabel(p.tournament.division)}</td>
+                                        <td className="px-3 py-2 text-center text-gray-500 hidden sm:table-cell">
+                                            Division {p.tournament.division}{DIVISION_NAMES[p.tournament.division] ? ` — ${DIVISION_NAMES[p.tournament.division]}` : ""}
+                                        </td>
                                         <td className="px-4 py-2 text-right">
                                             {p.finalRank !== null ? (
                                                 <span className={rankColor(p.finalRank)}>#{p.finalRank}</span>

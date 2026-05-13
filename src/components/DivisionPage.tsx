@@ -69,16 +69,6 @@ export function DivisionPage() {
                                             {(player.badges as BadgeType[]).map(badge => (
                                                 <span key={badge} title={BADGE_META[badge].description} className="text-base shrink-0">{BADGE_META[badge].emoji}</span>
                                             ))}
-                                            {player.division !== division && player.division !== 7 && !player.homeDivBottomFinish && (
-                                                <>
-                                                    {player.crossDivBadFinish && (
-                                                        <span title="Bottom-3 finish in this division" className="text-base shrink-0 text-red-500">▼</span>
-                                                    )}
-                                                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full shrink-0 ${DIVISION_BADGES[player.division].className}`}>
-                                                        Division {player.division}
-                                                    </span>
-                                                </>
-                                            )}
                                             {player.promotionEligible && (
                                                 <>
                                                     <span title="Eligible for promotion" className="text-base shrink-0 text-green-500">▲</span>
@@ -122,8 +112,8 @@ export function DivisionPage() {
                         })()}
                     </div>
                     <div className="text-xs text-gray-400 mt-2 space-y-0.5">
-                        <p>▲ Promotion eligible — 3 consecutive top-3 or 3+ top-3 in last 5 with avg ≥ 80th percentile.</p>
-                        <p>▼ Relegation eligible — 3 consecutive bottom-3 or 3+ bottom-3 in last 5 with avg ≤ 20th percentile.</p>
+                        <p>▲ Promotion eligible — top 15% by ELO in this division.</p>
+                        <p>▼ Relegation eligible — bottom 15% by ELO in this division.</p>
                         <p>Americano Champions results are not counted in standings.</p>
                     </div>
                 </section>
