@@ -338,9 +338,9 @@ function MatchScoreRow({
                 {/* Scores */}
                 <div className="flex items-center justify-center gap-2 shrink-0">
                     <input
-                        type="number"
-                        min={0}
-                        max={32}
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
                         value={score1}
                         onChange={e => handleScore1Change(e.target.value)}
                         className={`w-14 text-center border rounded-lg px-2 py-2 text-base font-semibold focus:outline-none focus:ring-2 focus:ring-[#FF4200] ${
@@ -349,9 +349,9 @@ function MatchScoreRow({
                     />
                     <span className="text-gray-300 font-bold text-lg">:</span>
                     <input
-                        type="number"
-                        min={0}
-                        max={32}
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
                         value={score2}
                         onChange={e => handleScore2Change(e.target.value)}
                         className={`w-14 text-center border rounded-lg px-2 py-2 text-base font-semibold focus:outline-none focus:ring-2 focus:ring-[#FF4200] ${
