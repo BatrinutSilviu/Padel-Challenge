@@ -4,6 +4,7 @@ import { trpc } from "../trpc";
 import { NavBar } from "./NavBar";
 import { DIVISION_NAMES, DIVISION_BADGES } from "../lib/divisions";
 import { BADGE_META, BadgeType } from "../lib/badges";
+import { StatusBadge } from "./HomePage";
 
 export function DivisionPage() {
     const { id } = useParams<{ id: string }>();
@@ -16,33 +17,39 @@ export function DivisionPage() {
         return <div className="p-8 text-red-600">Invalid division.</div>;
     }
 
+    const badge = DIVISION_BADGES[division];
+
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-[#F5F5F7]">
             <NavBar />
-            <main className="max-w-5xl mx-auto px-3 sm:px-4 py-6 sm:py-8 space-y-8 sm:space-y-10">
-                <div className="space-y-2">
+            <main className="max-w-5xl mx-auto px-3 sm:px-4 py-6 sm:py-8 pb-24 sm:pb-8 space-y-6 sm:space-y-8">
+
+                <div className="flex items-start gap-3">
                     <Link
                         to="/"
-                        className="inline-flex items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-lg bg-white border border-gray-200 text-gray-600 hover:border-[#FF4200] hover:text-[#FF4200] shadow-sm transition-colors w-fit"
+                        className="mt-1 shrink-0 text-[#8E8E93] hover:text-[#FF4200] transition-colors"
                     >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
                             <path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd" />
                         </svg>
-                        Home
                     </Link>
-                    <h1 className="text-xl sm:text-2xl font-bold text-gray-800">
-                        Division {division}
-                        {DIVISION_NAMES[division] && (
-                            <span className="text-gray-400 font-normal ml-2">— {DIVISION_NAMES[division]}</span>
-                        )}
-                    </h1>
+                    <div>
+                        <div className="flex items-center gap-2.5 flex-wrap">
+                            <h1 className="text-3xl font-black text-[#1A1A2E] tracking-tight leading-none">
+                                {DIVISION_NAMES[division] ?? `Division ${division}`}
+                            </h1>
+                            <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${badge.className}`}>
+                                Division {division}
+                            </span>
+                        </div>
+                    </div>
                 </div>
 
                 <section>
-                    <h2 className="text-lg font-semibold text-gray-700 mb-3">Players</h2>
-                    {standings.isPending && <p className="text-gray-500">Loading…</p>}
-                    {standings.data?.length === 0 && <p className="text-gray-500">No players in this division.</p>}
-                    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                    <SectionLabel>Standings</SectionLabel>
+                    {standings.isPending && <p className="text-[#8E8E93]">Loading…</p>}
+                    {standings.data?.length === 0 && <p className="text-[#8E8E93]">No players in this division.</p>}
+                    <div className="bg-white rounded-2xl border border-[#E5E5EA] overflow-hidden shadow-sm">
                         {(() => {
                             const byElo = (a: typeof standings.data[number], b: typeof standings.data[number]) =>
                                 b.elo - a.elo || a.name.localeCompare(b.name);
@@ -66,7 +73,7 @@ export function DivisionPage() {
                             });
                         })()}
                     </div>
-                    <div className="text-xs text-gray-400 mt-2 space-y-0.5">
+                    <div className="text-xs text-[#8E8E93] mt-2 space-y-0.5">
                         <p>▲ Promotion eligible — top 15% by ELO in this division.</p>
                         <p>▼ Relegation eligible — bottom 15% by ELO in this division.</p>
                         <p>Americano Champions results are not counted in standings.</p>
@@ -74,19 +81,23 @@ export function DivisionPage() {
                 </section>
 
                 <section>
-                    <h2 className="text-lg font-semibold text-gray-700 mb-3">Tournaments</h2>
-                    {tournaments.isPending && <p className="text-gray-500">Loading…</p>}
-                    {tournaments.data?.length === 0 && <p className="text-gray-500">No tournaments in this division yet.</p>}
+                    <SectionLabel>Tournaments</SectionLabel>
+                    {tournaments.isPending && <p className="text-[#8E8E93]">Loading…</p>}
+                    {tournaments.data?.length === 0 && <p className="text-[#8E8E93]">No tournaments in this division yet.</p>}
                     <div className="space-y-2">
                         {tournaments.data?.map(t => (
                             <Link
                                 key={t.id}
                                 to={`/tournament/${t.id}`}
-                                className="flex items-center justify-between bg-white rounded-lg border border-gray-200 px-4 py-3 hover:border-[#FF4200] hover:shadow-sm transition-all gap-3"
+                                className={`flex items-center justify-between bg-white rounded-2xl border px-4 py-3.5 hover:border-[#FF4200]/40 hover:shadow-sm transition-all gap-3 ${
+                                    t.status === "IN_PROGRESS"
+                                        ? "border-l-[3px] border-l-[#FF4200] border-[#E5E5EA]"
+                                        : "border-[#E5E5EA]"
+                                }`}
                             >
-                                <span className="font-medium text-gray-800 truncate">{t.name}</span>
+                                <span className="font-bold text-[#1A1A2E] truncate">{t.name}</span>
                                 <div className="flex items-center gap-2 shrink-0">
-                                    <span className="text-xs text-gray-400 hidden sm:inline">
+                                    <span className="text-xs text-[#8E8E93] hidden sm:inline">
                                         {new Date(t.date).toLocaleDateString()}
                                     </span>
                                     <StatusBadge status={t.status} />
@@ -111,19 +122,17 @@ function PlayerRow({ player, rank, division, avg }: {
     const [expanded, setExpanded] = useState(false);
 
     return (
-        <div className="border-b border-gray-100 last:border-0">
-            {/* Main row — always visible */}
+        <div className="border-b border-[#F5F5F7] last:border-0">
             <div
-                className="flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer gap-2"
+                className="flex items-center justify-between px-4 py-3 hover:bg-[#F5F5F7] transition-colors cursor-pointer gap-2"
                 onClick={() => setExpanded(e => !e)}
             >
-                {/* Left: rank + name + badges + ▲/▼ arrows */}
                 <div className="flex items-center gap-2 min-w-0 flex-1">
-                    <span className="text-sm text-gray-400 w-5 shrink-0">{rank}</span>
+                    <span className="text-sm font-black text-[#8E8E93] w-5 shrink-0 text-right">{rank}</span>
                     <Link
                         to={`/player/${player.id}`}
                         onClick={e => e.stopPropagation()}
-                        className="font-medium text-gray-800 truncate hover:text-[#FF4200] transition-colors"
+                        className="font-semibold text-[#1A1A2E] truncate hover:text-[#FF4200] transition-colors"
                     >
                         {player.name}
                     </Link>
@@ -132,43 +141,40 @@ function PlayerRow({ player, rank, division, avg }: {
                     ))}
                     {player.promotionEligible && (
                         <>
-                            <span title="Eligible for promotion" className="text-base shrink-0 text-green-500">▲</span>
-                            {/* Division target badge: always on desktop, hidden on mobile (shown in expanded panel) */}
-                            <span className={`hidden sm:inline text-xs font-semibold px-2 py-0.5 rounded-full shrink-0 ${DIVISION_BADGES[division - 1].className}`}>
-                                Division {division - 1}
+                            <span title="Eligible for promotion" className="text-sm shrink-0 text-emerald-500 font-bold">▲</span>
+                            <span className={`hidden sm:inline text-xs font-bold px-2 py-0.5 rounded-full shrink-0 ${DIVISION_BADGES[division - 1].className}`}>
+                                Div {division - 1}
                             </span>
                         </>
                     )}
                     {player.relegationEligible && (
                         <>
-                            <span title="Eligible for relegation" className="text-base shrink-0 text-red-500">▼</span>
-                            <span className={`hidden sm:inline text-xs font-semibold px-2 py-0.5 rounded-full shrink-0 ${DIVISION_BADGES[division + 1].className}`}>
-                                Division {division + 1}
+                            <span title="Eligible for relegation" className="text-sm shrink-0 text-red-500 font-bold">▼</span>
+                            <span className={`hidden sm:inline text-xs font-bold px-2 py-0.5 rounded-full shrink-0 ${DIVISION_BADGES[division + 1].className}`}>
+                                Div {division + 1}
                             </span>
                         </>
                     )}
                 </div>
 
-                {/* Right: history + avg (desktop only) + ELO + chevron (mobile only) */}
                 <div className="flex items-center gap-3 shrink-0">
                     <div className="hidden sm:flex gap-1 flex-wrap">
                         {player.participations.map(p => <RankBadge key={p.id} rank={p.finalRank} />)}
                     </div>
                     <div className="hidden sm:block text-right">
-                        <span className="text-sm font-semibold text-gray-500">{avg}</span>
-                        <span className="text-xs text-gray-400 ml-1">avg</span>
+                        <span className="text-sm font-bold text-[#8E8E93]">{avg}</span>
+                        <span className="text-xs text-[#8E8E93] ml-1">avg</span>
                     </div>
                     <div className="text-right">
-                        <span className="text-sm font-semibold text-[#FF4200]">{player.elo}</span>
-                        <span className="text-xs text-gray-400 ml-1">ELO</span>
+                        <span className="text-sm font-black text-[#FF4200]">{player.elo}</span>
+                        <span className="text-xs text-[#8E8E93] ml-1">ELO</span>
                     </div>
-                    <span className="sm:hidden text-gray-400 text-xs w-3 text-center shrink-0">
+                    <span className="sm:hidden text-[#8E8E93] text-xs w-3 text-center shrink-0">
                         {expanded ? "▴" : "▾"}
                     </span>
                 </div>
             </div>
 
-            {/* Expanded panel — mobile only */}
             {expanded && (
                 <div className="sm:hidden px-4 pb-3 pl-11 space-y-2">
                     <div className="flex items-center justify-between gap-3">
@@ -177,23 +183,23 @@ function PlayerRow({ player, rank, division, avg }: {
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
                             {player.promotionEligible && (
-                                <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${DIVISION_BADGES[division - 1].className}`}>
+                                <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${DIVISION_BADGES[division - 1].className}`}>
                                     Div {division - 1}
                                 </span>
                             )}
                             {player.relegationEligible && (
-                                <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${DIVISION_BADGES[division + 1].className}`}>
+                                <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${DIVISION_BADGES[division + 1].className}`}>
                                     Div {division + 1}
                                 </span>
                             )}
-                            <span className="text-sm font-semibold text-gray-500">{avg}</span>
-                            <span className="text-xs text-gray-400">avg</span>
+                            <span className="text-sm font-bold text-[#8E8E93]">{avg}</span>
+                            <span className="text-xs text-[#8E8E93]">avg</span>
                         </div>
                     </div>
                     <Link
                         to={`/player/${player.id}`}
                         onClick={e => e.stopPropagation()}
-                        className="block text-xs font-semibold text-[#FF4200] hover:underline"
+                        className="block text-xs font-bold text-[#FF4200] hover:underline"
                     >
                         View profile →
                     </Link>
@@ -203,25 +209,21 @@ function PlayerRow({ player, rank, division, avg }: {
     );
 }
 
-function RankBadge({ rank }: { rank: number | null }) {
-    if (rank === null) return null;
-    const color = rank <= 3 ? "bg-[#9FD2DD]/30 text-[#333366]" : rank >= 6 ? "bg-red-100 text-red-700" : "bg-gray-100 text-gray-600";
+function SectionLabel({ children }: { children: React.ReactNode }) {
     return (
-        <span className={`text-xs font-medium px-1.5 py-0.5 rounded ${color}`}>
-            #{rank}
-        </span>
+        <div className="flex items-center gap-2.5 mb-3">
+            <div className="w-1 h-4 rounded-full bg-[#FF4200]" />
+            <h2 className="text-xs font-bold uppercase tracking-widest text-[#8E8E93]">{children}</h2>
+        </div>
     );
 }
 
-function StatusBadge({ status }: { status: string }) {
-    const styles: Record<string, string> = {
-        UPCOMING: "bg-blue-100 text-blue-700",
-        IN_PROGRESS: "bg-yellow-100 text-yellow-700",
-        COMPLETED: "bg-green-100 text-green-700",
-    };
+function RankBadge({ rank }: { rank: number | null }) {
+    if (rank === null) return null;
+    const color = rank <= 3 ? "bg-[#9FD2DD]/30 text-[#333366]" : rank >= 6 ? "bg-red-100 text-red-600" : "bg-[#F5F5F7] text-[#8E8E93]";
     return (
-        <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${styles[status] ?? "bg-gray-100 text-gray-600"}`}>
-            {status.replace("_", " ")}
+        <span className={`text-xs font-bold px-1.5 py-0.5 rounded ${color}`}>
+            #{rank}
         </span>
     );
 }

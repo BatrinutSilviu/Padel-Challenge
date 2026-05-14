@@ -6,7 +6,7 @@ export const DIVISION_BADGES: Record<number, { label: string; className: string 
     1: { label: "Elite",    className: "bg-amber-100 text-amber-700 border border-amber-300" },
     2: { label: "Premier",  className: "bg-slate-100 text-slate-600 border border-slate-300" },
     3: { label: "Gold",     className: "bg-yellow-100 text-yellow-700 border border-yellow-300" },
-    4: { label: "Silver",   className: "bg-gray-100 text-gray-500 border border-gray-300" },
+    4: { label: "Silver",   className: "bg-zinc-200 text-zinc-600 border border-zinc-400" },
     5: { label: "Bronze",   className: "bg-orange-100 text-orange-700 border border-orange-300" },
     6: { label: "Beginner", className: "bg-green-100 text-green-700 border border-green-300" },
     7: { label: "Girls",    className: "bg-pink-100 text-pink-700 border border-pink-300" },

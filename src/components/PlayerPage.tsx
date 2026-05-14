@@ -30,64 +30,74 @@ export function PlayerPage() {
     );
     const overallRank = competitionRank(allPlayers ?? null, player.id);
 
+    const initials = player.name.split(" ").map(w => w[0]).slice(0, 2).join("").toUpperCase();
+
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-[#F5F5F7]">
             <NavBar />
-            <main className="max-w-3xl mx-auto px-3 sm:px-4 py-6 sm:py-8 space-y-6 sm:space-y-8">
+            <main className="max-w-3xl mx-auto px-3 sm:px-4 py-6 sm:py-8 pb-24 sm:pb-8 space-y-5 sm:space-y-6">
+
                 <button
                     onClick={() => navigate(-1)}
-                    className="inline-flex items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-lg bg-white border border-gray-200 text-gray-600 hover:border-[#FF4200] hover:text-[#FF4200] shadow-sm transition-colors w-fit"
+                    className="text-[#8E8E93] hover:text-[#FF4200] transition-colors flex items-center gap-1.5 text-sm font-semibold"
                 >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
                         <path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd" />
                     </svg>
                     Back
                 </button>
 
-                <div className="bg-white rounded-xl border border-gray-200 p-5 sm:p-6">
-                    <div className="flex items-center gap-3 flex-wrap">
-                        <h1 className="text-xl sm:text-2xl font-bold text-gray-800">{player.name}</h1>
-                        <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${
-                            player.gender === "FEMALE"
-                                ? "bg-pink-100 text-pink-700"
-                                : "bg-blue-100 text-blue-700"
-                        }`}>
-                            {player.gender === "FEMALE" ? "♀ Female" : "♂ Male"}
-                        </span>
+                {/* Profile hero */}
+                <div className="bg-white rounded-2xl border border-[#E5E5EA] p-5 sm:p-6 shadow-sm">
+                    <div className="flex items-center gap-4">
+                        <div className="w-14 h-14 rounded-2xl bg-[#333366] flex items-center justify-center shrink-0">
+                            <span className="text-lg font-black text-white">{initials}</span>
+                        </div>
+                        <div className="min-w-0">
+                            <h1 className="text-2xl font-black text-[#1A1A2E] tracking-tight leading-none">{player.name}</h1>
+                            <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                                <span className="text-sm text-[#8E8E93] font-medium">
+                                    {player.division === 6 ? "Beginner" : `Division ${player.division} — ${DIVISION_NAMES[player.division]}`}
+                                </span>
+                                <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+                                    player.gender === "FEMALE" ? "bg-pink-100 text-pink-700" : "bg-sky-50 text-sky-600"
+                                }`}>
+                                    {player.gender === "FEMALE" ? "♀ Female" : "♂ Male"}
+                                </span>
+                            </div>
+                        </div>
                     </div>
-                    <p className="text-gray-500 mt-1">
-                        {player.division === 6 ? "Beginner" : `Division ${player.division} — ${DIVISION_NAMES[player.division]}`}
-                    </p>
-                    <div className="flex flex-wrap gap-4 sm:gap-6 mt-4 pt-4 border-t border-gray-100">
-                        {divisionRank && <Stat label="Division Rank" value={`#${divisionRank}`} />}
-                        {overallRank && <Stat label="Overall Rank" value={`#${overallRank}`} />}
+
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-5 pt-5 border-t border-[#F5F5F7]">
                         <Stat label="ELO" value={player.elo} highlight />
-                        {completedResults.length > 0 && <>
+                        {divisionRank && <Stat label="Div Rank" value={`#${divisionRank}`} />}
+                        {overallRank && <Stat label="Overall" value={`#${overallRank}`} />}
+                        {completedResults.length > 0 && (
                             <Stat label="Tournaments" value={completedResults.length} />
-                            <Stat label="Total Points" value={completedResults.reduce((s, p) => s + p.totalPoints, 0)} />
-                            <Stat
-                                label="Avg Points"
-                                value={Math.round(completedResults.reduce((s, p) => s + p.totalPoints, 0) / completedResults.length)}
-                            />
-                            <Stat
-                                label="Best Finish"
-                                value={`#${Math.min(...completedResults.map(p => p.finalRank!))}`}
-                            />
-                        </>}
+                        )}
+                        {completedResults.length > 0 && (
+                            <Stat label="Avg Points" value={Math.round(completedResults.reduce((s, p) => s + p.totalPoints, 0) / completedResults.length)} />
+                        )}
+                        {completedResults.length > 0 && (
+                            <Stat label="Total Pts" value={completedResults.reduce((s, p) => s + p.totalPoints, 0)} />
+                        )}
+                        {completedResults.length > 0 && (
+                            <Stat label="Best Finish" value={`#${Math.min(...completedResults.map(p => p.finalRank!))}`} />
+                        )}
                     </div>
                 </div>
 
                 {player.badges.length > 0 && (
                     <section>
-                        <h2 className="text-lg font-semibold text-gray-700 mb-3">Achievements</h2>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <h2 className="text-xs font-bold uppercase tracking-widest text-[#8E8E93] mb-3">Achievements</h2>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                             {(player.badges as BadgeType[]).map(badge => {
                                 const meta = BADGE_META[badge];
                                 return (
-                                    <div key={badge} className={`flex items-center gap-3 px-4 py-3 rounded-xl border ${meta.className}`}>
+                                    <div key={badge} className={`flex items-center gap-3 px-4 py-3 rounded-2xl border ${meta.className}`}>
                                         <span className="text-2xl shrink-0">{meta.emoji}</span>
                                         <div className="min-w-0">
-                                            <p className="text-sm font-semibold leading-tight">{meta.label}</p>
+                                            <p className="text-sm font-bold leading-tight">{meta.label}</p>
                                             <p className="text-xs opacity-70 leading-tight">{meta.description}</p>
                                         </div>
                                     </div>
@@ -98,43 +108,43 @@ export function PlayerPage() {
                 )}
 
                 <section>
-                    <h2 className="text-lg font-semibold text-gray-700 mb-3">Tournament History</h2>
+                    <h2 className="text-xs font-bold uppercase tracking-widest text-[#8E8E93] mb-3">Tournament History</h2>
                     {player.participations.length === 0 && (
-                        <p className="text-gray-500">No tournaments yet.</p>
+                        <p className="text-[#8E8E93]">No tournaments yet.</p>
                     )}
-                    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden overflow-x-auto">
+                    <div className="bg-white rounded-2xl border border-[#E5E5EA] overflow-hidden overflow-x-auto shadow-sm">
                         <table className="w-full text-sm min-w-[360px]">
-                            <thead className="bg-gray-50 border-b border-gray-200">
+                            <thead className="border-b border-[#F5F5F7]">
                                 <tr>
-                                    <th className="text-left px-4 py-2 text-gray-600 font-medium">Tournament</th>
-                                    <th className="text-left px-4 py-2 text-gray-600 font-medium hidden sm:table-cell">Date</th>
-                                    <th className="text-center px-3 py-2 text-gray-600 font-medium hidden sm:table-cell">Div</th>
-                                    <th className="text-right px-4 py-2 text-gray-600 font-medium">Rank</th>
-                                    <th className="text-right px-4 py-2 text-gray-600 font-medium">Pts</th>
+                                    <th className="text-left px-4 py-3 text-xs font-bold uppercase tracking-widest text-[#8E8E93]">Tournament</th>
+                                    <th className="text-left px-4 py-3 text-xs font-bold uppercase tracking-widest text-[#8E8E93] hidden sm:table-cell">Date</th>
+                                    <th className="text-center px-3 py-3 text-xs font-bold uppercase tracking-widest text-[#8E8E93] hidden sm:table-cell">Div</th>
+                                    <th className="text-right px-4 py-3 text-xs font-bold uppercase tracking-widest text-[#8E8E93]">Rank</th>
+                                    <th className="text-right px-4 py-3 text-xs font-bold uppercase tracking-widest text-[#8E8E93]">Pts</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {player.participations.map(p => (
-                                    <tr key={p.id} className="border-b border-gray-100 last:border-0 hover:bg-gray-50">
-                                        <td className="px-4 py-2">
-                                            <Link to={`/tournament/${p.tournament.id}`} className="text-[#FF4200] hover:underline font-medium">
+                                    <tr key={p.id} className="border-b border-[#F5F5F7] last:border-0 hover:bg-[#F5F5F7] transition-colors">
+                                        <td className="px-4 py-3">
+                                            <Link to={`/tournament/${p.tournament.id}`} className="text-[#FF4200] hover:underline font-bold">
                                                 {p.tournament.name}
                                             </Link>
                                         </td>
-                                        <td className="px-4 py-2 text-gray-500 hidden sm:table-cell">
+                                        <td className="px-4 py-3 text-[#8E8E93] hidden sm:table-cell">
                                             {new Date(p.tournament.date).toLocaleDateString()}
                                         </td>
-                                        <td className="px-3 py-2 text-center text-gray-500 hidden sm:table-cell">
-                                            Division {p.tournament.division}{DIVISION_NAMES[p.tournament.division] ? ` — ${DIVISION_NAMES[p.tournament.division]}` : ""}
+                                        <td className="px-3 py-3 text-center text-[#8E8E93] hidden sm:table-cell">
+                                            {DIVISION_NAMES[p.tournament.division] ?? `Div ${p.tournament.division}`}
                                         </td>
-                                        <td className="px-4 py-2 text-right">
+                                        <td className="px-4 py-3 text-right">
                                             {p.finalRank !== null ? (
-                                                <span className={rankColor(p.finalRank)}>#{p.finalRank}</span>
+                                                <span className={`font-black ${rankColor(p.finalRank)}`}>#{p.finalRank}</span>
                                             ) : (
-                                                <span className="text-gray-400">—</span>
+                                                <span className="text-[#E5E5EA]">—</span>
                                             )}
                                         </td>
-                                        <td className="px-4 py-2 text-right font-medium text-gray-700">
+                                        <td className="px-4 py-3 text-right font-bold text-[#1A1A2E]">
                                             {p.finalRank !== null ? p.totalPoints : "—"}
                                         </td>
                                     </tr>
@@ -150,25 +160,25 @@ export function PlayerPage() {
 
 function Stat({ label, value, highlight }: { label: string; value: string | number; highlight?: boolean }) {
     return (
-        <div>
-            <p className="text-xs text-gray-500">{label}</p>
-            <p className={`text-xl font-bold ${highlight ? "text-[#FF4200]" : "text-gray-800"}`}>{value}</p>
+        <div className="bg-[#F5F5F7] rounded-xl px-3 py-2.5">
+            <p className="text-xs font-bold uppercase tracking-widest text-[#8E8E93] mb-0.5">{label}</p>
+            <p className={`text-xl font-black ${highlight ? "text-[#FF4200]" : "text-[#1A1A2E]"}`}>{value}</p>
         </div>
     );
 }
 
 function rankColor(rank: number) {
-    if (rank === 1) return "font-bold text-yellow-500";
-    if (rank <= 3) return "font-semibold text-[#FF4200]";
+    if (rank === 1) return "text-yellow-500";
+    if (rank <= 3) return "text-[#FF4200]";
     if (rank >= 6) return "text-red-500";
-    return "text-gray-700";
+    return "text-[#1A1A2E]";
 }
 
 function LoadingPage() {
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-[#F5F5F7]">
             <NavBar />
-            <div className="flex items-center justify-center h-64 text-gray-500">Loading…</div>
+            <div className="flex items-center justify-center h-64 text-[#8E8E93]">Loading…</div>
         </div>
     );
 }
