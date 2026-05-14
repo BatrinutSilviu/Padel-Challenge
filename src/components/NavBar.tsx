@@ -1,6 +1,8 @@
 import { Link } from "react-router-dom";
 
 export function NavBar() {
+    const isAdmin = !!localStorage.getItem("admin_token");
+
     return (
         <header className="bg-[#333366] text-white shadow-md">
             <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between gap-2">
@@ -15,12 +17,14 @@ export function NavBar() {
                     >
                         🏅 Badges
                     </Link>
-                    <Link
-                        to="/admin"
-                        className="text-sm font-medium px-2.5 py-2 sm:px-3 rounded-lg border border-[#9FD2DD]/50 text-[#9FD2DD] hover:bg-white/10 hover:text-white transition-colors whitespace-nowrap"
-                    >
-                        Admin
-                    </Link>
+                    {isAdmin && (
+                        <Link
+                            to="/admin"
+                            className="text-sm font-medium px-2.5 py-2 sm:px-3 rounded-lg border border-[#9FD2DD]/50 text-[#9FD2DD] hover:bg-white/10 hover:text-white transition-colors whitespace-nowrap"
+                        >
+                            Admin
+                        </Link>
+                    )}
                 </div>
             </div>
         </header>
