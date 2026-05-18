@@ -138,10 +138,17 @@ function NewTournamentTab({ onCreated }: { onCreated: () => void }) {
     const [date, setDate] = useState(() => new Date().toISOString().split("T")[0]);
     const [type, setType] = useState<TournamentType>("AMERICANO");
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
+    const [playerFilter, setPlayerFilter] = useState("");
     const [error, setError] = useState("");
 
     const divisionPlayersQuery = trpc.division.players.useQuery({ division });
+    const allPlayersQuery = trpc.division.allPlayers.useQuery();
+
     const divisionPlayers = divisionPlayersQuery.data ?? [];
+    const q = playerFilter.trim().toLowerCase();
+    const displayedPlayers = q
+        ? (allPlayersQuery.data ?? []).filter(p => p.name.toLowerCase().includes(q))
+        : divisionPlayers;
 
     const create = trpc.tournament.create.useMutation({
         onSuccess: onCreated,
@@ -186,7 +193,7 @@ function NewTournamentTab({ onCreated }: { onCreated: () => void }) {
                         <button
                             key={d}
                             type="button"
-                            onClick={() => { setDivision(d); setSelectedIds([]); }}
+                            onClick={() => { setDivision(d); setSelectedIds([]); setPlayerFilter(""); }}
                             className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${
                                 division === d
                                     ? "bg-[#FF4200] text-white border-[#FF4200]"
@@ -219,13 +226,40 @@ function NewTournamentTab({ onCreated }: { onCreated: () => void }) {
             </Field>
 
             <Field label={`Players (${selectedIds.length}/8 selected)`}>
+                <div className="relative mb-2">
+                    <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                    </svg>
+                    <input
+                        type="text"
+                        value={playerFilter}
+                        onChange={e => setPlayerFilter(e.target.value)}
+                        placeholder="Search across all divisions…"
+                        className="w-full border border-gray-300 rounded-lg pl-9 pr-8 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF4200] focus:border-transparent bg-white placeholder-gray-400"
+                    />
+                    {playerFilter && (
+                        <button
+                            type="button"
+                            onClick={() => setPlayerFilter("")}
+                            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                        >
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                                <path d="M18 6 6 18M6 6l12 12"/>
+                            </svg>
+                        </button>
+                    )}
+                </div>
                 {divisionPlayersQuery.isPending && <p className="text-gray-500 text-sm">Loading…</p>}
-                {divisionPlayers.length < 8 && !divisionPlayersQuery.isPending && (
+                {!q && divisionPlayers.length < 8 && !divisionPlayersQuery.isPending && (
                     <p className="text-amber-600 text-sm">{divisionLabel(division)} only has {divisionPlayers.length} players — need 8.</p>
                 )}
+                {q && displayedPlayers.length === 0 && !allPlayersQuery.isPending && (
+                    <p className="text-gray-500 text-sm">No players match "{playerFilter}".</p>
+                )}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 mt-1">
-                    {divisionPlayers.map(p => {
+                    {displayedPlayers.map(p => {
                         const selected = selectedIds.includes(p.id);
+                        const isOtherDiv = p.division !== division;
                         return (
                             <button
                                 key={p.id}
@@ -237,7 +271,11 @@ function NewTournamentTab({ onCreated }: { onCreated: () => void }) {
                                         : "border-gray-200 text-gray-700 hover:border-[#FF4200]/50"
                                 }`}
                             >
-                                {selected && <span className="mr-1">✓</span>}{p.name}
+                                {selected && <span className="mr-1">✓</span>}
+                                {p.name}
+                                {isOtherDiv && (
+                                    <span className="ml-1.5 text-xs font-normal text-gray-400">(Div {p.division === 6 ? "Beg." : p.division})</span>
+                                )}
                             </button>
                         );
                     })}
