@@ -96,7 +96,7 @@ function PlayersTab() {
 
     const groups = [1, 2, 3, 4, 5, 6, 7].map(d => ({
         division: d,
-        players: filtered.filter(p => p.division === d),
+        players: filtered.filter(p => p.highestDivisionPlayed === d),
     })).filter(g => g.players.length > 0);
 
     return (
