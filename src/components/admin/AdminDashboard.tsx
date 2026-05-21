@@ -326,6 +326,11 @@ function PlayersTab() {
         onError: (e) => setEloMsg(`Error: ${e.message}`),
     });
 
+    const q = name.trim().toLowerCase();
+    const matches = q.length >= 2
+        ? (players.data ?? []).filter(p => p.name.toLowerCase().includes(q))
+        : [];
+
     function handleAdd(e: React.FormEvent) {
         e.preventDefault();
         if (!name.trim()) return setError("Name is required.");
@@ -337,16 +342,44 @@ function PlayersTab() {
             <form onSubmit={handleAdd} className="bg-white rounded-xl border border-gray-200 p-5 space-y-4">
                 <h2 className="text-base font-semibold text-gray-800">Add Player</h2>
                 <div className="flex flex-col sm:flex-row gap-3">
-                    <input
-                        value={name}
-                        onChange={e => setName(e.target.value)}
-                        className={`${input} flex-1`}
-                        placeholder="Player name"
-                    />
+                    <div className="flex-1 space-y-1.5">
+                        <input
+                            value={name}
+                            onChange={e => setName(e.target.value)}
+                            className={`${input} w-full`}
+                            placeholder="Player name"
+                            autoComplete="off"
+                        />
+                        {q.length >= 2 && (
+                            <div className={`rounded-lg border text-sm px-3 py-2 ${
+                                matches.length > 0
+                                    ? "border-amber-200 bg-amber-50"
+                                    : "border-green-200 bg-green-50"
+                            }`}>
+                                {matches.length > 0 ? (
+                                    <>
+                                        <p className="text-amber-700 font-medium mb-1.5">Similar players found:</p>
+                                        <ul className="space-y-1">
+                                            {matches.map(p => (
+                                                <li key={p.id} className="flex items-center justify-between gap-2">
+                                                    <span className="text-amber-800 font-semibold">{p.name}</span>
+                                                    <span className="text-amber-600 text-xs">
+                                                        {p.division === 6 ? "Beginner" : `Div ${p.division}`} · {p.gender === "MALE" ? "♂" : "♀"}
+                                                    </span>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </>
+                                ) : (
+                                    <p className="text-green-700 font-medium">No existing player found — safe to add.</p>
+                                )}
+                            </div>
+                        )}
+                    </div>
                     <select
                         value={division}
                         onChange={e => setDivision(Number(e.target.value))}
-                        className={input}
+                        className={`${input} self-start`}
                     >
                         {[1, 2, 3, 4, 5, 6].map(d => (
                             <option key={d} value={d}>{d === 6 ? "Beginner" : `Div ${d} — ${DIVISION_NAMES[d]}`}</option>
@@ -355,7 +388,7 @@ function PlayersTab() {
                     <select
                         value={gender}
                         onChange={e => setGender(e.target.value as "MALE" | "FEMALE")}
-                        className={input}
+                        className={`${input} self-start`}
                     >
                         <option value="MALE">Male</option>
                         <option value="FEMALE">Female</option>
@@ -363,7 +396,7 @@ function PlayersTab() {
                     <button
                         type="submit"
                         disabled={create.isPending}
-                        className="bg-[#FF4200] text-white rounded-lg px-4 py-2 text-sm font-medium hover:bg-[#CC3500] disabled:opacity-50 transition-colors"
+                        className="bg-[#FF4200] text-white rounded-lg px-4 py-2 text-sm font-medium hover:bg-[#CC3500] disabled:opacity-50 transition-colors self-start"
                     >
                         Add
                     </button>
