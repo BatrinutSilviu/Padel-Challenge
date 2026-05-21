@@ -87,9 +87,10 @@ function PlayersTab() {
         .filter(p => genderFilter === "ALL" || p.gender === genderFilter)
         .filter(p => p.name.toLowerCase().includes(search.toLowerCase()));
 
+    const sortedByElo = [...data].sort((a, b) => b.elo - a.elo);
     const overallRanks = new Map<string, number>();
-    data.forEach((p, i) => {
-        const prev = data[i - 1];
+    sortedByElo.forEach((p, i) => {
+        const prev = sortedByElo[i - 1];
         const tied = prev && p.elo === prev.elo;
         overallRanks.set(p.id, tied ? overallRanks.get(prev.id)! : i + 1);
     });
