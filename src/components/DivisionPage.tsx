@@ -26,7 +26,7 @@ export function DivisionPage() {
 
                 <div className="flex items-start gap-3">
                     <Link
-                        to="/"
+                        to="/?tab=divisions"
                         className="mt-1 shrink-0 text-[#8E8E93] hover:text-[#FF4200] transition-colors"
                     >
                         <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
