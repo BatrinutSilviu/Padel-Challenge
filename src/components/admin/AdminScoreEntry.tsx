@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { NavBar } from "../NavBar";
 import { trpc } from "../../trpc";
@@ -172,6 +172,16 @@ export function AdminScoreEntry() {
                     </p>
                 )}
 
+                {/* Info */}
+                <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 flex items-start gap-2.5">
+                    <svg className="w-4 h-4 text-blue-400 mt-0.5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                    </svg>
+                    <p className="text-xs text-blue-700 leading-relaxed">
+                        After entering a score a confirmation prompt appears. Once confirmed the field is locked. Tap a locked score once to see the hint, then tap again to unlock and edit.
+                    </p>
+                </div>
+
                 {/* Rounds */}
                 <div className="space-y-4">
                     {tournament.rounds.map(round => (
@@ -232,6 +242,8 @@ function clearLocalScore(matchId: string) {
     try { localStorage.removeItem(`padel-score-${matchId}`); } catch {}
 }
 
+type ScoreStatus = 'editing' | 'confirming' | 'saving' | 'locked' | 'unlock-pending';
+
 function MatchScoreRow({
     match,
     courtNumber,
@@ -247,7 +259,6 @@ function MatchScoreRow({
 }) {
     const isScored = match.team1Score + match.team2Score === 32;
 
-    // Initialise from DB score if already saved, otherwise recover from localStorage.
     const [score1, setScore1] = useState(() => {
         if (isScored) return String(match.team1Score);
         const pending = readLocalScore(match.id);
@@ -258,71 +269,94 @@ function MatchScoreRow({
         const pending = readLocalScore(match.id);
         return pending ? String(pending.s2) : "";
     });
-    const [saving, setSaving] = useState(false);
-    const [saved, setSaved] = useState(isScored);
+    const [status, setStatus] = useState<ScoreStatus>(() => {
+        if (isScored) return 'locked';
+        return readLocalScore(match.id) ? 'confirming' : 'editing';
+    });
     const [error, setError] = useState("");
+    const unlockTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    useEffect(() => {
+        if (isScored) clearLocalScore(match.id);
+        return () => { if (unlockTimerRef.current) clearTimeout(unlockTimerRef.current); };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     const update = trpc.tournament.updateMatchScore.useMutation({
         onSuccess: () => {
-            setSaving(false);
-            setSaved(true);
+            setStatus('locked');
             clearLocalScore(match.id);
             onSaved(match.id);
             onSaveEnd();
             setError("");
         },
         onError: (e) => {
-            setSaving(false);
+            setStatus('confirming');
             onSaveEnd();
             setError(e.message);
         },
     });
 
-    function autoSave(s1: number, s2: number) {
-        if (s1 + s2 !== 32 || s1 < 0 || s2 < 0) return;
-        // Write to localStorage before the API call so a crash or network failure
-        // can't lose this score — it will be retried on the next page load.
-        writeLocalScore(match.id, s1, s2);
-        setSaving(true);
-        setSaved(false);
+    function handleScoreChange(field: 1 | 2, val: string) {
+        if (status !== 'editing' && status !== 'confirming') return;
+        const n = parseInt(val);
+        if (field === 1) setScore1(val); else setScore2(val);
+        if (!isNaN(n) && n >= 0 && n <= 32) {
+            const other = 32 - n;
+            if (field === 1) setScore2(String(other)); else setScore1(String(other));
+            writeLocalScore(match.id, field === 1 ? n : other, field === 1 ? other : n);
+            setStatus('confirming');
+        } else {
+            if (field === 1) setScore2(""); else setScore1("");
+            clearLocalScore(match.id);
+            setStatus('editing');
+        }
+    }
+
+    function handleConfirm() {
+        const s1 = parseInt(score1);
+        const s2 = parseInt(score2);
+        if (isNaN(s1) || isNaN(s2) || s1 + s2 !== 32) return;
+        setStatus('saving');
         onSaveStart();
         update.mutate({ matchId: match.id, team1Score: s1, team2Score: s2 });
     }
 
-    // On mount: if this match is already confirmed in the DB, clear any stale
-    // localStorage entry.  If it isn't confirmed but we recovered a valid score
-    // from localStorage, retry the save immediately.
-    useEffect(() => {
-        if (isScored) { clearLocalScore(match.id); return; }
-        const s1 = parseInt(score1);
-        const s2 = parseInt(score2);
-        if (!isNaN(s1) && !isNaN(s2) && s1 + s2 === 32) autoSave(s1, s2);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []); // intentionally runs once on mount for crash-recovery
+    function handleCancel() {
+        clearLocalScore(match.id);
+        setScore1("");
+        setScore2("");
+        setStatus('editing');
+        setError("");
+    }
 
-    function handleScore1Change(val: string) {
-        const n = parseInt(val);
-        setScore1(val);
-        if (!isNaN(n) && n >= 0 && n <= 32) {
-            const s2 = 32 - n;
-            setScore2(String(s2));
-            autoSave(n, s2);
+    function handleLockedClick() {
+        if (status === 'locked') {
+            if (unlockTimerRef.current) clearTimeout(unlockTimerRef.current);
+            setStatus('unlock-pending');
+            unlockTimerRef.current = setTimeout(() => setStatus('locked'), 3000);
+        } else if (status === 'unlock-pending') {
+            if (unlockTimerRef.current) clearTimeout(unlockTimerRef.current);
+            clearLocalScore(match.id);
+            setScore1("");
+            setScore2("");
+            setStatus('editing');
         }
     }
 
-    function handleScore2Change(val: string) {
-        const n = parseInt(val);
-        setScore2(val);
-        if (!isNaN(n) && n >= 0 && n <= 32) {
-            const s1 = 32 - n;
-            setScore1(String(s1));
-            autoSave(s1, n);
-        }
-    }
-
+    const isLocked = status === 'locked' || status === 'unlock-pending';
     const s1 = parseInt(score1) || 0;
     const s2 = parseInt(score2) || 0;
-    const isValid = s1 + s2 === 32 && (s1 > 0 || s2 > 0);
+    const isValid = s1 + s2 === 32;
+
+    function inputClass(team: 1 | 2) {
+        const wins = team === 1 ? s1 > s2 : s2 > s1;
+        if (status === 'saving') return "border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed";
+        if (status === 'unlock-pending') return "border-amber-400 bg-amber-50 text-gray-700 cursor-pointer";
+        if (status === 'locked') return "border-gray-200 bg-gray-50 text-gray-500 cursor-pointer";
+        if (status === 'confirming') return "border-blue-400 text-gray-800 bg-white";
+        return isValid && wins ? "border-[#FF4200] text-[#FF4200]" : "border-gray-300 text-gray-700";
+    }
 
     return (
         <div className="px-4 sm:px-5 py-4">
@@ -342,10 +376,11 @@ function MatchScoreRow({
                         inputMode="numeric"
                         pattern="[0-9]*"
                         value={score1}
-                        onChange={e => handleScore1Change(e.target.value)}
-                        className={`w-14 text-center border rounded-lg px-2 py-2 text-base font-semibold focus:outline-none focus:ring-2 focus:ring-[#FF4200] ${
-                            isValid && s1 > s2 ? "border-[#FF4200] text-[#FF4200]" : "border-gray-300 text-gray-700"
-                        }`}
+                        onChange={e => handleScoreChange(1, e.target.value)}
+                        onClick={isLocked ? handleLockedClick : undefined}
+                        readOnly={isLocked}
+                        disabled={status === 'saving'}
+                        className={`w-14 text-center border rounded-lg px-2 py-2 text-base font-semibold focus:outline-none focus:ring-2 focus:ring-[#FF4200] transition-colors ${inputClass(1)}`}
                     />
                     <span className="text-gray-300 font-bold text-lg">:</span>
                     <input
@@ -353,14 +388,24 @@ function MatchScoreRow({
                         inputMode="numeric"
                         pattern="[0-9]*"
                         value={score2}
-                        onChange={e => handleScore2Change(e.target.value)}
-                        className={`w-14 text-center border rounded-lg px-2 py-2 text-base font-semibold focus:outline-none focus:ring-2 focus:ring-[#FF4200] ${
-                            isValid && s2 > s1 ? "border-[#FF4200] text-[#FF4200]" : "border-gray-300 text-gray-700"
-                        }`}
+                        onChange={e => handleScoreChange(2, e.target.value)}
+                        onClick={isLocked ? handleLockedClick : undefined}
+                        readOnly={isLocked}
+                        disabled={status === 'saving'}
+                        className={`w-14 text-center border rounded-lg px-2 py-2 text-base font-semibold focus:outline-none focus:ring-2 focus:ring-[#FF4200] transition-colors ${inputClass(2)}`}
                     />
-                    <div className="w-8 text-center">
-                        {saving && <span className="text-xs text-gray-400">…</span>}
-                        {!saving && saved && isValid && <span className="text-sm text-[#FF4200]">✓</span>}
+                    <div className="w-8 flex items-center justify-center shrink-0">
+                        {status === 'saving' && <span className="text-xs text-gray-400">…</span>}
+                        {status === 'locked' && (
+                            <svg className="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                            </svg>
+                        )}
+                        {status === 'unlock-pending' && (
+                            <svg className="w-4 h-4 text-amber-400" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M10 2a5 5 0 00-5 5v2a2 2 0 00-2 2v5a2 2 0 002 2h10a2 2 0 002-2v-5a2 2 0 00-2-2H7V7a3 3 0 015.905-.75 1 1 0 001.937-.5A5.002 5.002 0 0010 2z" />
+                            </svg>
+                        )}
                     </div>
                 </div>
 
@@ -371,17 +416,40 @@ function MatchScoreRow({
                     </p>
                 </div>
             </div>
+
+            {/* Confirm row */}
+            {status === 'confirming' && (
+                <div className="flex items-center justify-center gap-3 mt-3 flex-wrap">
+                    <span className="text-sm text-gray-600 font-medium">Confirm {score1} – {score2}?</span>
+                    <button
+                        onClick={handleConfirm}
+                        className="px-3 py-1.5 rounded-lg text-sm bg-[#FF4200] text-white font-semibold hover:bg-[#CC3500] transition-colors"
+                    >
+                        Confirm
+                    </button>
+                    <button
+                        onClick={handleCancel}
+                        className="px-3 py-1.5 rounded-lg text-sm border border-gray-300 text-gray-600 hover:bg-gray-50 transition-colors"
+                    >
+                        Cancel
+                    </button>
+                </div>
+            )}
+
+            {/* Unlock hint */}
+            {status === 'unlock-pending' && (
+                <p className="text-center text-xs text-amber-600 mt-2">Tap again to unlock and edit</p>
+            )}
+
             {error && (
                 <div className="flex items-center justify-center gap-2 mt-2">
                     <p className="text-xs text-red-500">{error}</p>
-                    {isValid && (
-                        <button
-                            onClick={() => { setError(""); autoSave(s1, s2); }}
-                            className="text-xs font-semibold text-[#FF4200] hover:underline shrink-0"
-                        >
-                            Retry
-                        </button>
-                    )}
+                    <button
+                        onClick={() => { setError(""); handleConfirm(); }}
+                        className="text-xs font-semibold text-[#FF4200] hover:underline shrink-0"
+                    >
+                        Retry
+                    </button>
                 </div>
             )}
         </div>
