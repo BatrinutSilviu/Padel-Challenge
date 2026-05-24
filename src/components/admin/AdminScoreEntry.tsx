@@ -380,7 +380,7 @@ function MatchScoreRow({
                         onClick={isLocked ? handleLockedClick : undefined}
                         readOnly={isLocked}
                         disabled={status === 'saving'}
-                        className={`w-14 text-center border rounded-lg px-2 py-2 text-base font-semibold focus:outline-none focus:ring-2 focus:ring-[#FF4200] transition-colors ${inputClass(1)}`}
+                        className={`w-14 text-center border rounded-lg px-2 py-3 text-base font-semibold focus:outline-none focus:ring-2 focus:ring-[#FF4200] transition-colors ${inputClass(1)}`}
                     />
                     <span className="text-gray-300 font-bold text-lg">:</span>
                     <input
@@ -392,7 +392,7 @@ function MatchScoreRow({
                         onClick={isLocked ? handleLockedClick : undefined}
                         readOnly={isLocked}
                         disabled={status === 'saving'}
-                        className={`w-14 text-center border rounded-lg px-2 py-2 text-base font-semibold focus:outline-none focus:ring-2 focus:ring-[#FF4200] transition-colors ${inputClass(2)}`}
+                        className={`w-14 text-center border rounded-lg px-2 py-3 text-base font-semibold focus:outline-none focus:ring-2 focus:ring-[#FF4200] transition-colors ${inputClass(2)}`}
                     />
                     <div className="w-8 flex items-center justify-center shrink-0">
                         {status === 'saving' && <span className="text-xs text-gray-400">…</span>}
@@ -419,26 +419,30 @@ function MatchScoreRow({
 
             {/* Confirm row */}
             {status === 'confirming' && (
-                <div className="flex items-center justify-center gap-3 mt-3 flex-wrap">
-                    <span className="text-sm text-gray-600 font-medium">Confirm {score1} – {score2}?</span>
-                    <button
-                        onClick={handleConfirm}
-                        className="px-3 py-1.5 rounded-lg text-sm bg-[#FF4200] text-white font-semibold hover:bg-[#CC3500] transition-colors"
-                    >
-                        Confirm
-                    </button>
-                    <button
-                        onClick={handleCancel}
-                        className="px-3 py-1.5 rounded-lg text-sm border border-gray-300 text-gray-600 hover:bg-gray-50 transition-colors"
-                    >
-                        Cancel
-                    </button>
+                <div className="mt-3 pt-3 border-t border-blue-100">
+                    <p className="text-center text-sm text-gray-500 mb-2.5">
+                        Confirm <span className="font-bold text-gray-800">{score1} – {score2}</span>?
+                    </p>
+                    <div className="flex gap-2">
+                        <button
+                            onClick={handleCancel}
+                            className="flex-1 py-3 rounded-xl text-sm border border-gray-300 text-gray-600 font-medium hover:bg-gray-50 active:bg-gray-100 transition-colors"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            onClick={handleConfirm}
+                            className="flex-1 py-3 rounded-xl text-sm bg-[#FF4200] text-white font-semibold hover:bg-[#CC3500] active:bg-[#AA2C00] transition-colors"
+                        >
+                            Confirm
+                        </button>
+                    </div>
                 </div>
             )}
 
             {/* Unlock hint */}
             {status === 'unlock-pending' && (
-                <p className="text-center text-xs text-amber-600 mt-2">Tap again to unlock and edit</p>
+                <p className="text-center text-sm text-amber-600 font-medium mt-2">Tap again to unlock and edit</p>
             )}
 
             {error && (
