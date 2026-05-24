@@ -513,87 +513,90 @@ function MatchScoreRow({
             {mobileSheetOpen && (
                 <div className="sm:hidden fixed inset-0 z-[60] flex flex-col justify-end">
                     <div className="absolute inset-0 bg-black/50" onClick={() => { if (status !== 'saving') setMobileSheetOpen(false); }} />
-                    <div className="relative bg-white rounded-t-2xl px-5 pt-4 pb-10">
-                        <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-4" />
+                    <div className="relative bg-white rounded-t-2xl flex flex-col max-h-[90dvh]">
+                        {/* Scrollable content — shrinks when keyboard appears */}
+                        <div className="overflow-y-auto flex-1 px-5 pt-4 pb-3">
+                            <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-4" />
 
-                        {/* Header */}
-                        <div className="flex items-center justify-between mb-5">
-                            <span className="text-xs text-gray-400 font-medium uppercase tracking-wide">Court {courtNumber}</span>
-                            <button
-                                onClick={() => { if (status !== 'saving') setMobileSheetOpen(false); }}
-                                className="text-gray-400 p-1 -mr-1"
-                            >
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                            </button>
-                        </div>
-
-                        {/* Teams */}
-                        <div className="flex items-start justify-between gap-3 mb-6">
-                            <div className="flex-1 text-center space-y-0.5">
-                                <p className="font-semibold text-gray-800 text-sm">{match.team1Player1.name}</p>
-                                <p className="font-semibold text-gray-800 text-sm">{match.team1Player2.name}</p>
-                            </div>
-                            <span className="text-gray-300 text-xs font-bold mt-1 shrink-0">vs</span>
-                            <div className="flex-1 text-center space-y-0.5">
-                                <p className="font-semibold text-gray-800 text-sm">{match.team2Player1.name}</p>
-                                <p className="font-semibold text-gray-800 text-sm">{match.team2Player2.name}</p>
-                            </div>
-                        </div>
-
-                        {/* Large score inputs */}
-                        <div className="flex items-center justify-center gap-5 mb-6">
-                            <input
-                                ref={sheetInputRef}
-                                type="text"
-                                inputMode="numeric"
-                                pattern="[0-9]*"
-                                value={score1}
-                                onChange={e => handleScoreChange(1, e.target.value)}
-                                disabled={status === 'saving'}
-                                className={`w-24 text-center border-2 rounded-2xl px-3 py-4 text-4xl font-bold focus:outline-none transition-colors ${sheetInputClass(1)}`}
-                            />
-                            <span className="text-gray-200 font-bold text-4xl">:</span>
-                            <input
-                                type="text"
-                                inputMode="numeric"
-                                pattern="[0-9]*"
-                                value={score2}
-                                onChange={e => handleScoreChange(2, e.target.value)}
-                                disabled={status === 'saving'}
-                                className={`w-24 text-center border-2 rounded-2xl px-3 py-4 text-4xl font-bold focus:outline-none transition-colors ${sheetInputClass(2)}`}
-                            />
-                        </div>
-
-                        {/* Action buttons */}
-                        {status === 'saving' ? (
-                            <p className="text-center text-sm text-gray-400 py-3.5">Saving…</p>
-                        ) : (
-                            <div className="flex gap-2">
+                            {/* Header */}
+                            <div className="flex items-center justify-between mb-5">
+                                <span className="text-xs text-gray-400 font-medium uppercase tracking-wide">Court {courtNumber}</span>
                                 <button
-                                    onClick={handleCancel}
-                                    className="flex-1 py-3.5 rounded-xl text-sm border border-gray-300 text-gray-600 font-medium active:bg-gray-100 transition-colors"
+                                    onClick={() => { if (status !== 'saving') setMobileSheetOpen(false); }}
+                                    className="text-gray-400 p-1 -mr-1"
                                 >
-                                    Cancel
-                                </button>
-                                <button
-                                    onClick={handleConfirm}
-                                    disabled={!isValid || status !== 'confirming'}
-                                    className="flex-1 py-3.5 rounded-xl text-sm bg-[#FF4200] text-white font-semibold active:bg-[#AA2C00] transition-colors disabled:opacity-40"
-                                >
-                                    Confirm
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
                                 </button>
                             </div>
-                        )}
 
-                        {/* Error */}
-                        {error && (
-                            <div className="flex items-center justify-center gap-2 mt-3">
-                                <p className="text-sm text-red-500">{error}</p>
-                                <button onClick={() => { setError(""); handleConfirm(); }} className="text-sm font-semibold text-[#FF4200] shrink-0">Retry</button>
+                            {/* Teams */}
+                            <div className="flex items-start justify-between gap-3 mb-6">
+                                <div className="flex-1 text-center space-y-0.5">
+                                    <p className="font-semibold text-gray-800 text-sm">{match.team1Player1.name}</p>
+                                    <p className="font-semibold text-gray-800 text-sm">{match.team1Player2.name}</p>
+                                </div>
+                                <span className="text-gray-300 text-xs font-bold mt-1 shrink-0">vs</span>
+                                <div className="flex-1 text-center space-y-0.5">
+                                    <p className="font-semibold text-gray-800 text-sm">{match.team2Player1.name}</p>
+                                    <p className="font-semibold text-gray-800 text-sm">{match.team2Player2.name}</p>
+                                </div>
                             </div>
-                        )}
+
+                            {/* Large score inputs */}
+                            <div className="flex items-center justify-center gap-5">
+                                <input
+                                    ref={sheetInputRef}
+                                    type="text"
+                                    inputMode="numeric"
+                                    pattern="[0-9]*"
+                                    value={score1}
+                                    onChange={e => handleScoreChange(1, e.target.value)}
+                                    disabled={status === 'saving'}
+                                    className={`w-24 text-center border-2 rounded-2xl px-3 py-4 text-4xl font-bold focus:outline-none transition-colors ${sheetInputClass(1)}`}
+                                />
+                                <span className="text-gray-200 font-bold text-4xl">:</span>
+                                <input
+                                    type="text"
+                                    inputMode="numeric"
+                                    pattern="[0-9]*"
+                                    value={score2}
+                                    onChange={e => handleScoreChange(2, e.target.value)}
+                                    disabled={status === 'saving'}
+                                    className={`w-24 text-center border-2 rounded-2xl px-3 py-4 text-4xl font-bold focus:outline-none transition-colors ${sheetInputClass(2)}`}
+                                />
+                            </div>
+                        </div>
+
+                        {/* Sticky footer — always visible above keyboard */}
+                        <div className="shrink-0 px-5 pt-3 pb-10 border-t border-gray-100">
+                            {status === 'saving' ? (
+                                <p className="text-center text-sm text-gray-400 py-3.5">Saving…</p>
+                            ) : (
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={handleCancel}
+                                        className="flex-1 py-3.5 rounded-xl text-sm border border-gray-300 text-gray-600 font-medium active:bg-gray-100 transition-colors"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        onClick={handleConfirm}
+                                        disabled={!isValid || status !== 'confirming'}
+                                        className="flex-1 py-3.5 rounded-xl text-sm bg-[#FF4200] text-white font-semibold active:bg-[#AA2C00] transition-colors disabled:opacity-40"
+                                    >
+                                        Confirm
+                                    </button>
+                                </div>
+                            )}
+                            {error && (
+                                <div className="flex items-center justify-center gap-2 mt-3">
+                                    <p className="text-sm text-red-500">{error}</p>
+                                    <button onClick={() => { setError(""); handleConfirm(); }} className="text-sm font-semibold text-[#FF4200] shrink-0">Retry</button>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
             )}
