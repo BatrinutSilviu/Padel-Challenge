@@ -225,8 +225,20 @@ function NewTournamentTab({ onCreated }: { onCreated: () => void }) {
                 </div>
             </Field>
 
-            <Field label={`Players (${selectedIds.length}/8 selected)`}>
-                <div className="relative mb-2">
+            <div className="space-y-1">
+                <div className="sticky top-14 z-20 -mx-5 sm:-mx-6 px-5 sm:px-6 py-2 bg-white border-b border-gray-100 flex items-center justify-between">
+                    <span className="text-sm font-medium text-gray-700">Players</span>
+                    <span className={`text-sm font-semibold px-2.5 py-0.5 rounded-full transition-colors ${
+                        selectedIds.length === 8
+                            ? "bg-[#FF4200] text-white"
+                            : selectedIds.length > 0
+                            ? "bg-[#FF4200]/10 text-[#FF4200]"
+                            : "bg-gray-100 text-gray-600"
+                    }`}>
+                        {selectedIds.length} / 8
+                    </span>
+                </div>
+                <div className="relative mb-2 pt-1">
                     <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                         <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
                     </svg>
@@ -280,7 +292,7 @@ function NewTournamentTab({ onCreated }: { onCreated: () => void }) {
                         );
                     })}
                 </div>
-            </Field>
+            </div>
 
             {error && <p className="text-sm text-red-500">{error}</p>}
 
