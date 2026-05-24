@@ -274,6 +274,7 @@ function MatchScoreRow({
         return readLocalScore(match.id) ? 'confirming' : 'editing';
     });
     const [mobileSheetOpen, setMobileSheetOpen] = useState(false);
+    const [keyboardHeight, setKeyboardHeight] = useState(0);
     const [error, setError] = useState("");
     const unlockTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const sheetInputRef = useRef<HTMLInputElement>(null);
@@ -289,6 +290,17 @@ function MatchScoreRow({
             const t = setTimeout(() => sheetInputRef.current?.focus(), 50);
             return () => clearTimeout(t);
         }
+    }, [mobileSheetOpen]);
+
+    useEffect(() => {
+        if (!mobileSheetOpen) { setKeyboardHeight(0); return; }
+        function onVVResize() {
+            const vv = window.visualViewport;
+            if (vv) setKeyboardHeight(Math.max(0, window.innerHeight - vv.height));
+        }
+        window.visualViewport?.addEventListener('resize', onVVResize);
+        onVVResize();
+        return () => window.visualViewport?.removeEventListener('resize', onVVResize);
     }, [mobileSheetOpen]);
 
     const update = trpc.tournament.updateMatchScore.useMutation({
@@ -511,9 +523,15 @@ function MatchScoreRow({
 
             {/* Mobile bottom sheet */}
             {mobileSheetOpen && (
-                <div className="sm:hidden fixed inset-0 z-[60] flex flex-col justify-end">
+                <div className="sm:hidden fixed inset-0 z-[60]">
                     <div className="absolute inset-0 bg-black/50" onClick={() => { if (status !== 'saving') setMobileSheetOpen(false); }} />
-                    <div className="relative bg-white rounded-t-2xl flex flex-col max-h-[90dvh]">
+                    <div
+                        className="absolute left-0 right-0 bg-white rounded-t-2xl flex flex-col"
+                        style={{
+                            bottom: keyboardHeight,
+                            maxHeight: `calc(100vh - ${keyboardHeight}px - 3rem)`,
+                        }}
+                    >
                         {/* Scrollable content — shrinks when keyboard appears */}
                         <div className="overflow-y-auto flex-1 px-5 pt-4 pb-3">
                             <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-4" />
@@ -570,7 +588,7 @@ function MatchScoreRow({
                         </div>
 
                         {/* Sticky footer — always visible above keyboard */}
-                        <div className="shrink-0 px-5 pt-3 pb-10 border-t border-gray-100">
+                        <div className="shrink-0 px-5 pt-3 border-t border-gray-100" style={{ paddingBottom: keyboardHeight > 0 ? 16 : 40 }}>
                             {status === 'saving' ? (
                                 <p className="text-center text-sm text-gray-400 py-3.5">Saving…</p>
                             ) : (
