@@ -18,7 +18,7 @@ export function AdminDashboard({ onLogout }: { onLogout: () => void }) {
     return (
         <div className="min-h-screen bg-gray-50">
             <NavBar />
-            <main className="max-w-5xl mx-auto px-3 sm:px-4 py-6 sm:py-8">
+            <main className="max-w-5xl mx-auto px-3 sm:px-4 pt-6 pb-24 sm:py-8">
                 <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-between mb-6">
                     <div className="flex gap-1 bg-white border border-gray-200 rounded-xl p-1 w-fit overflow-x-auto">
                         {(["tournaments", "new-tournament", "players"] as Tab[]).map(t => (
