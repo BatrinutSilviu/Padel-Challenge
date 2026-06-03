@@ -137,6 +137,8 @@ function NewTournamentTab({ onCreated }: { onCreated: () => void }) {
     const [name, setName] = useState("");
     const [date, setDate] = useState(() => new Date().toISOString().split("T")[0]);
     const [type, setType] = useState<TournamentType>("AMERICANO");
+    const [pointsPerGame, setPointsPerGame] = useState(32);
+    const [maxPlayers, setMaxPlayers] = useState(8);
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
     const [playerFilter, setPlayerFilter] = useState("");
     const [error, setError] = useState("");
@@ -145,10 +147,13 @@ function NewTournamentTab({ onCreated }: { onCreated: () => void }) {
     const allPlayersQuery = trpc.division.allPlayers.useQuery();
 
     const divisionPlayers = divisionPlayersQuery.data ?? [];
+    const allPlayers = allPlayersQuery.data ?? [];
     const q = playerFilter.trim().toLowerCase();
-    const displayedPlayers = q
-        ? (allPlayersQuery.data ?? []).filter(p => p.name.toLowerCase().includes(q))
-        : divisionPlayers;
+    const displayedPlayers = (() => {
+        const base = q ? allPlayers.filter(p => p.name.toLowerCase().includes(q)) : divisionPlayers;
+        const selectedNotInBase = allPlayers.filter(p => selectedIds.includes(p.id) && !base.some(b => b.id === p.id));
+        return [...selectedNotInBase, ...base];
+    })();
 
     const create = trpc.tournament.create.useMutation({
         onSuccess: onCreated,
@@ -156,17 +161,20 @@ function NewTournamentTab({ onCreated }: { onCreated: () => void }) {
     });
 
     function togglePlayer(id: string) {
-        setSelectedIds(prev =>
-            prev.includes(id) ? prev.filter(x => x !== id) : prev.length < 8 ? [...prev, id] : prev
-        );
+        setSelectedIds(prev => {
+            if (prev.includes(id)) return prev.filter(x => x !== id);
+            if (prev.length >= maxPlayers) return prev;
+            if (playerFilter) setPlayerFilter("");
+            return [...prev, id];
+        });
     }
 
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
         setError("");
         if (!name.trim()) return setError("Tournament name is required.");
-        if (selectedIds.length !== 8) return setError("Select exactly 8 players.");
-        create.mutate({ name: name.trim(), date, division, type, playerIds: selectedIds });
+        if (selectedIds.length !== maxPlayers) return setError(`Select exactly ${maxPlayers} players.`);
+        create.mutate({ name: name.trim(), date, division, type, pointsPerGame, playerIds: selectedIds });
     }
 
     return (
@@ -225,17 +233,55 @@ function NewTournamentTab({ onCreated }: { onCreated: () => void }) {
                 </div>
             </Field>
 
+            <Field label="Number of players">
+                <div className="flex gap-2">
+                    {[8, 12, 16].map(n => (
+                        <button
+                            key={n}
+                            type="button"
+                            onClick={() => { setMaxPlayers(n); setSelectedIds([]); }}
+                            className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${
+                                maxPlayers === n
+                                    ? "bg-[#FF4200] text-white border-[#FF4200]"
+                                    : "border-gray-300 text-gray-600 hover:border-[#FF4200]"
+                            }`}
+                        >
+                            {n}
+                        </button>
+                    ))}
+                </div>
+            </Field>
+
+            <Field label="Points per game">
+                <div className="flex flex-wrap gap-2">
+                    {[16, 24, 32].map(p => (
+                        <button
+                            key={p}
+                            type="button"
+                            onClick={() => setPointsPerGame(p)}
+                            className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${
+                                pointsPerGame === p
+                                    ? "bg-[#FF4200] text-white border-[#FF4200]"
+                                    : "border-gray-300 text-gray-600 hover:border-[#FF4200]"
+                            }`}
+                        >
+                            {p}
+                        </button>
+                    ))}
+                </div>
+            </Field>
+
             <div className="space-y-1">
                 <div className="sticky top-14 z-20 -mx-5 sm:-mx-6 px-5 sm:px-6 py-2 bg-white border-b border-gray-100 flex items-center justify-between">
                     <span className="text-sm font-medium text-gray-700">Players</span>
                     <span className={`text-sm font-semibold px-2.5 py-0.5 rounded-full transition-colors ${
-                        selectedIds.length === 8
+                        selectedIds.length === maxPlayers
                             ? "bg-[#FF4200] text-white"
                             : selectedIds.length > 0
                             ? "bg-[#FF4200]/10 text-[#FF4200]"
                             : "bg-gray-100 text-gray-600"
                     }`}>
-                        {selectedIds.length} / 8
+                        {selectedIds.length} / {maxPlayers}
                     </span>
                 </div>
                 <div className="relative mb-2 pt-1">
@@ -262,8 +308,8 @@ function NewTournamentTab({ onCreated }: { onCreated: () => void }) {
                     )}
                 </div>
                 {divisionPlayersQuery.isPending && <p className="text-gray-500 text-sm">Loading…</p>}
-                {!q && divisionPlayers.length < 8 && !divisionPlayersQuery.isPending && (
-                    <p className="text-amber-600 text-sm">{divisionLabel(division)} only has {divisionPlayers.length} players — need 8.</p>
+                {!q && divisionPlayers.length < maxPlayers && !divisionPlayersQuery.isPending && (
+                    <p className="text-amber-600 text-sm">{divisionLabel(division)} only has {divisionPlayers.length} players — need {maxPlayers}.</p>
                 )}
                 {q && displayedPlayers.length === 0 && !allPlayersQuery.isPending && (
                     <p className="text-gray-500 text-sm">No players match "{playerFilter}".</p>

@@ -19,11 +19,12 @@ export function AdminScoreEntry() {
 
     useEffect(() => {
         if (!tournament) return;
+        const ppg = tournament.pointsPerGame;
         setScoredIds(prev => {
             if (prev.size > 0) return prev;
             const ids = tournament.rounds
                 .flatMap(r => r.matches)
-                .filter(m => m.team1Score + m.team2Score === 32)
+                .filter(m => m.team1Score + m.team2Score === ppg)
                 .map(m => m.id);
             return new Set(ids);
         });
@@ -80,15 +81,6 @@ export function AdminScoreEntry() {
                         </div>
                     </div>
                     <div className="flex items-center gap-3 self-start sm:self-auto flex-wrap">
-                        {!isCompleted && (
-                            <button
-                                onClick={handleComplete}
-                                disabled={complete.isPending}
-                                className="bg-[#FF4200] text-white rounded-lg px-4 py-2 text-sm font-semibold hover:bg-[#CC3500] disabled:opacity-50 transition-colors"
-                            >
-                                {complete.isPending ? "Completing…" : "Complete Tournament"}
-                            </button>
-                        )}
                         {isCompleted && (
                             <Link to={`/tournament/${id}`} className="text-sm text-[#FF4200] hover:underline">
                                 View results →
@@ -137,35 +129,6 @@ export function AdminScoreEntry() {
                     </div>
                 )}
 
-                {/* Confirm dialog */}
-                {confirmComplete && (
-                    <div className="bg-amber-50 border border-amber-300 rounded-xl px-4 sm:px-5 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                        <p className="text-sm text-amber-800 font-medium">
-                            {totalMatches - scoredCount} match{totalMatches - scoredCount !== 1 ? "es" : ""} still have no score.
-                            Complete anyway? Those players will receive 0 points.
-                        </p>
-                        <div className="flex gap-2 shrink-0">
-                            <button
-                                onClick={() => setConfirmComplete(false)}
-                                className="px-3 py-1.5 rounded-lg text-sm border border-gray-300 text-gray-600 hover:bg-gray-50"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                onClick={() => { setConfirmComplete(false); complete.mutate({ id: id! }); }}
-                                className="px-3 py-1.5 rounded-lg text-sm bg-amber-500 text-white hover:bg-amber-600"
-                            >
-                                Complete anyway
-                            </button>
-                        </div>
-                    </div>
-                )}
-
-                {complete.error && (
-                    <p className="text-sm text-red-500 bg-red-50 border border-red-200 rounded-lg px-4 py-2">
-                        {complete.error.message}
-                    </p>
-                )}
                 {recalculate.error && (
                     <p className="text-sm text-red-500 bg-red-50 border border-red-200 rounded-lg px-4 py-2">
                         {recalculate.error.message}
@@ -198,6 +161,7 @@ export function AdminScoreEntry() {
                                         key={match.id}
                                         match={match}
                                         courtNumber={i + 1}
+                                        pointsPerGame={tournament.pointsPerGame}
                                         onSaveStart={handleSaveStart}
                                         onSaveEnd={handleSaveEnd}
                                         onSaved={handleSaved}
@@ -207,6 +171,46 @@ export function AdminScoreEntry() {
                         </div>
                     ))}
                 </div>
+
+                {/* Complete tournament — shown after all rounds */}
+                {!isCompleted && (
+                    <div className="space-y-3">
+                        {confirmComplete && (
+                            <div className="bg-amber-50 border border-amber-300 rounded-xl px-4 sm:px-5 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                <p className="text-sm text-amber-800 font-medium">
+                                    {totalMatches - scoredCount} match{totalMatches - scoredCount !== 1 ? "es" : ""} still have no score.
+                                    Complete anyway? Those players will receive 0 points.
+                                </p>
+                                <div className="flex gap-2 shrink-0">
+                                    <button
+                                        onClick={() => setConfirmComplete(false)}
+                                        className="px-3 py-1.5 rounded-lg text-sm border border-gray-300 text-gray-600 hover:bg-gray-50"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        onClick={() => { setConfirmComplete(false); complete.mutate({ id: id! }); }}
+                                        className="px-3 py-1.5 rounded-lg text-sm bg-amber-500 text-white hover:bg-amber-600"
+                                    >
+                                        Complete anyway
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                        {complete.error && (
+                            <p className="text-sm text-red-500 bg-red-50 border border-red-200 rounded-lg px-4 py-2">
+                                {complete.error.message}
+                            </p>
+                        )}
+                        <button
+                            onClick={handleComplete}
+                            disabled={complete.isPending}
+                            className="w-full bg-[#FF4200] text-white rounded-xl px-4 py-4 text-base font-semibold hover:bg-[#CC3500] disabled:opacity-50 transition-colors"
+                        >
+                            {complete.isPending ? "Completing…" : "Complete Tournament"}
+                        </button>
+                    </div>
+                )}
             </main>
         </div>
     );
@@ -222,12 +226,12 @@ type MatchData = {
     team2Player2: { id: string; name: string };
 };
 
-function readLocalScore(matchId: string): { s1: number; s2: number } | null {
+function readLocalScore(matchId: string, ppg: number): { s1: number; s2: number } | null {
     try {
         const raw = localStorage.getItem(`padel-score-${matchId}`);
         if (!raw) return null;
         const { s1, s2 } = JSON.parse(raw);
-        if (typeof s1 === "number" && typeof s2 === "number" && s1 + s2 === 32 && s1 >= 0 && s2 >= 0) {
+        if (typeof s1 === "number" && typeof s2 === "number" && s1 + s2 === ppg && s1 >= 0 && s2 >= 0) {
             return { s1, s2 };
         }
     } catch {}
@@ -247,31 +251,33 @@ type ScoreStatus = 'editing' | 'confirming' | 'saving' | 'locked' | 'unlock-pend
 function MatchScoreRow({
     match,
     courtNumber,
+    pointsPerGame,
     onSaveStart,
     onSaveEnd,
     onSaved,
 }: {
     match: MatchData;
     courtNumber: number;
+    pointsPerGame: number;
     onSaveStart: () => void;
     onSaveEnd: () => void;
     onSaved: (matchId: string) => void;
 }) {
-    const isScored = match.team1Score + match.team2Score === 32;
+    const isScored = match.team1Score + match.team2Score === pointsPerGame;
 
     const [score1, setScore1] = useState(() => {
         if (isScored) return String(match.team1Score);
-        const pending = readLocalScore(match.id);
+        const pending = readLocalScore(match.id, pointsPerGame);
         return pending ? String(pending.s1) : "";
     });
     const [score2, setScore2] = useState(() => {
         if (isScored) return String(match.team2Score);
-        const pending = readLocalScore(match.id);
+        const pending = readLocalScore(match.id, pointsPerGame);
         return pending ? String(pending.s2) : "";
     });
     const [status, setStatus] = useState<ScoreStatus>(() => {
         if (isScored) return 'locked';
-        return readLocalScore(match.id) ? 'confirming' : 'editing';
+        return readLocalScore(match.id, pointsPerGame) ? 'confirming' : 'editing';
     });
     const [mobileSheetOpen, setMobileSheetOpen] = useState(false);
     const [keyboardHeight, setKeyboardHeight] = useState(0);
@@ -323,8 +329,8 @@ function MatchScoreRow({
         if (status !== 'editing' && status !== 'confirming') return;
         const n = parseInt(val);
         if (field === 1) setScore1(val); else setScore2(val);
-        if (!isNaN(n) && n >= 0 && n <= 32) {
-            const other = 32 - n;
+        if (!isNaN(n) && n >= 0 && n <= pointsPerGame) {
+            const other = pointsPerGame - n;
             if (field === 1) setScore2(String(other)); else setScore1(String(other));
             writeLocalScore(match.id, field === 1 ? n : other, field === 1 ? other : n);
             setStatus('confirming');
@@ -338,7 +344,7 @@ function MatchScoreRow({
     function handleConfirm() {
         const s1 = parseInt(score1);
         const s2 = parseInt(score2);
-        if (isNaN(s1) || isNaN(s2) || s1 + s2 !== 32) return;
+        if (isNaN(s1) || isNaN(s2) || s1 + s2 !== pointsPerGame) return;
         setStatus('saving');
         onSaveStart();
         update.mutate({ matchId: match.id, team1Score: s1, team2Score: s2 });
@@ -379,7 +385,7 @@ function MatchScoreRow({
     const isLocked = status === 'locked' || status === 'unlock-pending';
     const s1 = parseInt(score1) || 0;
     const s2 = parseInt(score2) || 0;
-    const isValid = s1 + s2 === 32;
+    const isValid = s1 + s2 === pointsPerGame;
 
     function inputClass(team: 1 | 2) {
         const wins = team === 1 ? s1 > s2 : s2 > s1;
