@@ -149,15 +149,11 @@ function NewTournamentTab({ onCreated }: { onCreated: () => void }) {
     const divisionPlayers = divisionPlayersQuery.data ?? [];
     const allPlayers = allPlayersQuery.data ?? [];
     const q = playerFilter.trim().toLowerCase();
-    const displayedPlayers = (() => {
-        if (selectedIds.length >= maxPlayers) {
-            return allPlayers.filter(p => selectedIds.includes(p.id));
-        }
-        if (q) {
-            return allPlayers.filter(p => p.name.toLowerCase().includes(q) && !selectedIds.includes(p.id));
-        }
-        const selectedNotInBase = allPlayers.filter(p => selectedIds.includes(p.id) && !divisionPlayers.some(b => b.id === p.id));
-        return [...selectedNotInBase, ...divisionPlayers];
+    const selectedPlayers = allPlayers.filter(p => selectedIds.includes(p.id));
+    const unselectedPlayers = (() => {
+        if (selectedIds.length >= maxPlayers) return [];
+        if (q) return allPlayers.filter(p => p.name.toLowerCase().includes(q) && !selectedIds.includes(p.id));
+        return divisionPlayers.filter(p => !selectedIds.includes(p.id));
     })();
 
     const create = trpc.tournament.create.useMutation({
@@ -316,33 +312,50 @@ function NewTournamentTab({ onCreated }: { onCreated: () => void }) {
                 {!q && divisionPlayers.length < maxPlayers && !divisionPlayersQuery.isPending && (
                     <p className="text-amber-600 text-sm">{divisionLabel(division)} only has {divisionPlayers.length} players — need {maxPlayers}.</p>
                 )}
-                {q && displayedPlayers.length === 0 && !allPlayersQuery.isPending && (
+                {q && unselectedPlayers.length === 0 && !allPlayersQuery.isPending && (
                     <p className="text-gray-500 text-sm">No players match "{playerFilter}".</p>
                 )}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 mt-1">
-                    {displayedPlayers.map(p => {
-                        const selected = selectedIds.includes(p.id);
-                        const isOtherDiv = p.division !== division;
-                        return (
-                            <button
-                                key={p.id}
-                                type="button"
-                                onClick={() => togglePlayer(p.id)}
-                                className={`text-left px-3 py-2.5 rounded-lg text-sm border transition-colors ${
-                                    selected
-                                        ? "bg-[#FF4200]/10 border-[#FF4200] text-[#333366] font-medium"
-                                        : "border-gray-200 text-gray-700 hover:border-[#FF4200]/50"
-                                }`}
-                            >
-                                {selected && <span className="mr-1">✓</span>}
-                                {p.name}
-                                {isOtherDiv && (
-                                    <span className="ml-1.5 text-xs font-normal text-gray-400">(Div {p.division === 6 ? "Beg." : p.division})</span>
-                                )}
-                            </button>
-                        );
-                    })}
-                </div>
+                {selectedPlayers.length > 0 && (
+                    <div className="flex flex-col gap-1.5 mt-1">
+                        {selectedPlayers.map(p => {
+                            const isOtherDiv = p.division !== division;
+                            return (
+                                <button
+                                    key={p.id}
+                                    type="button"
+                                    onClick={() => togglePlayer(p.id)}
+                                    className="text-left px-3 py-2.5 rounded-lg text-sm border transition-colors bg-[#FF4200]/10 border-[#FF4200] text-[#333366] font-medium"
+                                >
+                                    <span className="mr-1">✓</span>
+                                    {p.name}
+                                    {isOtherDiv && (
+                                        <span className="ml-1.5 text-xs font-normal text-gray-400">(Div {p.division === 6 ? "Beg." : p.division})</span>
+                                    )}
+                                </button>
+                            );
+                        })}
+                    </div>
+                )}
+                {unselectedPlayers.length > 0 && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 mt-1">
+                        {unselectedPlayers.map(p => {
+                            const isOtherDiv = p.division !== division;
+                            return (
+                                <button
+                                    key={p.id}
+                                    type="button"
+                                    onClick={() => togglePlayer(p.id)}
+                                    className="text-left px-3 py-2.5 rounded-lg text-sm border transition-colors border-gray-200 text-gray-700 hover:border-[#FF4200]/50"
+                                >
+                                    {p.name}
+                                    {isOtherDiv && (
+                                        <span className="ml-1.5 text-xs font-normal text-gray-400">(Div {p.division === 6 ? "Beg." : p.division})</span>
+                                    )}
+                                </button>
+                            );
+                        })}
+                    </div>
+                )}
             </div>
 
             {error && <p className="text-sm text-red-500">{error}</p>}
