@@ -150,6 +150,9 @@ function NewTournamentTab({ onCreated }: { onCreated: () => void }) {
     const allPlayers = allPlayersQuery.data ?? [];
     const q = playerFilter.trim().toLowerCase();
     const displayedPlayers = (() => {
+        if (selectedIds.length >= maxPlayers) {
+            return allPlayers.filter(p => selectedIds.includes(p.id));
+        }
         const base = q ? allPlayers.filter(p => p.name.toLowerCase().includes(q)) : divisionPlayers;
         const selectedNotInBase = allPlayers.filter(p => selectedIds.includes(p.id) && !base.some(b => b.id === p.id));
         return [...selectedNotInBase, ...base];
