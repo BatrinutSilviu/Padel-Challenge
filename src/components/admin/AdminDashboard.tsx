@@ -153,9 +153,11 @@ function NewTournamentTab({ onCreated }: { onCreated: () => void }) {
         if (selectedIds.length >= maxPlayers) {
             return allPlayers.filter(p => selectedIds.includes(p.id));
         }
-        const base = q ? allPlayers.filter(p => p.name.toLowerCase().includes(q)) : divisionPlayers;
-        const selectedNotInBase = allPlayers.filter(p => selectedIds.includes(p.id) && !base.some(b => b.id === p.id));
-        return [...selectedNotInBase, ...base];
+        if (q) {
+            return allPlayers.filter(p => p.name.toLowerCase().includes(q) && !selectedIds.includes(p.id));
+        }
+        const selectedNotInBase = allPlayers.filter(p => selectedIds.includes(p.id) && !divisionPlayers.some(b => b.id === p.id));
+        return [...selectedNotInBase, ...divisionPlayers];
     })();
 
     const create = trpc.tournament.create.useMutation({
