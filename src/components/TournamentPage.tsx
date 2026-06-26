@@ -164,18 +164,18 @@ function TeamStandings({ tournament }: { tournament: TournamentData }) {
             <table className="w-full text-sm min-w-[280px]">
                 <thead className="border-b border-[#F5F5F7]">
                     <tr>
-                        <th className="text-left px-4 py-3 text-xs font-bold uppercase tracking-widest text-[#8E8E93] w-12">Rank</th>
-                        <th className="text-left px-4 py-3 text-xs font-bold uppercase tracking-widest text-[#8E8E93]">Team</th>
-                        <th className="text-right px-4 py-3 text-xs font-bold uppercase tracking-widest text-[#8E8E93]">Points</th>
+                        <th className="text-left px-3 py-3 text-xs font-bold uppercase tracking-widest text-[#8E8E93] w-10">Rank</th>
+                        <th className="text-left px-3 py-3 text-xs font-bold uppercase tracking-widest text-[#8E8E93]">Team</th>
+                        <th className="text-right px-3 py-3 text-xs font-bold uppercase tracking-widest text-[#8E8E93]">Pts</th>
                     </tr>
                 </thead>
                 <tbody>
                     {teams.map(({ p1, p2, rank, points }) => (
                         <tr key={p1.id} className="border-b border-[#F5F5F7] last:border-0 hover:bg-[#F5F5F7] transition-colors">
-                            <td className="px-4 py-3 align-middle">
+                            <td className="px-3 py-3 align-middle">
                                 <RankMedal rank={rankRemap.get(rank) ?? rank} />
                             </td>
-                            <td className="px-4 py-3">
+                            <td className="px-3 py-3">
                                 <Link to={`/player/${p1.player.id}`} className="font-semibold text-[#1A1A2E] hover:text-[#FF4200] transition-colors block">
                                     {p1.player.name}
                                 </Link>
@@ -185,7 +185,7 @@ function TeamStandings({ tournament }: { tournament: TournamentData }) {
                                     </Link>
                                 )}
                             </td>
-                            <td className="px-4 py-3 text-right font-black text-[#1A1A2E] align-middle">{points}</td>
+                            <td className="px-3 py-3 text-right font-black text-[#1A1A2E] align-middle">{points}</td>
                         </tr>
                     ))}
                 </tbody>

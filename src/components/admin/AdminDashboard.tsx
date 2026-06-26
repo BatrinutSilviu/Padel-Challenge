@@ -315,10 +315,12 @@ function CreateTournamentForm({ onCreated, onImport }: { onCreated: () => void; 
                         {teamSlots.map(([p1, p2], i) => {
                             const assignedIds = new Set(teamSlots.flat().filter(Boolean));
                             return (
-                                <div key={i} className="flex items-center gap-2">
-                                    <span className="text-sm font-medium text-gray-500 w-14 shrink-0">Team {i + 1}</span>
-                                    <PlayerPicker value={p1} onChange={id => updateTeamSlot(i, 0, id)} players={allPlayers} excludeIds={new Set([...assignedIds].filter(id => id !== p1))} placeholder="Player 1" />
-                                    <PlayerPicker value={p2} onChange={id => updateTeamSlot(i, 1, id)} players={allPlayers} excludeIds={new Set([...assignedIds].filter(id => id !== p2))} placeholder="Player 2" />
+                                <div key={i} className="flex items-start gap-2">
+                                    <span className="text-sm font-medium text-gray-500 w-14 shrink-0 pt-2.5">Team {i + 1}</span>
+                                    <div className="flex-1 flex flex-col sm:flex-row gap-2">
+                                        <PlayerPicker value={p1} onChange={id => updateTeamSlot(i, 0, id)} players={allPlayers} excludeIds={new Set([...assignedIds].filter(id => id !== p1))} placeholder="Player 1" />
+                                        <PlayerPicker value={p2} onChange={id => updateTeamSlot(i, 1, id)} players={allPlayers} excludeIds={new Set([...assignedIds].filter(id => id !== p2))} placeholder="Player 2" />
+                                    </div>
                                 </div>
                             );
                         })}
@@ -464,7 +466,7 @@ function PlayerPicker({
             <button
                 type="button"
                 onClick={() => { setOpen(v => !v); setSearch(""); }}
-                className={`w-full text-left px-3 py-2 rounded-lg border text-sm transition-colors truncate ${
+                className={`w-full text-left px-3 py-2.5 rounded-lg border text-sm transition-colors truncate ${
                     selected
                         ? "border-gray-300 text-gray-800 bg-white hover:border-[#FF4200]"
                         : "border-dashed border-gray-300 text-gray-400 bg-white hover:border-[#FF4200] hover:text-[#FF4200]"
@@ -473,30 +475,30 @@ function PlayerPicker({
                 {selected ? selected.name : placeholder}
             </button>
             {open && (
-                <div className="absolute z-30 top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden">
+                <div className="absolute z-30 top-full left-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden min-w-[220px]">
                     <div className="p-2 border-b border-gray-100">
                         <input
                             autoFocus
                             value={search}
                             onChange={e => setSearch(e.target.value)}
                             onKeyDown={e => e.key === "Escape" && setOpen(false)}
-                            className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF4200]"
+                            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF4200]"
                             placeholder="Search…"
                         />
                     </div>
-                    <div className="max-h-48 overflow-y-auto">
+                    <div className="max-h-52 overflow-y-auto">
                         {filtered.length === 0 ? (
-                            <p className="text-sm text-gray-400 px-3 py-2">No players available</p>
+                            <p className="text-sm text-gray-400 px-3 py-3">No players available</p>
                         ) : (
                             filtered.map(p => (
                                 <button
                                     key={p.id}
                                     type="button"
                                     onClick={() => { onChange(p.id); setOpen(false); }}
-                                    className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-[#FF4200]/5 hover:text-[#FF4200] flex items-center justify-between"
+                                    className="w-full text-left px-3 py-3 text-sm text-gray-700 hover:bg-[#FF4200]/5 hover:text-[#FF4200] flex items-center justify-between gap-2"
                                 >
                                     <span>{p.name}</span>
-                                    <span className="text-xs text-gray-400 ml-2 shrink-0">Div {p.division === 6 ? "Beg" : p.division}</span>
+                                    <span className="text-xs text-gray-400 shrink-0">Div {p.division === 6 ? "Beg" : p.division}</span>
                                 </button>
                             ))
                         )}
@@ -506,7 +508,7 @@ function PlayerPicker({
                             <button
                                 type="button"
                                 onClick={() => { onChange(""); setOpen(false); }}
-                                className="w-full text-left px-3 py-1.5 text-xs text-gray-400 hover:text-red-400 rounded-lg"
+                                className="w-full text-left px-3 py-2.5 text-xs text-gray-400 hover:text-red-400 rounded-lg"
                             >
                                 Clear
                             </button>
