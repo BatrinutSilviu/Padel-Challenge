@@ -8,10 +8,11 @@ import { trpc, trpcClient } from './trpc';
 
 const queryClient = new QueryClient({
     mutationCache: new MutationCache({
-        onError(error) {
+        onError(error, _variables, _context, mutation) {
             if ((error as any)?.data?.code === 'UNAUTHORIZED') {
                 localStorage.removeItem('admin_token');
-                window.dispatchEvent(new Event('admin-session-expired'));
+                const retry = () => mutation.execute(mutation.state.variables);
+                window.dispatchEvent(new CustomEvent('admin-session-expired', { detail: { retry } }));
             }
         },
     }),

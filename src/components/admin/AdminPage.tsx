@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { NavBar } from "../NavBar";
 import { AdminDashboard } from "./AdminDashboard";
 import { trpc } from "../../trpc";
@@ -6,11 +6,15 @@ import { trpc } from "../../trpc";
 export function AdminPage() {
     const [token, setToken] = useState<string | null>(() => localStorage.getItem("admin_token"));
     const [sessionExpired, setSessionExpired] = useState(false);
+    const pendingRetryRef = useRef<(() => void) | null>(null);
 
     function handleLogin(t: string) {
         localStorage.setItem("admin_token", t);
         setToken(t);
         setSessionExpired(false);
+        const retry = pendingRetryRef.current;
+        pendingRetryRef.current = null;
+        if (retry) retry();
     }
 
     function handleLogout() {
@@ -20,7 +24,8 @@ export function AdminPage() {
     }
 
     useEffect(() => {
-        function onExpired() {
+        function onExpired(e: Event) {
+            pendingRetryRef.current = (e as CustomEvent).detail?.retry ?? null;
             setSessionExpired(true);
         }
         window.addEventListener('admin-session-expired', onExpired);
