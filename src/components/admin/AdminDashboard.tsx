@@ -279,7 +279,7 @@ function CreateTournamentForm({ onCreated, onImport, onTeamAmericano }: { onCrea
 
             <Field label="Points per game">
                 <div className="flex flex-wrap gap-2">
-                    {[16, 24, 32].map(p => (
+                    {[16, 24, 32, 40].map(p => (
                         <button
                             key={p}
                             type="button"
@@ -563,7 +563,7 @@ function CreateTeamAmericanoForm({ onCreated, onBack }: { onCreated: () => void;
 
             <Field label="Points per game">
                 <div className="flex flex-wrap gap-2">
-                    {[16, 24, 32].map(p => (
+                    {[16, 24, 32, 40].map(p => (
                         <button key={p} type="button" onClick={() => setPointsPerGame(p)}
                             className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${pointsPerGame === p ? "bg-[#FF4200] text-white border-[#FF4200]" : "border-gray-300 text-gray-600 hover:border-[#FF4200]"}`}>
                             {p}
