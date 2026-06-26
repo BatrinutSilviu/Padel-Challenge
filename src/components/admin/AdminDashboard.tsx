@@ -133,13 +133,12 @@ function TournamentsTab() {
 }
 
 function NewTournamentTab({ onCreated }: { onCreated: () => void }) {
-    const [mode, setMode] = useState<"create" | "import" | "team">("create");
+    const [mode, setMode] = useState<"create" | "import">("create");
     if (mode === "import") return <ImportRankedinTab onImported={onCreated} onBack={() => setMode("create")} />;
-    if (mode === "team") return <CreateTeamAmericanoForm onCreated={onCreated} onBack={() => setMode("create")} />;
-    return <CreateTournamentForm onCreated={onCreated} onImport={() => setMode("import")} onTeamAmericano={() => setMode("team")} />;
+    return <CreateTournamentForm onCreated={onCreated} onImport={() => setMode("import")} />;
 }
 
-function CreateTournamentForm({ onCreated, onImport, onTeamAmericano }: { onCreated: () => void; onImport: () => void; onTeamAmericano: () => void }) {
+function CreateTournamentForm({ onCreated, onImport }: { onCreated: () => void; onImport: () => void }) {
     const [division, setDivision] = useState(1);
     const [name, setName] = useState("");
     const [date, setDate] = useState(() => new Date().toISOString().split("T")[0]);
@@ -148,6 +147,9 @@ function CreateTournamentForm({ onCreated, onImport, onTeamAmericano }: { onCrea
     const [maxPlayers, setMaxPlayers] = useState(8);
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
     const [playerFilter, setPlayerFilter] = useState("");
+    // Team Americano state
+    const [numTeams, setNumTeams] = useState(4);
+    const [teamSlots, setTeamSlots] = useState<[string, string][]>(() => Array.from({ length: 4 }, () => ["", ""]));
     const [error, setError] = useState("");
 
     const divisionPlayersQuery = trpc.division.players.useQuery({ division });
@@ -167,6 +169,19 @@ function CreateTournamentForm({ onCreated, onImport, onTeamAmericano }: { onCrea
         onSuccess: onCreated,
         onError: (e) => setError(e.message),
     });
+    const createTeamAmericano = trpc.tournament.createTeamAmericano.useMutation({
+        onSuccess: onCreated,
+        onError: (e) => setError(e.message),
+    });
+
+    function changeNumTeams(n: number) {
+        setNumTeams(n);
+        setTeamSlots(prev => Array.from({ length: n }, (_, i) => prev[i] ?? ["", ""]));
+    }
+
+    function updateTeamSlot(i: number, slot: 0 | 1, playerId: string) {
+        setTeamSlots(prev => prev.map((t, idx) => idx === i ? (slot === 0 ? [playerId, t[1]] : [t[0], playerId]) : t));
+    }
 
     function togglePlayer(id: string) {
         setSelectedIds(prev => {
@@ -181,8 +196,17 @@ function CreateTournamentForm({ onCreated, onImport, onTeamAmericano }: { onCrea
         e.preventDefault();
         setError("");
         if (!name.trim()) return setError("Tournament name is required.");
-        if (selectedIds.length !== maxPlayers) return setError(`Select exactly ${maxPlayers} players.`);
-        create.mutate({ name: name.trim(), date, division, type, pointsPerGame, playerIds: selectedIds });
+        if (type === "TEAM_AMERICANO") {
+            for (let i = 0; i < teamSlots.length; i++) {
+                const [p1, p2] = teamSlots[i];
+                if (!p1 || !p2) return setError(`Team ${i + 1} is incomplete — select both players.`);
+                if (p1 === p2) return setError(`Team ${i + 1} has the same player in both slots.`);
+            }
+            createTeamAmericano.mutate({ name: name.trim(), date, division, pointsPerGame, teams: teamSlots.map(([p1, p2]) => ({ player1Id: p1, player2Id: p2 })) });
+        } else {
+            if (selectedIds.length !== maxPlayers) return setError(`Select exactly ${maxPlayers} players.`);
+            create.mutate({ name: name.trim(), date, division, type, pointsPerGame, playerIds: selectedIds });
+        }
     }
 
     return (
@@ -234,7 +258,7 @@ function CreateTournamentForm({ onCreated, onImport, onTeamAmericano }: { onCrea
 
             <Field label="Type">
                 <div className="flex flex-wrap gap-2">
-                    {(["AMERICANO", "AMERICANO_CHAMPIONS", "AMERICANO_GIRLS", "CHALLENGER"] as TournamentType[]).map(t => (
+                    {(["AMERICANO", "AMERICANO_CHAMPIONS", "AMERICANO_GIRLS", "CHALLENGER", "TEAM_AMERICANO"] as TournamentType[]).map(t => (
                         <button
                             key={t}
                             type="button"
@@ -246,32 +270,6 @@ function CreateTournamentForm({ onCreated, onImport, onTeamAmericano }: { onCrea
                             }`}
                         >
                             {TOURNAMENT_TYPE_LABELS[t]}
-                        </button>
-                    ))}
-                    <button
-                        type="button"
-                        onClick={onTeamAmericano}
-                        className="px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors border-gray-300 text-gray-600 hover:border-[#FF4200] hover:text-[#FF4200]"
-                    >
-                        {TOURNAMENT_TYPE_LABELS["TEAM_AMERICANO"]}
-                    </button>
-                </div>
-            </Field>
-
-            <Field label="Number of players">
-                <div className="flex gap-2">
-                    {[8, 12, 16].map(n => (
-                        <button
-                            key={n}
-                            type="button"
-                            onClick={() => { setMaxPlayers(n); setSelectedIds([]); }}
-                            className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${
-                                maxPlayers === n
-                                    ? "bg-[#FF4200] text-white border-[#FF4200]"
-                                    : "border-gray-300 text-gray-600 hover:border-[#FF4200]"
-                            }`}
-                        >
-                            {n}
                         </button>
                     ))}
                 </div>
@@ -296,100 +294,141 @@ function CreateTournamentForm({ onCreated, onImport, onTeamAmericano }: { onCrea
                 </div>
             </Field>
 
-            <div className="space-y-1">
-                <div className="sticky top-14 z-20 -mx-5 sm:-mx-6 px-5 sm:px-6 py-2 bg-white border-b border-gray-100 flex items-center justify-between">
-                    <span className="text-sm font-medium text-gray-700">Players</span>
-                    <span className={`text-sm font-semibold px-2.5 py-0.5 rounded-full transition-colors ${
-                        selectedIds.length === maxPlayers
-                            ? "bg-[#FF4200] text-white"
-                            : selectedIds.length > 0
-                            ? "bg-[#FF4200]/10 text-[#FF4200]"
-                            : "bg-gray-100 text-gray-600"
-                    }`}>
-                        {selectedIds.length} / {maxPlayers}
-                    </span>
-                </div>
-                <div className="relative mb-2 pt-1">
-                    <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-                    </svg>
-                    <input
-                        type="text"
-                        value={playerFilter}
-                        onChange={e => setPlayerFilter(e.target.value)}
-                        placeholder="Search across all divisions…"
-                        className="w-full border border-gray-300 rounded-lg pl-9 pr-8 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF4200] focus:border-transparent bg-white placeholder-gray-400"
-                    />
-                    {playerFilter && (
-                        <button
-                            type="button"
-                            onClick={() => setPlayerFilter("")}
-                            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                        >
-                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                                <path d="M18 6 6 18M6 6l12 12"/>
+            {type === "TEAM_AMERICANO" ? (
+                <>
+                    <Field label="Number of teams">
+                        <div className="flex gap-2">
+                            {[4, 6, 8].map(n => (
+                                <button key={n} type="button" onClick={() => changeNumTeams(n)}
+                                    className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${numTeams === n ? "bg-[#FF4200] text-white border-[#FF4200]" : "border-gray-300 text-gray-600 hover:border-[#FF4200]"}`}>
+                                    {n}
+                                </button>
+                            ))}
+                        </div>
+                    </Field>
+
+                    <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                            <span className="text-sm font-medium text-gray-700">Teams</span>
+                            <span className="text-xs text-gray-400">{(numTeams * (numTeams - 1)) / 2} matches · {numTeams - 1} rounds</span>
+                        </div>
+                        {teamSlots.map(([p1, p2], i) => {
+                            const assignedIds = new Set(teamSlots.flat().filter(Boolean));
+                            return (
+                                <div key={i} className="flex items-center gap-2">
+                                    <span className="text-sm font-medium text-gray-500 w-14 shrink-0">Team {i + 1}</span>
+                                    <PlayerPicker value={p1} onChange={id => updateTeamSlot(i, 0, id)} players={allPlayers} excludeIds={new Set([...assignedIds].filter(id => id !== p1))} placeholder="Player 1" />
+                                    <PlayerPicker value={p2} onChange={id => updateTeamSlot(i, 1, id)} players={allPlayers} excludeIds={new Set([...assignedIds].filter(id => id !== p2))} placeholder="Player 2" />
+                                </div>
+                            );
+                        })}
+                    </div>
+                </>
+            ) : (
+                <>
+                    <Field label="Number of players">
+                        <div className="flex gap-2">
+                            {[8, 12, 16].map(n => (
+                                <button
+                                    key={n}
+                                    type="button"
+                                    onClick={() => { setMaxPlayers(n); setSelectedIds([]); }}
+                                    className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${
+                                        maxPlayers === n
+                                            ? "bg-[#FF4200] text-white border-[#FF4200]"
+                                            : "border-gray-300 text-gray-600 hover:border-[#FF4200]"
+                                    }`}
+                                >
+                                    {n}
+                                </button>
+                            ))}
+                        </div>
+                    </Field>
+
+                    <div className="space-y-1">
+                        <div className="sticky top-14 z-20 -mx-5 sm:-mx-6 px-5 sm:px-6 py-2 bg-white border-b border-gray-100 flex items-center justify-between">
+                            <span className="text-sm font-medium text-gray-700">Players</span>
+                            <span className={`text-sm font-semibold px-2.5 py-0.5 rounded-full transition-colors ${
+                                selectedIds.length === maxPlayers
+                                    ? "bg-[#FF4200] text-white"
+                                    : selectedIds.length > 0
+                                    ? "bg-[#FF4200]/10 text-[#FF4200]"
+                                    : "bg-gray-100 text-gray-600"
+                            }`}>
+                                {selectedIds.length} / {maxPlayers}
+                            </span>
+                        </div>
+                        <div className="relative mb-2 pt-1">
+                            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
                             </svg>
-                        </button>
-                    )}
-                </div>
-                {divisionPlayersQuery.isPending && <p className="text-gray-500 text-sm">Loading…</p>}
-                {!q && divisionPlayers.length < maxPlayers && !divisionPlayersQuery.isPending && (
-                    <p className="text-amber-600 text-sm">{divisionLabel(division)} only has {divisionPlayers.length} players — need {maxPlayers}.</p>
-                )}
-                {q && unselectedPlayers.length === 0 && !allPlayersQuery.isPending && (
-                    <p className="text-gray-500 text-sm">No players match "{playerFilter}".</p>
-                )}
-                {selectedPlayers.length > 0 && (
-                    <div className="flex flex-col gap-1.5 mt-1">
-                        {selectedPlayers.map(p => {
-                            const isOtherDiv = p.division !== division;
-                            return (
+                            <input
+                                type="text"
+                                value={playerFilter}
+                                onChange={e => setPlayerFilter(e.target.value)}
+                                placeholder="Search across all divisions…"
+                                className="w-full border border-gray-300 rounded-lg pl-9 pr-8 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF4200] focus:border-transparent bg-white placeholder-gray-400"
+                            />
+                            {playerFilter && (
                                 <button
-                                    key={p.id}
                                     type="button"
-                                    onClick={() => togglePlayer(p.id)}
-                                    className="text-left px-3 py-2.5 rounded-lg text-sm border transition-colors bg-[#FF4200]/10 border-[#FF4200] text-[#333366] font-medium"
+                                    onClick={() => setPlayerFilter("")}
+                                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                                 >
-                                    <span className="mr-1">✓</span>
-                                    {p.name}
-                                    {isOtherDiv && (
-                                        <span className="ml-1.5 text-xs font-normal text-gray-400">(Div {p.division === 6 ? "Beg." : p.division})</span>
-                                    )}
+                                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                                        <path d="M18 6 6 18M6 6l12 12"/>
+                                    </svg>
                                 </button>
-                            );
-                        })}
+                            )}
+                        </div>
+                        {divisionPlayersQuery.isPending && <p className="text-gray-500 text-sm">Loading…</p>}
+                        {!q && divisionPlayers.length < maxPlayers && !divisionPlayersQuery.isPending && (
+                            <p className="text-amber-600 text-sm">{divisionLabel(division)} only has {divisionPlayers.length} players — need {maxPlayers}.</p>
+                        )}
+                        {q && unselectedPlayers.length === 0 && !allPlayersQuery.isPending && (
+                            <p className="text-gray-500 text-sm">No players match "{playerFilter}".</p>
+                        )}
+                        {selectedPlayers.length > 0 && (
+                            <div className="flex flex-col gap-1.5 mt-1">
+                                {selectedPlayers.map(p => {
+                                    const isOtherDiv = p.division !== division;
+                                    return (
+                                        <button key={p.id} type="button" onClick={() => togglePlayer(p.id)}
+                                            className="text-left px-3 py-2.5 rounded-lg text-sm border transition-colors bg-[#FF4200]/10 border-[#FF4200] text-[#333366] font-medium">
+                                            <span className="mr-1">✓</span>
+                                            {p.name}
+                                            {isOtherDiv && <span className="ml-1.5 text-xs font-normal text-gray-400">(Div {p.division === 6 ? "Beg." : p.division})</span>}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        )}
+                        {unselectedPlayers.length > 0 && (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 mt-1">
+                                {unselectedPlayers.map(p => {
+                                    const isOtherDiv = p.division !== division;
+                                    return (
+                                        <button key={p.id} type="button" onClick={() => togglePlayer(p.id)}
+                                            className="text-left px-3 py-2.5 rounded-lg text-sm border transition-colors border-gray-200 text-gray-700 hover:border-[#FF4200]/50">
+                                            {p.name}
+                                            {isOtherDiv && <span className="ml-1.5 text-xs font-normal text-gray-400">(Div {p.division === 6 ? "Beg." : p.division})</span>}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        )}
                     </div>
-                )}
-                {unselectedPlayers.length > 0 && (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 mt-1">
-                        {unselectedPlayers.map(p => {
-                            const isOtherDiv = p.division !== division;
-                            return (
-                                <button
-                                    key={p.id}
-                                    type="button"
-                                    onClick={() => togglePlayer(p.id)}
-                                    className="text-left px-3 py-2.5 rounded-lg text-sm border transition-colors border-gray-200 text-gray-700 hover:border-[#FF4200]/50"
-                                >
-                                    {p.name}
-                                    {isOtherDiv && (
-                                        <span className="ml-1.5 text-xs font-normal text-gray-400">(Div {p.division === 6 ? "Beg." : p.division})</span>
-                                    )}
-                                </button>
-                            );
-                        })}
-                    </div>
-                )}
-            </div>
+                </>
+            )}
 
             {error && <p className="text-sm text-red-500">{error}</p>}
 
             <button
                 type="submit"
-                disabled={create.isPending}
+                disabled={create.isPending || createTeamAmericano.isPending}
                 className="w-full sm:w-auto bg-[#FF4200] text-white rounded-lg px-5 py-2.5 text-sm font-medium hover:bg-[#CC3500] disabled:opacity-50 transition-colors"
             >
-                {create.isPending ? "Creating…" : "Create & Generate Schedule"}
+                {(create.isPending || createTeamAmericano.isPending) ? "Creating…" : "Create & Generate Schedule"}
             </button>
         </form>
     );
@@ -476,138 +515,6 @@ function PlayerPicker({
                 </div>
             )}
         </div>
-    );
-}
-
-function CreateTeamAmericanoForm({ onCreated, onBack }: { onCreated: () => void; onBack: () => void }) {
-    const [name, setName] = useState("");
-    const [date, setDate] = useState(() => new Date().toISOString().split("T")[0]);
-    const [division, setDivision] = useState(4);
-    const [pointsPerGame, setPointsPerGame] = useState(32);
-    const [numTeams, setNumTeams] = useState(4);
-    const [slots, setSlots] = useState<[string, string][]>(() => Array.from({ length: 4 }, () => ["", ""]));
-    const [error, setError] = useState("");
-
-    const allPlayersQuery = trpc.division.allPlayers.useQuery();
-    const allPlayers = allPlayersQuery.data ?? [];
-
-    const create = trpc.tournament.createTeamAmericano.useMutation({
-        onSuccess: onCreated,
-        onError: (e) => setError(e.message),
-    });
-
-    const assignedIds = new Set(slots.flat().filter(Boolean));
-    const totalMatches = (numTeams * (numTeams - 1)) / 2;
-    const numRounds = numTeams - 1; // always even (4, 6, 8)
-
-    function changeNumTeams(n: number) {
-        setNumTeams(n);
-        setSlots(prev => {
-            const next: [string, string][] = Array.from({ length: n }, (_, i) => prev[i] ?? ["", ""]);
-            return next;
-        });
-    }
-
-    function updateTeam(i: number, slot: 0 | 1, playerId: string) {
-        setSlots(prev => prev.map((t, idx) => idx === i ? (slot === 0 ? [playerId, t[1]] : [t[0], playerId]) : t));
-    }
-
-    function handleSubmit(e: React.FormEvent) {
-        e.preventDefault();
-        setError("");
-        if (!name.trim()) return setError("Tournament name is required.");
-        for (let i = 0; i < slots.length; i++) {
-            const [p1, p2] = slots[i];
-            if (!p1 || !p2) return setError(`Team ${i + 1} is incomplete — select both players.`);
-            if (p1 === p2) return setError(`Team ${i + 1} has the same player in both slots.`);
-        }
-        create.mutate({
-            name: name.trim(),
-            date,
-            division,
-            pointsPerGame,
-            teams: slots.map(([p1, p2]) => ({ player1Id: p1, player2Id: p2 })),
-        });
-    }
-
-    return (
-        <form onSubmit={handleSubmit} className="bg-white rounded-xl border border-gray-200 p-5 sm:p-6 space-y-5 max-w-2xl">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-                <h2 className="text-lg font-semibold text-gray-800">Team Americano</h2>
-                <button type="button" onClick={onBack}
-                    className="inline-flex items-center gap-1.5 text-sm font-medium border border-gray-200 text-gray-500 px-3 py-1.5 rounded-lg hover:border-gray-400 hover:text-gray-700 transition-colors shrink-0">
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"/></svg>
-                    Back
-                </button>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Field label="Name">
-                    <input value={name} onChange={e => setName(e.target.value)} className={input} placeholder="e.g. Team Cup — Round 1" />
-                </Field>
-                <Field label="Date">
-                    <input type="date" value={date} onChange={e => setDate(e.target.value)} className={input} />
-                </Field>
-            </div>
-
-            <Field label="Division">
-                <div className="flex flex-wrap gap-2">
-                    {[1, 2, 3, 4, 5, 6].map(d => (
-                        <button key={d} type="button" onClick={() => setDivision(d)}
-                            className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${division === d ? "bg-[#FF4200] text-white border-[#FF4200]" : "border-gray-300 text-gray-600 hover:border-[#FF4200]"}`}>
-                            {d === 6 ? "Beginner" : `${d} — ${DIVISION_NAMES[d]}`}
-                        </button>
-                    ))}
-                </div>
-            </Field>
-
-            <Field label="Points per game">
-                <div className="flex flex-wrap gap-2">
-                    {[16, 24, 32, 40].map(p => (
-                        <button key={p} type="button" onClick={() => setPointsPerGame(p)}
-                            className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${pointsPerGame === p ? "bg-[#FF4200] text-white border-[#FF4200]" : "border-gray-300 text-gray-600 hover:border-[#FF4200]"}`}>
-                            {p}
-                        </button>
-                    ))}
-                </div>
-            </Field>
-
-            <Field label="Number of teams">
-                <div className="flex gap-2">
-                    {[4, 6, 8].map(n => (
-                        <button key={n} type="button" onClick={() => changeNumTeams(n)}
-                            className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${numTeams === n ? "bg-[#FF4200] text-white border-[#FF4200]" : "border-gray-300 text-gray-600 hover:border-[#FF4200]"}`}>
-                            {n}
-                        </button>
-                    ))}
-                </div>
-            </Field>
-
-            <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-gray-700">Teams</span>
-                    <span className="text-xs text-gray-400">{totalMatches} matches · {numRounds} rounds</span>
-                </div>
-                {slots.map(([p1, p2], i) => {
-                    const excludeForSlot0 = new Set([...assignedIds].filter(id => id !== p1));
-                    const excludeForSlot1 = new Set([...assignedIds].filter(id => id !== p2));
-                    return (
-                        <div key={i} className="flex items-center gap-2">
-                            <span className="text-sm font-medium text-gray-500 w-14 shrink-0">Team {i + 1}</span>
-                            <PlayerPicker value={p1} onChange={id => updateTeam(i, 0, id)} players={allPlayers} excludeIds={excludeForSlot0} placeholder="Player 1" />
-                            <PlayerPicker value={p2} onChange={id => updateTeam(i, 1, id)} players={allPlayers} excludeIds={excludeForSlot1} placeholder="Player 2" />
-                        </div>
-                    );
-                })}
-            </div>
-
-            {error && <p className="text-sm text-red-500">{error}</p>}
-
-            <button type="submit" disabled={create.isPending}
-                className="w-full sm:w-auto bg-[#FF4200] text-white rounded-lg px-5 py-2.5 text-sm font-medium hover:bg-[#CC3500] disabled:opacity-50 transition-colors">
-                {create.isPending ? "Creating…" : "Create & Generate Schedule"}
-            </button>
-        </form>
     );
 }
 
