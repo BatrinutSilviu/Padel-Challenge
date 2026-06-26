@@ -133,13 +133,13 @@ function TournamentsTab() {
 }
 
 function NewTournamentTab({ onCreated }: { onCreated: () => void }) {
-    const [mode, setMode] = useState<"create" | "import">("create");
+    const [mode, setMode] = useState<"create" | "import" | "team">("create");
     if (mode === "import") return <ImportRankedinTab onImported={onCreated} onBack={() => setMode("create")} />;
-
-    return <CreateTournamentForm onCreated={onCreated} onImport={() => setMode("import")} />;
+    if (mode === "team") return <CreateTeamAmericanoForm onCreated={onCreated} onBack={() => setMode("create")} />;
+    return <CreateTournamentForm onCreated={onCreated} onImport={() => setMode("import")} onTeamAmericano={() => setMode("team")} />;
 }
 
-function CreateTournamentForm({ onCreated, onImport }: { onCreated: () => void; onImport: () => void }) {
+function CreateTournamentForm({ onCreated, onImport, onTeamAmericano }: { onCreated: () => void; onImport: () => void; onTeamAmericano: () => void }) {
     const [division, setDivision] = useState(1);
     const [name, setName] = useState("");
     const [date, setDate] = useState(() => new Date().toISOString().split("T")[0]);
@@ -189,14 +189,24 @@ function CreateTournamentForm({ onCreated, onImport }: { onCreated: () => void; 
         <form onSubmit={handleSubmit} className="bg-white rounded-xl border border-gray-200 p-5 sm:p-6 space-y-5 max-w-2xl">
             <div className="flex flex-wrap items-center justify-between gap-2">
                 <h2 className="text-lg font-semibold text-gray-800">Create Tournament</h2>
-                <button
-                    type="button"
-                    onClick={onImport}
-                    className="inline-flex items-center gap-1.5 text-sm font-medium border border-gray-300 text-gray-600 px-3 py-1.5 rounded-lg hover:border-[#FF4200] hover:text-[#FF4200] transition-colors shrink-0"
-                >
-                    <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
-                    Import from Rankedin
-                </button>
+                <div className="flex flex-wrap gap-2">
+                    <button
+                        type="button"
+                        onClick={onTeamAmericano}
+                        className="inline-flex items-center gap-1.5 text-sm font-medium border border-gray-300 text-gray-600 px-3 py-1.5 rounded-lg hover:border-[#FF4200] hover:text-[#FF4200] transition-colors shrink-0"
+                    >
+                        <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 3a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Zm-13.5 0a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z"/></svg>
+                        Team Americano
+                    </button>
+                    <button
+                        type="button"
+                        onClick={onImport}
+                        className="inline-flex items-center gap-1.5 text-sm font-medium border border-gray-300 text-gray-600 px-3 py-1.5 rounded-lg hover:border-[#FF4200] hover:text-[#FF4200] transition-colors shrink-0"
+                    >
+                        <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
+                        Import from Rankedin
+                    </button>
+                </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -388,6 +398,226 @@ function CreateTournamentForm({ onCreated, onImport }: { onCreated: () => void; 
     );
 }
 
+
+// ─── Team Americano ──────────────────────────────────────────────────────────
+
+function PlayerPicker({
+    value,
+    onChange,
+    players,
+    excludeIds,
+    placeholder = "Pick player",
+}: {
+    value: string;
+    onChange: (id: string) => void;
+    players: { id: string; name: string; division: number }[];
+    excludeIds: Set<string>;
+    placeholder?: string;
+}) {
+    const [open, setOpen] = useState(false);
+    const [search, setSearch] = useState("");
+
+    const selected = players.find(p => p.id === value);
+    const filtered = players.filter(p =>
+        !excludeIds.has(p.id) &&
+        (search === "" || p.name.toLowerCase().includes(search.toLowerCase()))
+    );
+
+    return (
+        <div className="relative flex-1 min-w-0">
+            <button
+                type="button"
+                onClick={() => { setOpen(v => !v); setSearch(""); }}
+                className={`w-full text-left px-3 py-2 rounded-lg border text-sm transition-colors truncate ${
+                    selected
+                        ? "border-gray-300 text-gray-800 bg-white hover:border-[#FF4200]"
+                        : "border-dashed border-gray-300 text-gray-400 bg-white hover:border-[#FF4200] hover:text-[#FF4200]"
+                }`}
+            >
+                {selected ? selected.name : placeholder}
+            </button>
+            {open && (
+                <div className="absolute z-30 top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden">
+                    <div className="p-2 border-b border-gray-100">
+                        <input
+                            autoFocus
+                            value={search}
+                            onChange={e => setSearch(e.target.value)}
+                            onKeyDown={e => e.key === "Escape" && setOpen(false)}
+                            className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF4200]"
+                            placeholder="Search…"
+                        />
+                    </div>
+                    <div className="max-h-48 overflow-y-auto">
+                        {filtered.length === 0 ? (
+                            <p className="text-sm text-gray-400 px-3 py-2">No players available</p>
+                        ) : (
+                            filtered.map(p => (
+                                <button
+                                    key={p.id}
+                                    type="button"
+                                    onClick={() => { onChange(p.id); setOpen(false); }}
+                                    className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-[#FF4200]/5 hover:text-[#FF4200] flex items-center justify-between"
+                                >
+                                    <span>{p.name}</span>
+                                    <span className="text-xs text-gray-400 ml-2 shrink-0">Div {p.division === 6 ? "Beg" : p.division}</span>
+                                </button>
+                            ))
+                        )}
+                    </div>
+                    {value && (
+                        <div className="border-t border-gray-100 p-1.5">
+                            <button
+                                type="button"
+                                onClick={() => { onChange(""); setOpen(false); }}
+                                className="w-full text-left px-3 py-1.5 text-xs text-gray-400 hover:text-red-400 rounded-lg"
+                            >
+                                Clear
+                            </button>
+                        </div>
+                    )}
+                </div>
+            )}
+        </div>
+    );
+}
+
+function CreateTeamAmericanoForm({ onCreated, onBack }: { onCreated: () => void; onBack: () => void }) {
+    const [name, setName] = useState("");
+    const [date, setDate] = useState(() => new Date().toISOString().split("T")[0]);
+    const [division, setDivision] = useState(4);
+    const [pointsPerGame, setPointsPerGame] = useState(32);
+    const [teams, setTeams] = useState<[string, string][]>([["", ""], ["", ""], ["", ""], ["", ""]]);
+    const [error, setError] = useState("");
+
+    const allPlayersQuery = trpc.division.allPlayers.useQuery();
+    const allPlayers = allPlayersQuery.data ?? [];
+
+    const create = trpc.tournament.createTeamAmericano.useMutation({
+        onSuccess: onCreated,
+        onError: (e) => setError(e.message),
+    });
+
+    const assignedIds = new Set(teams.flat().filter(Boolean));
+    const numTeams = teams.length;
+    const totalMatches = (numTeams * (numTeams - 1)) / 2;
+    const numRounds = numTeams % 2 === 0 ? numTeams - 1 : numTeams;
+
+    function updateTeam(i: number, slot: 0 | 1, playerId: string) {
+        setTeams(prev => prev.map((t, idx) => idx === i ? (slot === 0 ? [playerId, t[1]] : [t[0], playerId]) : t));
+    }
+
+    function addTeam() {
+        setTeams(prev => [...prev, ["", ""]]);
+    }
+
+    function removeTeam(i: number) {
+        setTeams(prev => prev.filter((_, idx) => idx !== i));
+    }
+
+    function handleSubmit(e: React.FormEvent) {
+        e.preventDefault();
+        setError("");
+        if (!name.trim()) return setError("Tournament name is required.");
+        if (teams.length < 2) return setError("At least 2 teams required.");
+        for (let i = 0; i < teams.length; i++) {
+            const [p1, p2] = teams[i];
+            if (!p1 || !p2) return setError(`Team ${i + 1} is incomplete — select both players.`);
+            if (p1 === p2) return setError(`Team ${i + 1} has the same player in both slots.`);
+        }
+        create.mutate({
+            name: name.trim(),
+            date,
+            division,
+            pointsPerGame,
+            teams: teams.map(([p1, p2]) => ({ player1Id: p1, player2Id: p2 })),
+        });
+    }
+
+    return (
+        <form onSubmit={handleSubmit} className="bg-white rounded-xl border border-gray-200 p-5 sm:p-6 space-y-5 max-w-2xl">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+                <h2 className="text-lg font-semibold text-gray-800">Team Americano</h2>
+                <button type="button" onClick={onBack}
+                    className="inline-flex items-center gap-1.5 text-sm font-medium border border-gray-200 text-gray-500 px-3 py-1.5 rounded-lg hover:border-gray-400 hover:text-gray-700 transition-colors shrink-0">
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"/></svg>
+                    Back
+                </button>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <Field label="Name">
+                    <input value={name} onChange={e => setName(e.target.value)} className={input} placeholder="e.g. Team Cup — Round 1" />
+                </Field>
+                <Field label="Date">
+                    <input type="date" value={date} onChange={e => setDate(e.target.value)} className={input} />
+                </Field>
+            </div>
+
+            <Field label="Division">
+                <div className="flex flex-wrap gap-2">
+                    {[1, 2, 3, 4, 5, 6].map(d => (
+                        <button key={d} type="button" onClick={() => setDivision(d)}
+                            className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${division === d ? "bg-[#FF4200] text-white border-[#FF4200]" : "border-gray-300 text-gray-600 hover:border-[#FF4200]"}`}>
+                            {d === 6 ? "Beginner" : `${d} — ${DIVISION_NAMES[d]}`}
+                        </button>
+                    ))}
+                </div>
+            </Field>
+
+            <Field label="Points per game">
+                <div className="flex flex-wrap gap-2">
+                    {[16, 24, 32].map(p => (
+                        <button key={p} type="button" onClick={() => setPointsPerGame(p)}
+                            className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${pointsPerGame === p ? "bg-[#FF4200] text-white border-[#FF4200]" : "border-gray-300 text-gray-600 hover:border-[#FF4200]"}`}>
+                            {p}
+                        </button>
+                    ))}
+                </div>
+            </Field>
+
+            <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-gray-700">Teams</span>
+                    <span className="text-xs text-gray-400">{numTeams} teams · {totalMatches} matches · {numRounds} rounds</span>
+                </div>
+
+                {teams.map(([p1, p2], i) => {
+                    const excludeForSlot0 = new Set([...assignedIds].filter(id => id !== p1));
+                    const excludeForSlot1 = new Set([...assignedIds].filter(id => id !== p2));
+                    return (
+                        <div key={i} className="flex items-center gap-2">
+                            <span className="text-sm font-medium text-gray-500 w-14 shrink-0">Team {i + 1}</span>
+                            <PlayerPicker value={p1} onChange={id => updateTeam(i, 0, id)} players={allPlayers} excludeIds={excludeForSlot0} placeholder="Player 1" />
+                            <PlayerPicker value={p2} onChange={id => updateTeam(i, 1, id)} players={allPlayers} excludeIds={excludeForSlot1} placeholder="Player 2" />
+                            {teams.length > 2 && (
+                                <button type="button" onClick={() => removeTeam(i)}
+                                    className="shrink-0 w-7 h-7 flex items-center justify-center text-gray-400 hover:text-red-400 rounded-lg border border-gray-200 hover:border-red-200 transition-colors">
+                                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
+                                </button>
+                            )}
+                        </div>
+                    );
+                })}
+
+                <button type="button" onClick={addTeam}
+                    className="inline-flex items-center gap-1.5 text-sm font-medium border border-dashed border-gray-300 text-gray-500 px-3 py-2 rounded-lg hover:border-[#FF4200] hover:text-[#FF4200] transition-colors">
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+                    Add team
+                </button>
+            </div>
+
+            {error && <p className="text-sm text-red-500">{error}</p>}
+
+            <button type="submit" disabled={create.isPending}
+                className="w-full sm:w-auto bg-[#FF4200] text-white rounded-lg px-5 py-2.5 text-sm font-medium hover:bg-[#CC3500] disabled:opacity-50 transition-colors">
+                {create.isPending ? "Creating…" : "Create & Generate Schedule"}
+            </button>
+        </form>
+    );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 type Resolution =
     | { kind: "link"; localPlayerId: string; localName: string }
