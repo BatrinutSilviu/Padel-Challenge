@@ -407,6 +407,7 @@ function ImportRankedinTab({ onImported, onBack }: { onImported: () => void; onB
     const preview = trpc.tournament.previewRankedinImport.useMutation({
         onSuccess: (data) => {
             setName(data.name);
+            if (data.date) setDate(data.date);
             setResolutions({});
             setError("");
         },
