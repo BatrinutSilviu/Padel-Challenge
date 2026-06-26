@@ -484,7 +484,8 @@ function CreateTeamAmericanoForm({ onCreated, onBack }: { onCreated: () => void;
     const [date, setDate] = useState(() => new Date().toISOString().split("T")[0]);
     const [division, setDivision] = useState(4);
     const [pointsPerGame, setPointsPerGame] = useState(32);
-    const [teams, setTeams] = useState<[string, string][]>([["", ""], ["", ""], ["", ""], ["", ""]]);
+    const [numTeams, setNumTeams] = useState(4);
+    const [slots, setSlots] = useState<[string, string][]>(() => Array.from({ length: 4 }, () => ["", ""]));
     const [error, setError] = useState("");
 
     const allPlayersQuery = trpc.division.allPlayers.useQuery();
@@ -495,30 +496,28 @@ function CreateTeamAmericanoForm({ onCreated, onBack }: { onCreated: () => void;
         onError: (e) => setError(e.message),
     });
 
-    const assignedIds = new Set(teams.flat().filter(Boolean));
-    const numTeams = teams.length;
+    const assignedIds = new Set(slots.flat().filter(Boolean));
     const totalMatches = (numTeams * (numTeams - 1)) / 2;
-    const numRounds = numTeams % 2 === 0 ? numTeams - 1 : numTeams;
+    const numRounds = numTeams - 1; // always even (4, 6, 8)
+
+    function changeNumTeams(n: number) {
+        setNumTeams(n);
+        setSlots(prev => {
+            const next: [string, string][] = Array.from({ length: n }, (_, i) => prev[i] ?? ["", ""]);
+            return next;
+        });
+    }
 
     function updateTeam(i: number, slot: 0 | 1, playerId: string) {
-        setTeams(prev => prev.map((t, idx) => idx === i ? (slot === 0 ? [playerId, t[1]] : [t[0], playerId]) : t));
-    }
-
-    function addTeam() {
-        setTeams(prev => [...prev, ["", ""]]);
-    }
-
-    function removeTeam(i: number) {
-        setTeams(prev => prev.filter((_, idx) => idx !== i));
+        setSlots(prev => prev.map((t, idx) => idx === i ? (slot === 0 ? [playerId, t[1]] : [t[0], playerId]) : t));
     }
 
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
         setError("");
         if (!name.trim()) return setError("Tournament name is required.");
-        if (teams.length < 2) return setError("At least 2 teams required.");
-        for (let i = 0; i < teams.length; i++) {
-            const [p1, p2] = teams[i];
+        for (let i = 0; i < slots.length; i++) {
+            const [p1, p2] = slots[i];
             if (!p1 || !p2) return setError(`Team ${i + 1} is incomplete — select both players.`);
             if (p1 === p2) return setError(`Team ${i + 1} has the same player in both slots.`);
         }
@@ -527,7 +526,7 @@ function CreateTeamAmericanoForm({ onCreated, onBack }: { onCreated: () => void;
             date,
             division,
             pointsPerGame,
-            teams: teams.map(([p1, p2]) => ({ player1Id: p1, player2Id: p2 })),
+            teams: slots.map(([p1, p2]) => ({ player1Id: p1, player2Id: p2 })),
         });
     }
 
@@ -573,13 +572,23 @@ function CreateTeamAmericanoForm({ onCreated, onBack }: { onCreated: () => void;
                 </div>
             </Field>
 
-            <div className="space-y-3">
+            <Field label="Number of teams">
+                <div className="flex gap-2">
+                    {[4, 6, 8].map(n => (
+                        <button key={n} type="button" onClick={() => changeNumTeams(n)}
+                            className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${numTeams === n ? "bg-[#FF4200] text-white border-[#FF4200]" : "border-gray-300 text-gray-600 hover:border-[#FF4200]"}`}>
+                            {n}
+                        </button>
+                    ))}
+                </div>
+            </Field>
+
+            <div className="space-y-2">
                 <div className="flex items-center justify-between">
                     <span className="text-sm font-medium text-gray-700">Teams</span>
-                    <span className="text-xs text-gray-400">{numTeams} teams · {totalMatches} matches · {numRounds} rounds</span>
+                    <span className="text-xs text-gray-400">{totalMatches} matches · {numRounds} rounds</span>
                 </div>
-
-                {teams.map(([p1, p2], i) => {
+                {slots.map(([p1, p2], i) => {
                     const excludeForSlot0 = new Set([...assignedIds].filter(id => id !== p1));
                     const excludeForSlot1 = new Set([...assignedIds].filter(id => id !== p2));
                     return (
@@ -587,21 +596,9 @@ function CreateTeamAmericanoForm({ onCreated, onBack }: { onCreated: () => void;
                             <span className="text-sm font-medium text-gray-500 w-14 shrink-0">Team {i + 1}</span>
                             <PlayerPicker value={p1} onChange={id => updateTeam(i, 0, id)} players={allPlayers} excludeIds={excludeForSlot0} placeholder="Player 1" />
                             <PlayerPicker value={p2} onChange={id => updateTeam(i, 1, id)} players={allPlayers} excludeIds={excludeForSlot1} placeholder="Player 2" />
-                            {teams.length > 2 && (
-                                <button type="button" onClick={() => removeTeam(i)}
-                                    className="shrink-0 w-7 h-7 flex items-center justify-center text-gray-400 hover:text-red-400 rounded-lg border border-gray-200 hover:border-red-200 transition-colors">
-                                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
-                                </button>
-                            )}
                         </div>
                     );
                 })}
-
-                <button type="button" onClick={addTeam}
-                    className="inline-flex items-center gap-1.5 text-sm font-medium border border-dashed border-gray-300 text-gray-500 px-3 py-2 rounded-lg hover:border-[#FF4200] hover:text-[#FF4200] transition-colors">
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
-                    Add team
-                </button>
             </div>
 
             {error && <p className="text-sm text-red-500">{error}</p>}
