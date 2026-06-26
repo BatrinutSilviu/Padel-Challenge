@@ -155,6 +155,10 @@ function TeamStandings({ tournament }: { tournament: TournamentData }) {
     }
     teams.sort((a, b) => a.rank - b.rank);
 
+    // Stored ranks may be 1,1,3,3,5,5 (old tournaments). Remap to 1,1,2,2,3,3 for display.
+    const uniqueRanks = [...new Set(teams.map(t => t.rank))].sort((a, b) => a - b);
+    const rankRemap = new Map(uniqueRanks.map((r, i) => [r, i + 1]));
+
     return (
         <div className="bg-white rounded-2xl border border-[#E5E5EA] overflow-hidden overflow-x-auto shadow-sm">
             <table className="w-full text-sm min-w-[280px]">
@@ -169,7 +173,7 @@ function TeamStandings({ tournament }: { tournament: TournamentData }) {
                     {teams.map(({ p1, p2, rank, points }) => (
                         <tr key={p1.id} className="border-b border-[#F5F5F7] last:border-0 hover:bg-[#F5F5F7] transition-colors">
                             <td className="px-4 py-3 align-middle">
-                                <RankMedal rank={rank} />
+                                <RankMedal rank={rankRemap.get(rank) ?? rank} />
                             </td>
                             <td className="px-4 py-3">
                                 <Link to={`/player/${p1.player.id}`} className="font-semibold text-[#1A1A2E] hover:text-[#FF4200] transition-colors block">
