@@ -20,13 +20,18 @@ export function AdminScoreEntry() {
     useEffect(() => {
         if (!tournament) return;
         const ppg = tournament.pointsPerGame;
-        setScoredIds(prev => {
-            if (prev.size > 0) return prev;
-            const ids = tournament.rounds
+        const serverScoredIds = new Set(
+            tournament.rounds
                 .flatMap(r => r.matches)
                 .filter(m => m.team1Score + m.team2Score === ppg)
-                .map(m => m.id);
-            return new Set(ids);
+                .map(m => m.id)
+        );
+        // Merge server-known scored IDs with any locally-tracked ones (e.g. scored
+        // from this session but not yet reflected in a fresh server fetch).
+        setScoredIds(prev => {
+            const merged = new Set(serverScoredIds);
+            for (const id of prev) merged.add(id);
+            return merged;
         });
     }, [tournament]);
 
