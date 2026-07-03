@@ -59,7 +59,10 @@ export function AdminScoreEntry() {
         // invalidateQueries()-only refetch can lose the race if the admin
         // navigates away before it resolves, leaving the stale (unscored)
         // snapshot cached for the next visit to this tournament.
-        const queryKey = getQueryKey(trpc.tournament.getById, { id: id! });
+        // setQueryData needs the exact key useQuery reads from — unlike
+        // invalidateQueries, it does not do a partial/fuzzy match, so the
+        // 'query' type must be included or this silently patches nothing.
+        const queryKey = getQueryKey(trpc.tournament.getById, { id: id! }, 'query');
         qc.setQueryData(queryKey, (old: typeof tournament) => {
             if (!old) return old;
             return {
