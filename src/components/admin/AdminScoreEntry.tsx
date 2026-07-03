@@ -53,9 +53,23 @@ export function AdminScoreEntry() {
 
     const handleSaveStart = useCallback(() => setPendingSaves(n => n + 1), []);
     const handleSaveEnd = useCallback(() => setPendingSaves(n => n - 1), []);
-    const handleSaved = useCallback((matchId: string) => {
+    const handleSaved = useCallback((matchId: string, team1Score: number, team2Score: number) => {
         setScoredIds(prev => new Set([...prev, matchId]));
-        qc.invalidateQueries({ queryKey: getQueryKey(trpc.tournament.getById, { id: id! }) });
+        // Patch the cache synchronously so it's correct immediately — an
+        // invalidateQueries()-only refetch can lose the race if the admin
+        // navigates away before it resolves, leaving the stale (unscored)
+        // snapshot cached for the next visit to this tournament.
+        const queryKey = getQueryKey(trpc.tournament.getById, { id: id! });
+        qc.setQueryData(queryKey, (old: typeof tournament) => {
+            if (!old) return old;
+            return {
+                ...old,
+                rounds: old.rounds.map(r => ({
+                    ...r,
+                    matches: r.matches.map(m => m.id === matchId ? { ...m, team1Score, team2Score } : m),
+                })),
+            };
+        });
     }, [qc, id]);
 
     if (isPending) return <LoadingPage />;
@@ -267,7 +281,7 @@ function MatchScoreRow({
     pointsPerGame: number;
     onSaveStart: () => void;
     onSaveEnd: () => void;
-    onSaved: (matchId: string) => void;
+    onSaved: (matchId: string, team1Score: number, team2Score: number) => void;
 }) {
     const isScored = match.team1Score + match.team2Score === pointsPerGame;
 
@@ -329,11 +343,11 @@ function MatchScoreRow({
     }, [mobileSheetOpen]);
 
     const update = trpc.tournament.updateMatchScore.useMutation({
-        onSuccess: () => {
+        onSuccess: (data) => {
             setStatus('locked');
             setMobileSheetOpen(false);
             clearLocalScore(match.id);
-            onSaved(match.id);
+            onSaved(match.id, data.team1Score, data.team2Score);
             onSaveEnd();
             setError("");
         },
