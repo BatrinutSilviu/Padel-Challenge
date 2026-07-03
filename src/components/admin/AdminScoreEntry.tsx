@@ -55,7 +55,8 @@ export function AdminScoreEntry() {
     const handleSaveEnd = useCallback(() => setPendingSaves(n => n - 1), []);
     const handleSaved = useCallback((matchId: string) => {
         setScoredIds(prev => new Set([...prev, matchId]));
-    }, []);
+        qc.invalidateQueries({ queryKey: getQueryKey(trpc.tournament.getById, { id: id! }) });
+    }, [qc, id]);
 
     if (isPending) return <LoadingPage />;
     if (error || !tournament) return <div className="p-8 text-red-600">Tournament not found.</div>;
@@ -290,10 +291,23 @@ function MatchScoreRow({
     const unlockTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const sheetInputRef = useRef<HTMLInputElement>(null);
 
+    // Re-sync whenever the server's committed score for this match changes —
+    // not just on mount. Without this, a row that mounts on a briefly-stale
+    // query cache (e.g. after navigating away and back) freezes at its
+    // initial blank state forever, even once the background refetch brings
+    // in the real, already-saved score.
     useEffect(() => {
-        if (isScored) clearLocalScore(match.id);
-        return () => { if (unlockTimerRef.current) clearTimeout(unlockTimerRef.current); };
+        if (isScored) {
+            clearLocalScore(match.id);
+            setScore1(String(match.team1Score));
+            setScore2(String(match.team2Score));
+            setStatus('locked');
+        }
         // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isScored, match.team1Score, match.team2Score, match.id]);
+
+    useEffect(() => {
+        return () => { if (unlockTimerRef.current) clearTimeout(unlockTimerRef.current); };
     }, []);
 
     useEffect(() => {
