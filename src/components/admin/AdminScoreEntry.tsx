@@ -5,6 +5,10 @@ import { trpc } from "../../trpc";
 import { divisionLabel } from "../../lib/divisions";
 import { useQueryClient } from "@tanstack/react-query";
 import { getQueryKey } from "@trpc/react-query";
+import { challengerProgress, isChallengerMatchScored } from "../../lib/challenger";
+import { ChallengerScoreEntry } from "./ChallengerScoreEntry";
+import { isKotcMatchScored, kotcProgress } from "../../lib/kingOfTheCourt";
+import { KingOfTheCourtScoreEntry } from "./KingOfTheCourtScoreEntry";
 
 export function AdminScoreEntry() {
     const { id } = useParams<{ id: string }>();
@@ -20,10 +24,15 @@ export function AdminScoreEntry() {
     useEffect(() => {
         if (!tournament) return;
         const ppg = tournament.pointsPerGame;
+        const isScored = tournament.type === "CHALLENGER"
+            ? isChallengerMatchScored
+            : tournament.type === "KING_OF_THE_COURT"
+            ? isKotcMatchScored
+            : (m: { team1Score: number; team2Score: number }) => m.team1Score + m.team2Score === ppg;
         const serverScoredIds = new Set(
             tournament.rounds
                 .flatMap(r => r.matches)
-                .filter(m => m.team1Score + m.team2Score === ppg)
+                .filter(isScored)
                 .map(m => m.id)
         );
         // Merge server-known scored IDs with any locally-tracked ones (e.g. scored
@@ -51,9 +60,21 @@ export function AdminScoreEntry() {
         },
     });
 
+    const startKnockout = trpc.tournament.startChallengerKnockout.useMutation({
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: getQueryKey(trpc.tournament.getById, { id: id! }) });
+        },
+    });
+
     const handleSaveStart = useCallback(() => setPendingSaves(n => n + 1), []);
     const handleSaveEnd = useCallback(() => setPendingSaves(n => n - 1), []);
-    const handleSaved = useCallback((matchId: string, team1Score: number, team2Score: number) => {
+    const handleSaved = useCallback((
+        matchId: string,
+        team1Score: number,
+        team2Score: number,
+        team1TiebreakPoints?: number | null,
+        team2TiebreakPoints?: number | null,
+    ) => {
         setScoredIds(prev => new Set([...prev, matchId]));
         // Patch the cache synchronously so it's correct immediately — an
         // invalidateQueries()-only refetch can lose the race if the admin
@@ -69,19 +90,59 @@ export function AdminScoreEntry() {
                 ...old,
                 rounds: old.rounds.map(r => ({
                     ...r,
-                    matches: r.matches.map(m => m.id === matchId ? { ...m, team1Score, team2Score } : m),
+                    matches: r.matches.map(m => m.id === matchId
+                        ? {
+                            ...m,
+                            team1Score,
+                            team2Score,
+                            ...(team1TiebreakPoints !== undefined ? { team1TiebreakPoints, team2TiebreakPoints: team2TiebreakPoints ?? null } : {}),
+                        }
+                        : m),
                 })),
             };
         });
+    }, [qc, id]);
+
+    // Separate from handleSaved: King of the Court's 4th argument (goldenPointWinner) is
+    // not positionally compatible with handleSaved's tiebreak-point pair, and saving the
+    // last match of a round can auto-create a whole new round server-side, which a
+    // synchronous cache patch can't materialize — so this also triggers a real refetch.
+    const handleKotcSaved = useCallback((
+        matchId: string,
+        team1Score: number,
+        team2Score: number,
+        goldenPointWinner: number | null,
+    ) => {
+        setScoredIds(prev => new Set([...prev, matchId]));
+        const queryKey = getQueryKey(trpc.tournament.getById, { id: id! }, 'query');
+        qc.setQueryData(queryKey, (old: typeof tournament) => {
+            if (!old) return old;
+            return {
+                ...old,
+                rounds: old.rounds.map(r => ({
+                    ...r,
+                    matches: r.matches.map(m => m.id === matchId ? { ...m, team1Score, team2Score, goldenPointWinner } : m),
+                })),
+            };
+        });
+        qc.invalidateQueries({ queryKey: getQueryKey(trpc.tournament.getById, { id: id! }) });
     }, [qc, id]);
 
     if (isPending) return <LoadingPage />;
     if (error || !tournament) return <div className="p-8 text-red-600">Tournament not found.</div>;
 
     const isCompleted = tournament.status === "COMPLETED";
+    const isChallenger = tournament.type === "CHALLENGER";
+    const isKotc = tournament.type === "KING_OF_THE_COURT";
+    const progress = isChallenger ? challengerProgress(tournament) : null;
+    const kotcProgressData = isKotc ? kotcProgress(tournament) : null;
     const totalMatches = tournament.rounds.flatMap(r => r.matches).length;
     const scoredCount = scoredIds.size;
-    const allScored = scoredCount === totalMatches;
+    const allScored = isChallenger
+        ? (progress?.allBracketScored ?? false)
+        : isKotc
+        ? (kotcProgressData?.allDone ?? false)
+        : scoredCount === totalMatches;
     const isSaving = pendingSaves > 0;
 
     function handleComplete() {
@@ -109,38 +170,96 @@ export function AdminScoreEntry() {
                                 View results →
                             </Link>
                         )}
-                        <button
-                            onClick={() => { setRecalcSuccess(false); recalculate.mutate({ id: id! }); }}
-                            disabled={recalculate.isPending || isSaving}
-                            title={isSaving ? "Waiting for scores to save…" : undefined}
-                            className="bg-amber-500 text-white rounded-lg px-4 py-2 text-sm font-semibold hover:bg-amber-600 disabled:opacity-50 transition-colors"
-                        >
-                            {recalculate.isPending ? "Recalculating…" : isSaving ? "Saving scores…" : "Recalculate Results"}
-                        </button>
+                        {isChallenger && progress && progress.allGroupScored && !progress.knockoutStarted && (
+                            <button
+                                onClick={() => startKnockout.mutate({ id: id! })}
+                                disabled={startKnockout.isPending || isSaving}
+                                title={isSaving ? "Waiting for scores to save…" : undefined}
+                                className="bg-amber-500 text-white rounded-lg px-4 py-2 text-sm font-semibold hover:bg-amber-600 disabled:opacity-50 transition-colors"
+                            >
+                                {startKnockout.isPending ? "Starting…" : "Start Knockout Stage"}
+                            </button>
+                        )}
+                        {!isChallenger && !isKotc && (
+                            <button
+                                onClick={() => { setRecalcSuccess(false); recalculate.mutate({ id: id! }); }}
+                                disabled={recalculate.isPending || isSaving}
+                                title={isSaving ? "Waiting for scores to save…" : undefined}
+                                className="bg-amber-500 text-white rounded-lg px-4 py-2 text-sm font-semibold hover:bg-amber-600 disabled:opacity-50 transition-colors"
+                            >
+                                {recalculate.isPending ? "Recalculating…" : isSaving ? "Saving scores…" : "Recalculate Results"}
+                            </button>
+                        )}
                     </div>
                 </div>
 
                 {/* Progress bar */}
-                <div className="bg-white rounded-xl border border-gray-200 px-4 sm:px-5 py-4 space-y-2">
-                    <div className="flex items-center justify-between text-sm">
-                        <span className="text-gray-600 font-medium">Scores entered</span>
-                        <span className={`font-semibold ${allScored ? "text-[#FF4200]" : "text-gray-700"}`}>
-                            {scoredCount} / {totalMatches}
-                        </span>
-                    </div>
-                    <div className="w-full bg-gray-100 rounded-full h-2">
-                        <div
-                            className={`h-2 rounded-full transition-all ${allScored ? "bg-[#FF4200]" : "bg-[#FF6D00]"}`}
-                            style={{ width: `${totalMatches > 0 ? (scoredCount / totalMatches) * 100 : 0}%` }}
+                {isChallenger && progress ? (
+                    <div className="bg-white rounded-xl border border-gray-200 px-4 sm:px-5 py-4 space-y-3">
+                        <ProgressRow
+                            label="Group stage"
+                            scored={[...progress.groupRounds.A, ...progress.groupRounds.B].flatMap(r => r.matches).filter(m => scoredIds.has(m.id)).length}
+                            total={[...progress.groupRounds.A, ...progress.groupRounds.B].flatMap(r => r.matches).length}
                         />
+                        {progress.knockoutStarted && (
+                            <ProgressRow
+                                label="Bracket"
+                                scored={[
+                                    ...progress.bracket.golden.semifinals, progress.bracket.golden.final, progress.bracket.golden.thirdPlace,
+                                    ...progress.bracket.silver.semifinals, progress.bracket.silver.final, progress.bracket.silver.thirdPlace,
+                                ].filter((m): m is NonNullable<typeof m> => Boolean(m)).filter(m => scoredIds.has(m.id)).length}
+                                total={[
+                                    ...progress.bracket.golden.semifinals, progress.bracket.golden.final, progress.bracket.golden.thirdPlace,
+                                    ...progress.bracket.silver.semifinals, progress.bracket.silver.final, progress.bracket.silver.thirdPlace,
+                                ].filter((m): m is NonNullable<typeof m> => Boolean(m)).length}
+                            />
+                        )}
+                        {!isCompleted && allScored && (
+                            <p className="text-xs text-[#FF4200]">All scores saved — ready to complete.</p>
+                        )}
                     </div>
-                    {!isCompleted && allScored && (
-                        <p className="text-xs text-[#FF4200]">All scores saved — ready to complete.</p>
-                    )}
-                </div>
+                ) : isKotc && kotcProgressData ? (
+                    <div className="bg-white rounded-xl border border-gray-200 px-4 sm:px-5 py-4 space-y-3">
+                        <ProgressRow
+                            label={`Round ${kotcProgressData.current?.roundNumber ?? 1} of ${kotcProgressData.totalRounds}`}
+                            scored={kotcProgressData.current?.matches.filter(m => scoredIds.has(m.id)).length ?? 0}
+                            total={kotcProgressData.current?.matches.length ?? 0}
+                        />
+                        {!isCompleted && allScored && (
+                            <p className="text-xs text-[#FF4200]">Final round complete — ready to complete the tournament.</p>
+                        )}
+                        {!isCompleted && !allScored && kotcProgressData.currentRoundScored && !kotcProgressData.isLastRound && (
+                            <p className="text-xs text-gray-400">Round complete — next round will appear once generated.</p>
+                        )}
+                    </div>
+                ) : (
+                    <div className="bg-white rounded-xl border border-gray-200 px-4 sm:px-5 py-4 space-y-2">
+                        <div className="flex items-center justify-between text-sm">
+                            <span className="text-gray-600 font-medium">Scores entered</span>
+                            <span className={`font-semibold ${allScored ? "text-[#FF4200]" : "text-gray-700"}`}>
+                                {scoredCount} / {totalMatches}
+                            </span>
+                        </div>
+                        <div className="w-full bg-gray-100 rounded-full h-2">
+                            <div
+                                className={`h-2 rounded-full transition-all ${allScored ? "bg-[#FF4200]" : "bg-[#FF6D00]"}`}
+                                style={{ width: `${totalMatches > 0 ? (scoredCount / totalMatches) * 100 : 0}%` }}
+                            />
+                        </div>
+                        {!isCompleted && allScored && (
+                            <p className="text-xs text-[#FF4200]">All scores saved — ready to complete.</p>
+                        )}
+                    </div>
+                )}
+
+                {startKnockout.error && (
+                    <p className="text-sm text-red-500 bg-red-50 border border-red-200 rounded-lg px-4 py-2">
+                        {startKnockout.error.message}
+                    </p>
+                )}
 
                 {/* Recalculate success banner */}
-                {recalcSuccess && (
+                {!isChallenger && !isKotc && recalcSuccess && (
                     <div className="bg-green-50 border border-green-200 rounded-xl px-4 py-3 flex items-center justify-between gap-3">
                         <p className="text-sm text-green-700 font-medium">Results recalculated successfully.</p>
                         <div className="flex items-center gap-3 shrink-0">
@@ -152,7 +271,7 @@ export function AdminScoreEntry() {
                     </div>
                 )}
 
-                {recalculate.error && (
+                {!isChallenger && !isKotc && recalculate.error && (
                     <p className="text-sm text-red-500 bg-red-50 border border-red-200 rounded-lg px-4 py-2">
                         {recalculate.error.message}
                     </p>
@@ -168,41 +287,60 @@ export function AdminScoreEntry() {
                     </p>
                 </div>
 
-                {/* Rounds */}
-                <div className="space-y-4">
-                    {tournament.rounds.map(round => (
-                        <div key={round.id} className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-                            <div className="px-4 sm:px-5 py-3 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
-                                <span className="font-semibold text-gray-700">Round {round.roundNumber}</span>
-                                <span className="text-xs text-gray-400">
-                                    {round.matches.filter(m => scoredIds.has(m.id)).length}/{round.matches.length} scored
-                                </span>
+                {/* Matches */}
+                {isChallenger ? (
+                    <ChallengerScoreEntry
+                        tournament={tournament}
+                        onSaveStart={handleSaveStart}
+                        onSaveEnd={handleSaveEnd}
+                        onSaved={handleSaved}
+                    />
+                ) : isKotc ? (
+                    <KingOfTheCourtScoreEntry
+                        tournament={tournament}
+                        onSaveStart={handleSaveStart}
+                        onSaveEnd={handleSaveEnd}
+                        onSaved={handleKotcSaved}
+                    />
+                ) : (
+                    <div className="space-y-4">
+                        {tournament.rounds.map(round => (
+                            <div key={round.id} className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                                <div className="px-4 sm:px-5 py-3 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
+                                    <span className="font-semibold text-gray-700">Round {round.roundNumber}</span>
+                                    <span className="text-xs text-gray-400">
+                                        {round.matches.filter(m => scoredIds.has(m.id)).length}/{round.matches.length} scored
+                                    </span>
+                                </div>
+                                <div className="divide-y divide-gray-100">
+                                    {round.matches.map((match, i) => (
+                                        <MatchScoreRow
+                                            key={match.id}
+                                            match={match}
+                                            courtNumber={i + 1}
+                                            pointsPerGame={tournament.pointsPerGame}
+                                            onSaveStart={handleSaveStart}
+                                            onSaveEnd={handleSaveEnd}
+                                            onSaved={handleSaved}
+                                        />
+                                    ))}
+                                </div>
                             </div>
-                            <div className="divide-y divide-gray-100">
-                                {round.matches.map((match, i) => (
-                                    <MatchScoreRow
-                                        key={match.id}
-                                        match={match}
-                                        courtNumber={i + 1}
-                                        pointsPerGame={tournament.pointsPerGame}
-                                        onSaveStart={handleSaveStart}
-                                        onSaveEnd={handleSaveEnd}
-                                        onSaved={handleSaved}
-                                    />
-                                ))}
-                            </div>
-                        </div>
-                    ))}
-                </div>
+                        ))}
+                    </div>
+                )}
 
                 {/* Complete tournament — shown after all rounds */}
-                {!isCompleted && (
+                {!isCompleted && (isChallenger ? Boolean(progress?.knockoutStarted) : isKotc ? Boolean(kotcProgressData?.isLastRound) : true) && (
                     <div className="space-y-3">
                         {confirmComplete && (
                             <div className="bg-amber-50 border border-amber-300 rounded-xl px-4 sm:px-5 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                                 <p className="text-sm text-amber-800 font-medium">
-                                    {totalMatches - scoredCount} match{totalMatches - scoredCount !== 1 ? "es" : ""} still have no score.
-                                    Complete anyway? Those players will receive 0 points.
+                                    {isChallenger
+                                        ? "Not all bracket matches have a score yet. Complete anyway?"
+                                        : isKotc
+                                        ? "Not all matches in the final round have a score yet. Complete anyway?"
+                                        : `${totalMatches - scoredCount} match${totalMatches - scoredCount !== 1 ? "es" : ""} still have no score. Complete anyway? Those players will receive 0 points.`}
                                 </p>
                                 <div className="flex gap-2 shrink-0">
                                     <button
@@ -661,6 +799,24 @@ function MatchScoreRow({
                 </div>
             )}
         </>
+    );
+}
+
+function ProgressRow({ label, scored, total }: { label: string; scored: number; total: number }) {
+    const allScored = total > 0 && scored === total;
+    return (
+        <div className="space-y-1.5">
+            <div className="flex items-center justify-between text-sm">
+                <span className="text-gray-600 font-medium">{label}</span>
+                <span className={`font-semibold ${allScored ? "text-[#FF4200]" : "text-gray-700"}`}>{scored} / {total}</span>
+            </div>
+            <div className="w-full bg-gray-100 rounded-full h-2">
+                <div
+                    className={`h-2 rounded-full transition-all ${allScored ? "bg-[#FF4200]" : "bg-[#FF6D00]"}`}
+                    style={{ width: `${total > 0 ? (scored / total) * 100 : 0}%` }}
+                />
+            </div>
+        </div>
     );
 }
 

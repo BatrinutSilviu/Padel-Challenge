@@ -150,6 +150,8 @@ function CreateTournamentForm({ onCreated, onImport }: { onCreated: () => void; 
     // Team Americano state
     const [numTeams, setNumTeams] = useState(4);
     const [teamSlots, setTeamSlots] = useState<[string, string][]>(() => Array.from({ length: 4 }, () => ["", ""]));
+    // King of the Court state
+    const [totalRounds, setTotalRounds] = useState(7);
     const [error, setError] = useState("");
 
     const divisionPlayersQuery = trpc.division.players.useQuery({ division });
@@ -173,10 +175,23 @@ function CreateTournamentForm({ onCreated, onImport }: { onCreated: () => void; 
         onSuccess: onCreated,
         onError: (e) => setError(e.message),
     });
+    const createChallenger = trpc.tournament.createChallenger.useMutation({
+        onSuccess: onCreated,
+        onError: (e) => setError(e.message),
+    });
+    const createKingOfTheCourt = trpc.tournament.createKingOfTheCourt.useMutation({
+        onSuccess: onCreated,
+        onError: (e) => setError(e.message),
+    });
 
     function changeNumTeams(n: number) {
         setNumTeams(n);
         setTeamSlots(prev => Array.from({ length: n }, (_, i) => prev[i] ?? ["", ""]));
+    }
+
+    function selectType(t: TournamentType) {
+        setType(t);
+        if (t === "CHALLENGER") changeNumTeams(8);
     }
 
     function updateTeamSlot(i: number, slot: 0 | 1, playerId: string) {
@@ -203,6 +218,21 @@ function CreateTournamentForm({ onCreated, onImport }: { onCreated: () => void; 
                 if (p1 === p2) return setError(`Team ${i + 1} has the same player in both slots.`);
             }
             createTeamAmericano.mutate({ name: name.trim(), date, division, pointsPerGame, teams: teamSlots.map(([p1, p2]) => ({ player1Id: p1, player2Id: p2 })) });
+        } else if (type === "CHALLENGER") {
+            if (teamSlots.length !== 8) return setError("Challenger requires exactly 8 teams.");
+            for (let i = 0; i < teamSlots.length; i++) {
+                const [p1, p2] = teamSlots[i];
+                if (!p1 || !p2) return setError(`Team ${i + 1} is incomplete — select both players.`);
+                if (p1 === p2) return setError(`Team ${i + 1} has the same player in both slots.`);
+            }
+            createChallenger.mutate({ name: name.trim(), date, division, pointsPerGame: 32, teams: teamSlots.map(([p1, p2]) => ({ player1Id: p1, player2Id: p2 })) });
+        } else if (type === "KING_OF_THE_COURT") {
+            for (let i = 0; i < teamSlots.length; i++) {
+                const [p1, p2] = teamSlots[i];
+                if (!p1 || !p2) return setError(`Team ${i + 1} is incomplete — select both players.`);
+                if (p1 === p2) return setError(`Team ${i + 1} has the same player in both slots.`);
+            }
+            createKingOfTheCourt.mutate({ name: name.trim(), date, division, totalRounds, teams: teamSlots.map(([p1, p2]) => ({ player1Id: p1, player2Id: p2 })) });
         } else {
             if (selectedIds.length !== maxPlayers) return setError(`Select exactly ${maxPlayers} players.`);
             create.mutate({ name: name.trim(), date, division, type, pointsPerGame, playerIds: selectedIds });
@@ -258,11 +288,11 @@ function CreateTournamentForm({ onCreated, onImport }: { onCreated: () => void; 
 
             <Field label="Type">
                 <div className="flex flex-wrap gap-2">
-                    {(["AMERICANO", "AMERICANO_CHAMPIONS", "AMERICANO_GIRLS", "CHALLENGER", "TEAM_AMERICANO"] as TournamentType[]).map(t => (
+                    {(["AMERICANO", "AMERICANO_CHAMPIONS", "AMERICANO_GIRLS", "CHALLENGER", "TEAM_AMERICANO", "KING_OF_THE_COURT"] as TournamentType[]).map(t => (
                         <button
                             key={t}
                             type="button"
-                            onClick={() => setType(t)}
+                            onClick={() => selectType(t)}
                             className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${
                                 type === t
                                     ? "bg-[#FF4200] text-white border-[#FF4200]"
@@ -275,42 +305,65 @@ function CreateTournamentForm({ onCreated, onImport }: { onCreated: () => void; 
                 </div>
             </Field>
 
-            <Field label="Points per game">
-                <div className="flex flex-wrap gap-2">
-                    {[16, 24, 32, 40].map(p => (
-                        <button
-                            key={p}
-                            type="button"
-                            onClick={() => setPointsPerGame(p)}
-                            className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${
-                                pointsPerGame === p
-                                    ? "bg-[#FF4200] text-white border-[#FF4200]"
-                                    : "border-gray-300 text-gray-600 hover:border-[#FF4200]"
-                            }`}
-                        >
-                            {p}
-                        </button>
-                    ))}
-                </div>
-            </Field>
+            {type !== "CHALLENGER" && type !== "KING_OF_THE_COURT" && (
+                <Field label="Points per game">
+                    <div className="flex flex-wrap gap-2">
+                        {[16, 24, 32, 40].map(p => (
+                            <button
+                                key={p}
+                                type="button"
+                                onClick={() => setPointsPerGame(p)}
+                                className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${
+                                    pointsPerGame === p
+                                        ? "bg-[#FF4200] text-white border-[#FF4200]"
+                                        : "border-gray-300 text-gray-600 hover:border-[#FF4200]"
+                                }`}
+                            >
+                                {p}
+                            </button>
+                        ))}
+                    </div>
+                </Field>
+            )}
 
-            {type === "TEAM_AMERICANO" ? (
+            {type === "KING_OF_THE_COURT" && (
+                <Field label="Number of rounds">
+                    <input
+                        type="number"
+                        min={1}
+                        max={15}
+                        value={totalRounds}
+                        onChange={e => setTotalRounds(Math.max(1, Math.min(15, Number(e.target.value) || 1)))}
+                        className={input}
+                    />
+                </Field>
+            )}
+
+            {(type === "TEAM_AMERICANO" || type === "CHALLENGER" || type === "KING_OF_THE_COURT") ? (
                 <>
-                    <Field label="Number of teams">
-                        <div className="flex gap-2">
-                            {[4, 6, 8].map(n => (
-                                <button key={n} type="button" onClick={() => changeNumTeams(n)}
-                                    className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${numTeams === n ? "bg-[#FF4200] text-white border-[#FF4200]" : "border-gray-300 text-gray-600 hover:border-[#FF4200]"}`}>
-                                    {n}
-                                </button>
-                            ))}
-                        </div>
-                    </Field>
+                    {(type === "TEAM_AMERICANO" || type === "KING_OF_THE_COURT") && (
+                        <Field label="Number of teams">
+                            <div className="flex gap-2">
+                                {[4, 6, 8].map(n => (
+                                    <button key={n} type="button" onClick={() => changeNumTeams(n)}
+                                        className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${numTeams === n ? "bg-[#FF4200] text-white border-[#FF4200]" : "border-gray-300 text-gray-600 hover:border-[#FF4200]"}`}>
+                                        {n}
+                                    </button>
+                                ))}
+                            </div>
+                        </Field>
+                    )}
 
                     <div className="space-y-2">
                         <div className="flex items-center justify-between">
                             <span className="text-sm font-medium text-gray-700">Teams</span>
-                            <span className="text-xs text-gray-400">{(numTeams * (numTeams - 1)) / 2} matches · {numTeams - 1} rounds</span>
+                            <span className="text-xs text-gray-400">
+                                {type === "CHALLENGER"
+                                    ? "8 teams · groups assigned randomly"
+                                    : type === "KING_OF_THE_COURT"
+                                    ? `${numTeams / 2} courts · ${totalRounds} rounds`
+                                    : `${(numTeams * (numTeams - 1)) / 2} matches · ${numTeams - 1} rounds`}
+                            </span>
                         </div>
                         {teamSlots.map(([p1, p2], i) => {
                             const assignedIds = new Set(teamSlots.flat().filter(Boolean));
@@ -427,10 +480,10 @@ function CreateTournamentForm({ onCreated, onImport }: { onCreated: () => void; 
 
             <button
                 type="submit"
-                disabled={create.isPending || createTeamAmericano.isPending}
+                disabled={create.isPending || createTeamAmericano.isPending || createChallenger.isPending || createKingOfTheCourt.isPending}
                 className="w-full sm:w-auto bg-[#FF4200] text-white rounded-lg px-5 py-2.5 text-sm font-medium hover:bg-[#CC3500] disabled:opacity-50 transition-colors"
             >
-                {(create.isPending || createTeamAmericano.isPending) ? "Creating…" : "Create & Generate Schedule"}
+                {(create.isPending || createTeamAmericano.isPending || createChallenger.isPending || createKingOfTheCourt.isPending) ? "Creating…" : "Create & Generate Schedule"}
             </button>
         </form>
     );
@@ -702,7 +755,7 @@ function ImportRankedinTab({ onImported, onBack }: { onImported: () => void; onB
                         <div className="space-y-2">
                             <label className="block text-sm font-medium text-gray-700">Type</label>
                             <div className="flex flex-wrap gap-2">
-                                {(["AMERICANO", "AMERICANO_CHAMPIONS", "AMERICANO_GIRLS", "CHALLENGER"] as TournamentType[]).map(t => (
+                                {(["AMERICANO", "AMERICANO_CHAMPIONS", "AMERICANO_GIRLS"] as TournamentType[]).map(t => (
                                     <button key={t} type="button" onClick={() => setType(t)}
                                         className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${type === t ? "bg-[#FF4200] text-white border-[#FF4200]" : "border-gray-300 text-gray-600 hover:border-[#FF4200]"}`}>
                                         {TOURNAMENT_TYPE_LABELS[t]}
