@@ -152,6 +152,7 @@ function CreateTournamentForm({ onCreated, onImport }: { onCreated: () => void; 
     const [teamSlots, setTeamSlots] = useState<[string, string][]>(() => Array.from({ length: 4 }, () => ["", ""]));
     // King of the Court state
     const [totalRounds, setTotalRounds] = useState(7);
+    const [totalRoundsInput, setTotalRoundsInput] = useState("7");
     const [error, setError] = useState("");
 
     const divisionPlayersQuery = trpc.division.players.useQuery({ division });
@@ -328,14 +329,28 @@ function CreateTournamentForm({ onCreated, onImport }: { onCreated: () => void; 
 
             {type === "KING_OF_THE_COURT" && (
                 <Field label="Number of rounds">
-                    <input
-                        type="number"
-                        min={1}
-                        max={15}
-                        value={totalRounds}
-                        onChange={e => setTotalRounds(Math.max(1, Math.min(15, Number(e.target.value) || 1)))}
-                        className={input}
-                    />
+                    <div className="pt-2">
+                        <input
+                            type="number"
+                            min={1}
+                            max={15}
+                            value={totalRoundsInput}
+                            onChange={e => {
+                                const raw = e.target.value;
+                                setTotalRoundsInput(raw);
+                                const parsed = Number(raw);
+                                if (raw !== "" && Number.isInteger(parsed) && parsed >= 1 && parsed <= 15) {
+                                    setTotalRounds(parsed);
+                                }
+                            }}
+                            onBlur={() => {
+                                const clamped = Math.max(1, Math.min(15, Number(totalRoundsInput) || 1));
+                                setTotalRounds(clamped);
+                                setTotalRoundsInput(String(clamped));
+                            }}
+                            className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF4200] bg-white w-16"
+                        />
+                    </div>
                 </Field>
             )}
 

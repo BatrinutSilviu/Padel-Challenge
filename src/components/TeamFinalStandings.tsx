@@ -59,6 +59,6 @@ export function TeamFinalStandings({ participants }: { participants: Participant
 function RankMedal({ rank }: { rank: number }) {
     if (rank === 1) return <span className="text-yellow-500 font-black text-lg">🥇</span>;
     if (rank === 2) return <span className="text-gray-400 font-black text-lg">🥈</span>;
-    if (rank === 3 || rank === 4) return <span className="text-amber-600 font-black text-lg">🥉</span>;
+    if (rank === 3) return <span className="text-amber-600 font-black text-lg">🥉</span>;
     return <span className="text-[#8E8E93] font-bold">#{rank}</span>;
 }
