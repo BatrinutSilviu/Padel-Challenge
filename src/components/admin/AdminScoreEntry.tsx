@@ -66,6 +66,12 @@ export function AdminScoreEntry() {
         },
     });
 
+    const advanceKotcRound = trpc.tournament.advanceKingOfTheCourtRound.useMutation({
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: getQueryKey(trpc.tournament.getById, { id: id! }) });
+        },
+    });
+
     const handleSaveStart = useCallback(() => setPendingSaves(n => n + 1), []);
     const handleSaveEnd = useCallback(() => setPendingSaves(n => n - 1), []);
     const handleSaved = useCallback((
@@ -146,7 +152,7 @@ export function AdminScoreEntry() {
     const allScored = isChallenger
         ? (progress?.allBracketScored ?? false)
         : isKotc
-        ? (kotcProgressData?.allDone ?? false)
+        ? (kotcProgressData?.currentRoundScored ?? false)
         : scoredCount === totalMatches;
     const isSaving = pendingSaves > 0;
 
@@ -226,15 +232,12 @@ export function AdminScoreEntry() {
                 ) : isKotc && kotcProgressData ? (
                     <div className="bg-white rounded-xl border border-gray-200 px-4 sm:px-5 py-4 space-y-3">
                         <ProgressRow
-                            label={`Round ${kotcProgressData.current?.roundNumber ?? 1} of ${kotcProgressData.totalRounds}`}
+                            label={`Round ${kotcProgressData.current?.roundNumber ?? 1}`}
                             scored={kotcProgressData.current?.matches.filter(m => scoredIds.has(m.id)).length ?? 0}
                             total={kotcProgressData.current?.matches.length ?? 0}
                         />
                         {!isCompleted && allScored && (
-                            <p className="text-xs text-[#FF4200]">Final round complete — ready to complete the tournament.</p>
-                        )}
-                        {!isCompleted && !allScored && kotcProgressData.currentRoundScored && !kotcProgressData.isLastRound && (
-                            <p className="text-xs text-gray-400">Round complete — next round will appear once generated.</p>
+                            <p className="text-xs text-[#FF4200]">Round complete — start the next round or complete the tournament.</p>
                         )}
                     </div>
                 ) : (
@@ -335,8 +338,9 @@ export function AdminScoreEntry() {
                     </div>
                 )}
 
-                {/* Complete tournament — shown after all rounds */}
-                {!isCompleted && (isChallenger ? Boolean(progress?.knockoutStarted) : isKotc ? Boolean(kotcProgressData?.isLastRound) : true) && (
+                {/* Complete tournament — shown after all rounds (or, for King of the Court,
+                    which has no fixed round count, after every round the admin has scored) */}
+                {!isCompleted && (isChallenger ? Boolean(progress?.knockoutStarted) : isKotc ? Boolean(kotcProgressData?.currentRoundScored) : true) && (
                     <div className="space-y-3">
                         {confirmComplete && (
                             <div className="bg-amber-50 border border-amber-300 rounded-xl px-4 sm:px-5 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -344,7 +348,7 @@ export function AdminScoreEntry() {
                                     {isChallenger
                                         ? "Not all bracket matches have a score yet. Complete anyway?"
                                         : isKotc
-                                        ? "Not all matches in the final round have a score yet. Complete anyway?"
+                                        ? "Not all matches in the current round have a score yet. Complete anyway?"
                                         : `${totalMatches - scoredCount} match${totalMatches - scoredCount !== 1 ? "es" : ""} still have no score. Complete anyway? Those players will receive 0 points.`}
                                 </p>
                                 <div className="flex gap-2 shrink-0">
@@ -363,18 +367,42 @@ export function AdminScoreEntry() {
                                 </div>
                             </div>
                         )}
+                        {advanceKotcRound.error && (
+                            <p className="text-sm text-red-500 bg-red-50 border border-red-200 rounded-lg px-4 py-2">
+                                {advanceKotcRound.error.message}
+                            </p>
+                        )}
                         {complete.error && (
                             <p className="text-sm text-red-500 bg-red-50 border border-red-200 rounded-lg px-4 py-2">
                                 {complete.error.message}
                             </p>
                         )}
-                        <button
-                            onClick={handleComplete}
-                            disabled={complete.isPending}
-                            className="w-full bg-[#FF4200] text-white rounded-xl px-4 py-4 text-base font-semibold hover:bg-[#CC3500] disabled:opacity-50 transition-colors"
-                        >
-                            {complete.isPending ? "Completing…" : "Complete Tournament"}
-                        </button>
+                        {isKotc ? (
+                            <div className="flex flex-col sm:flex-row gap-3">
+                                <button
+                                    onClick={() => advanceKotcRound.mutate({ id: id! })}
+                                    disabled={advanceKotcRound.isPending || complete.isPending}
+                                    className="flex-1 bg-amber-500 text-white rounded-xl px-4 py-4 text-base font-semibold hover:bg-amber-600 disabled:opacity-50 transition-colors"
+                                >
+                                    {advanceKotcRound.isPending ? "Starting next round…" : "Next Round"}
+                                </button>
+                                <button
+                                    onClick={handleComplete}
+                                    disabled={complete.isPending || advanceKotcRound.isPending}
+                                    className="flex-1 bg-[#FF4200] text-white rounded-xl px-4 py-4 text-base font-semibold hover:bg-[#CC3500] disabled:opacity-50 transition-colors"
+                                >
+                                    {complete.isPending ? "Completing…" : "Complete Tournament"}
+                                </button>
+                            </div>
+                        ) : (
+                            <button
+                                onClick={handleComplete}
+                                disabled={complete.isPending}
+                                className="w-full bg-[#FF4200] text-white rounded-xl px-4 py-4 text-base font-semibold hover:bg-[#CC3500] disabled:opacity-50 transition-colors"
+                            >
+                                {complete.isPending ? "Completing…" : "Complete Tournament"}
+                            </button>
+                        )}
                     </div>
                 )}
             </main>

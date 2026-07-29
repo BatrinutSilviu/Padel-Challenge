@@ -51,21 +51,18 @@ export function formatKotcScore(m: KotcMatch): string {
     return base;
 }
 
+// King of the Court has no fixed round count — the admin decides after every round
+// whether to continue or complete the tournament, so "progress" is just whether the
+// most recent round is fully scored yet.
 export type KotcProgress = {
     rounds: KotcRound[];
     current: KotcRound | undefined;
-    totalRounds: number;
     currentRoundScored: boolean;
-    isLastRound: boolean;
-    allDone: boolean;
 };
 
-export function kotcProgress(tournament: { rounds: KotcRound[]; totalRounds: number | null }): KotcProgress {
+export function kotcProgress(tournament: { rounds: KotcRound[] }): KotcProgress {
     const rounds = sortRoundsByNumber(tournament.rounds);
     const current = rounds[rounds.length - 1];
-    const totalRounds = tournament.totalRounds ?? rounds.length;
     const currentRoundScored = current ? current.matches.every(isKotcMatchScored) : false;
-    const isLastRound = current ? current.roundNumber === totalRounds : false;
-    const allDone = isLastRound && currentRoundScored;
-    return { rounds, current, totalRounds, currentRoundScored, isLastRound, allDone };
+    return { rounds, current, currentRoundScored };
 }
