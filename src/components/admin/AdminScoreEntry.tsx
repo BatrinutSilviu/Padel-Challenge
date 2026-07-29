@@ -101,6 +101,11 @@ export function AdminScoreEntry() {
                 })),
             };
         });
+        // Also refetch in the background: scoring the last Challenger semifinal of a
+        // bracket side makes the server auto-create the Final and Third Place matches
+        // (see maybeAdvanceChallengerBracket), which the patch above can't materialize —
+        // same reasoning as handleKotcSaved below.
+        qc.invalidateQueries({ queryKey: getQueryKey(trpc.tournament.getById, { id: id! }) });
     }, [qc, id]);
 
     // Separate from handleSaved: King of the Court's 4th argument (goldenPointWinner) is

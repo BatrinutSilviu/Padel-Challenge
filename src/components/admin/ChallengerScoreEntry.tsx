@@ -29,8 +29,8 @@ export function ChallengerScoreEntry({
 
             {progress.knockoutStarted && (
                 <>
-                    <BracketBlock title="Golden Bracket" side={progress.bracket.golden} onSaveStart={onSaveStart} onSaveEnd={onSaveEnd} onSaved={onSaved} />
-                    <BracketBlock title="Silver Bracket" side={progress.bracket.silver} onSaveStart={onSaveStart} onSaveEnd={onSaveEnd} onSaved={onSaved} />
+                    <BracketBlock title="Golden Bracket" accent="bg-amber-50 border-amber-200 text-amber-700" side={progress.bracket.golden} onSaveStart={onSaveStart} onSaveEnd={onSaveEnd} onSaved={onSaved} />
+                    <BracketBlock title="Silver Bracket" accent="bg-gray-50 border-gray-200 text-gray-700" side={progress.bracket.silver} onSaveStart={onSaveStart} onSaveEnd={onSaveEnd} onSaved={onSaved} />
                 </>
             )}
         </div>
@@ -55,19 +55,26 @@ function GroupBlock({
             <div className="px-4 sm:px-5 py-3 bg-gray-50 border-b border-gray-200">
                 <span className="font-semibold text-gray-700">{title}</span>
             </div>
-            <div className="divide-y divide-gray-100">
-                {rounds.map((round, ri) =>
-                    round.matches.map((match, mi) => (
-                        <ChallengerMatchScoreRow
-                            key={match.id}
-                            match={match}
-                            label={`Round ${ri + 1} · Court ${mi + 1}`}
-                            onSaveStart={onSaveStart}
-                            onSaveEnd={onSaveEnd}
-                            onSaved={onSaved}
-                        />
-                    ))
-                )}
+            <div className="divide-y divide-gray-200">
+                {rounds.map((round, ri) => (
+                    <div key={round.id}>
+                        <div className="px-4 sm:px-5 py-2 bg-gray-50/70 border-b border-gray-100">
+                            <span className="text-xs font-bold uppercase tracking-wide text-gray-500">Round {ri + 1}</span>
+                        </div>
+                        <div className="divide-y divide-gray-100">
+                            {round.matches.map((match, mi) => (
+                                <ChallengerMatchScoreRow
+                                    key={match.id}
+                                    match={match}
+                                    label={`Court ${mi + 1}`}
+                                    onSaveStart={onSaveStart}
+                                    onSaveEnd={onSaveEnd}
+                                    onSaved={onSaved}
+                                />
+                            ))}
+                        </div>
+                    </div>
+                ))}
             </div>
         </div>
     );
@@ -75,12 +82,14 @@ function GroupBlock({
 
 function BracketBlock({
     title,
+    accent,
     side,
     onSaveStart,
     onSaveEnd,
     onSaved,
 }: {
     title: string;
+    accent: string;
     side: BracketSideMatches;
     onSaveStart: () => void;
     onSaveEnd: () => void;
@@ -94,8 +103,8 @@ function BracketBlock({
 
     return (
         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-            <div className="px-4 sm:px-5 py-3 bg-gray-50 border-b border-gray-200">
-                <span className="font-semibold text-gray-700">{title}</span>
+            <div className={`px-4 sm:px-5 py-3 border-b ${accent}`}>
+                <span className="font-semibold">{title}</span>
             </div>
             <div className="divide-y divide-gray-100">
                 {rows.length > 0 ? (

@@ -29,33 +29,43 @@ export function ChallengerBracket({
 }
 
 function BracketSection({ title, accent, side }: { title: string; accent: string; side: BracketSideMatches }) {
+    const sf1 = side.semifinals[0];
+    const sf2 = side.semifinals[1];
+
     return (
         <div className="bg-white rounded-2xl border border-[#E5E5EA] overflow-hidden shadow-sm">
             <div className={`px-4 py-2.5 border-b ${accent}`}>
                 <span className="font-bold text-sm">{title}</span>
             </div>
-            <div className="p-4 grid grid-cols-1 lg:grid-cols-3 gap-4">
-                <div className="space-y-3">
-                    <p className="text-xs font-bold uppercase tracking-widest text-[#8E8E93]">Semifinals</p>
-                    {side.semifinals.length > 0 ? (
-                        side.semifinals.map(m => <BracketMatchCard key={m.id} match={m} />)
-                    ) : (
-                        <>
-                            <BracketMatchCard placeholder="TBD" />
-                            <BracketMatchCard placeholder="TBD" />
-                        </>
-                    )}
+            <div className="p-4 sm:p-6">
+                {/* Elimination tree: the two semifinals feed into the Final */}
+                <div className="flex flex-col md:flex-row md:items-stretch gap-6 md:gap-0">
+                    <div className="flex-1 md:pr-4">
+                        <p className="text-xs font-bold uppercase tracking-widest text-[#8E8E93] mb-3">Semifinals</p>
+                        <div className="flex flex-col gap-8">
+                            <div className="relative">
+                                {sf1 ? <BracketMatchCard match={sf1} /> : <BracketMatchCard placeholder="TBD" />}
+                                <div aria-hidden className="hidden md:block absolute left-full top-1/2 w-4 h-[calc(50%+1rem)] border-t-2 border-r-2 border-[#D1D1D6] rounded-tr-xl" />
+                            </div>
+                            <div className="relative">
+                                {sf2 ? <BracketMatchCard match={sf2} /> : <BracketMatchCard placeholder="TBD" />}
+                                <div aria-hidden className="hidden md:block absolute left-full bottom-1/2 w-4 h-[calc(50%+1rem)] border-b-2 border-r-2 border-[#D1D1D6] rounded-br-xl" />
+                            </div>
+                        </div>
+                    </div>
+                    <div className="flex-1 flex flex-col justify-center">
+                        <p className="text-xs font-bold uppercase tracking-widest text-[#FF4200] mb-3">Final</p>
+                        {side.final ? (
+                            <BracketMatchCard match={side.final} />
+                        ) : (
+                            <BracketMatchCard placeholderLeft="Winner of SF1" placeholderRight="Winner of SF2" />
+                        )}
+                    </div>
                 </div>
-                <div className="space-y-3">
-                    <p className="text-xs font-bold uppercase tracking-widest text-[#8E8E93]">Final</p>
-                    {side.final ? (
-                        <BracketMatchCard match={side.final} />
-                    ) : (
-                        <BracketMatchCard placeholderLeft="Winner of SF1" placeholderRight="Winner of SF2" />
-                    )}
-                </div>
-                <div className="space-y-3">
-                    <p className="text-xs font-bold uppercase tracking-widest text-[#8E8E93]">3rd Place Match</p>
+
+                {/* 3rd place is a consolation match between the semifinal losers, not part of the tree */}
+                <div className="mt-6 pt-5 border-t border-dashed border-[#E5E5EA]">
+                    <p className="text-xs font-bold uppercase tracking-widest text-[#8E8E93] mb-3">3rd Place Match</p>
                     {side.thirdPlace ? (
                         <BracketMatchCard match={side.thirdPlace} />
                     ) : (

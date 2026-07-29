@@ -4,6 +4,7 @@ import {
     challengerProgress,
     computeGroupStandings,
     formatChallengerScore,
+    isChallengerMatchScored,
     type ChallengerRound,
 } from "../../lib/challenger";
 import { ChallengerBracket } from "./ChallengerBracket";
@@ -82,7 +83,7 @@ function GroupSection({ title, rounds }: { title: string; rounds: ChallengerRoun
                                         <Link to={`/player/${match.team1Player2.id}`} className="font-semibold text-[#1A1A2E] hover:text-[#FF4200] text-sm block truncate transition-colors">{match.team1Player2.name}</Link>
                                     </div>
                                     <div className="text-center shrink-0">
-                                        <span className={`text-base font-black tabular-nums ${match.team1Score > match.team2Score ? "text-[#FF4200]" : match.team2Score > match.team1Score ? "text-[#8E8E93]" : "text-[#E5E5EA]"}`}>
+                                        <span className={`text-base font-black tabular-nums ${isChallengerMatchScored(match) ? "text-[#FF4200]" : "text-[#E5E5EA]"}`}>
                                             {formatChallengerScore(match)}
                                         </span>
                                     </div>

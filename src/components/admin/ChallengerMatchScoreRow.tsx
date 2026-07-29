@@ -194,7 +194,7 @@ export function ChallengerMatchScoreRow({
 
     return (
         <div className="px-4 sm:px-5 py-4">
-            <p className="text-xs text-gray-400 mb-3">{label}</p>
+            <p className={label === "Final" ? "text-xs font-bold uppercase tracking-wide text-[#FF4200] mb-3" : "text-xs text-gray-400 mb-3"}>{label}</p>
             <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
                 <div className="sm:flex-1 text-center sm:text-right">
                     <p className="font-medium text-gray-800 text-sm">{match.team1Player1.name} &amp; {match.team1Player2.name}</p>

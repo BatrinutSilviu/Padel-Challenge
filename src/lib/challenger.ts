@@ -65,8 +65,24 @@ export type GroupStanding = {
     rank: number;
 };
 
-// Ranked by match wins desc, then total game difference desc — matches the
-// backend's computeChallengerGroupStandings exactly.
+// Head-to-head tiebreak between two teams: negative if `a` won their direct match (ranks
+// `a` above `b`), positive if `b` won, 0 if they haven't played (or it wasn't scored).
+function challengerHeadToHead(a: ChallengerTeam, b: ChallengerTeam, matches: ChallengerMatch[]): number {
+    const aKey = teamKey(a.player1.id, a.player2.id);
+    const bKey = teamKey(b.player1.id, b.player2.id);
+    for (const m of matches) {
+        if (!isChallengerMatchScored(m)) continue;
+        const k1 = teamKey(m.team1Player1.id, m.team1Player2.id);
+        const k2 = teamKey(m.team2Player1.id, m.team2Player2.id);
+        if (k1 === aKey && k2 === bKey) return m.team2Score - m.team1Score;
+        if (k1 === bKey && k2 === aKey) return m.team1Score - m.team2Score;
+    }
+    return 0;
+}
+
+// Ranked by match wins desc, then total game difference desc, then the head-to-head
+// result of the direct match between the tied teams — matches the backend's
+// computeChallengerGroupStandings exactly.
 export function computeGroupStandings(groupRounds: ChallengerRound[]): GroupStanding[] {
     const matches = groupRounds.flatMap(r => r.matches);
     type Stat = { team: ChallengerTeam; wins: number; gameDiff: number };
@@ -90,7 +106,7 @@ export function computeGroupStandings(groupRounds: ChallengerRound[]): GroupStan
     }
 
     return [...stats.values()]
-        .sort((a, b) => b.wins - a.wins || b.gameDiff - a.gameDiff)
+        .sort((a, b) => b.wins - a.wins || b.gameDiff - a.gameDiff || challengerHeadToHead(a.team, b.team, matches))
         .map((s, i) => ({ ...s, rank: i + 1 }));
 }
 
