@@ -58,11 +58,17 @@ export type KotcProgress = {
     rounds: KotcRound[];
     current: KotcRound | undefined;
     currentRoundScored: boolean;
+    // The most recent round that IS fully scored — may be an earlier round than
+    // `current` if a further round was started (e.g. by mistake) and never finished.
+    // Completing the tournament should still be possible off this round, so a
+    // half-started extra round can never leave the admin with no way to end it.
+    lastScoredRound: KotcRound | undefined;
 };
 
 export function kotcProgress(tournament: { rounds: KotcRound[] }): KotcProgress {
     const rounds = sortRoundsByNumber(tournament.rounds);
     const current = rounds[rounds.length - 1];
     const currentRoundScored = current ? current.matches.every(isKotcMatchScored) : false;
-    return { rounds, current, currentRoundScored };
+    const lastScoredRound = [...rounds].reverse().find(r => r.matches.every(isKotcMatchScored));
+    return { rounds, current, currentRoundScored, lastScoredRound };
 }

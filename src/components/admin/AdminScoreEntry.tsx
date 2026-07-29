@@ -152,7 +152,7 @@ export function AdminScoreEntry() {
     const allScored = isChallenger
         ? (progress?.allBracketScored ?? false)
         : isKotc
-        ? (kotcProgressData?.currentRoundScored ?? false)
+        ? Boolean(kotcProgressData?.lastScoredRound)
         : scoredCount === totalMatches;
     const isSaving = pendingSaves > 0;
 
@@ -236,8 +236,13 @@ export function AdminScoreEntry() {
                             scored={kotcProgressData.current?.matches.filter(m => scoredIds.has(m.id)).length ?? 0}
                             total={kotcProgressData.current?.matches.length ?? 0}
                         />
-                        {!isCompleted && allScored && (
+                        {!isCompleted && kotcProgressData.currentRoundScored && (
                             <p className="text-xs text-[#FF4200]">Round complete — start the next round or complete the tournament.</p>
+                        )}
+                        {!isCompleted && !kotcProgressData.currentRoundScored && kotcProgressData.lastScoredRound && kotcProgressData.lastScoredRound.id !== kotcProgressData.current?.id && (
+                            <p className="text-xs text-gray-400">
+                                This round isn't finished — you can still complete the tournament using Round {kotcProgressData.lastScoredRound.roundNumber}'s results.
+                            </p>
                         )}
                     </div>
                 ) : (
@@ -339,8 +344,9 @@ export function AdminScoreEntry() {
                 )}
 
                 {/* Complete tournament — shown after all rounds (or, for King of the Court,
-                    which has no fixed round count, after every round the admin has scored) */}
-                {!isCompleted && (isChallenger ? Boolean(progress?.knockoutStarted) : isKotc ? Boolean(kotcProgressData?.currentRoundScored) : true) && (
+                    which has no fixed round count, as soon as any round has been scored —
+                    even if a further, unfinished round was already started) */}
+                {!isCompleted && (isChallenger ? Boolean(progress?.knockoutStarted) : isKotc ? Boolean(kotcProgressData?.lastScoredRound) : true) && (
                     <div className="space-y-3">
                         {confirmComplete && (
                             <div className="bg-amber-50 border border-amber-300 rounded-xl px-4 sm:px-5 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -379,13 +385,15 @@ export function AdminScoreEntry() {
                         )}
                         {isKotc ? (
                             <div className="flex flex-col sm:flex-row gap-3">
-                                <button
-                                    onClick={() => advanceKotcRound.mutate({ id: id! })}
-                                    disabled={advanceKotcRound.isPending || complete.isPending}
-                                    className="flex-1 bg-amber-500 text-white rounded-xl px-4 py-4 text-base font-semibold hover:bg-amber-600 disabled:opacity-50 transition-colors"
-                                >
-                                    {advanceKotcRound.isPending ? "Starting next round…" : "Next Round"}
-                                </button>
+                                {kotcProgressData?.currentRoundScored && (
+                                    <button
+                                        onClick={() => advanceKotcRound.mutate({ id: id! })}
+                                        disabled={advanceKotcRound.isPending || complete.isPending}
+                                        className="flex-1 bg-amber-500 text-white rounded-xl px-4 py-4 text-base font-semibold hover:bg-amber-600 disabled:opacity-50 transition-colors"
+                                    >
+                                        {advanceKotcRound.isPending ? "Starting next round…" : "Next Round"}
+                                    </button>
+                                )}
                                 <button
                                     onClick={handleComplete}
                                     disabled={complete.isPending || advanceKotcRound.isPending}
