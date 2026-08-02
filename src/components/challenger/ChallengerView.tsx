@@ -14,6 +14,7 @@ type TournamentData = NonNullable<ReturnType<typeof trpc.tournament.getById.useQ
 
 export function ChallengerView({ tournament }: { tournament: TournamentData }) {
     const progress = challengerProgress(tournament);
+    const hasGroupB = progress.groupRounds.B.length > 0;
 
     return (
         <div className="space-y-6">
@@ -21,14 +22,14 @@ export function ChallengerView({ tournament }: { tournament: TournamentData }) {
 
             <section>
                 <h2 className="text-xs font-bold uppercase tracking-widest text-[#8E8E93] mb-3">Bracket</h2>
-                <ChallengerBracket bracket={progress.bracket} knockoutStarted={progress.knockoutStarted} />
+                <ChallengerBracket bracket={progress.bracket} knockoutStarted={progress.knockoutStarted} hasGroupB={hasGroupB} />
             </section>
 
             <section>
                 <h2 className="text-xs font-bold uppercase tracking-widest text-[#8E8E93] mb-3">Group Stage</h2>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                    <GroupSection title="Group A" rounds={progress.groupRounds.A} />
-                    <GroupSection title="Group B" rounds={progress.groupRounds.B} />
+                <div className={`grid grid-cols-1 ${hasGroupB ? "lg:grid-cols-2" : ""} gap-4`}>
+                    <GroupSection title={hasGroupB ? "Group A" : "Group"} rounds={progress.groupRounds.A} />
+                    {hasGroupB && <GroupSection title="Group B" rounds={progress.groupRounds.B} />}
                 </div>
             </section>
         </div>

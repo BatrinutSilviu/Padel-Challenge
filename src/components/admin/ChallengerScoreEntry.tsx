@@ -1,5 +1,11 @@
-import { challengerProgress, type BracketSideMatches, type ChallengerMatch, type ChallengerRound } from "../../lib/challenger";
+import { challengerProgress, type ChallengerBracketSection, type ChallengerMatch, type ChallengerRound } from "../../lib/challenger";
 import { ChallengerMatchScoreRow } from "./ChallengerMatchScoreRow";
+
+const ACCENTS: Record<ChallengerBracketSection["key"], string> = {
+    GOLDEN: "bg-amber-50 border-amber-200 text-amber-700",
+    SILVER: "bg-gray-50 border-gray-200 text-gray-700",
+    MAIN: "bg-orange-50 border-[#FF4200]/20 text-[#FF4200]",
+};
 
 type OnSaved = (
     matchId: string,
@@ -21,18 +27,16 @@ export function ChallengerScoreEntry({
     onSaved: OnSaved;
 }) {
     const progress = challengerProgress(tournament);
+    const hasGroupB = progress.groupRounds.B.length > 0;
 
     return (
         <div className="space-y-4">
-            <GroupBlock title="Group A" rounds={progress.groupRounds.A} onSaveStart={onSaveStart} onSaveEnd={onSaveEnd} onSaved={onSaved} />
-            <GroupBlock title="Group B" rounds={progress.groupRounds.B} onSaveStart={onSaveStart} onSaveEnd={onSaveEnd} onSaved={onSaved} />
+            <GroupBlock title={hasGroupB ? "Group A" : "Group"} rounds={progress.groupRounds.A} onSaveStart={onSaveStart} onSaveEnd={onSaveEnd} onSaved={onSaved} />
+            {hasGroupB && <GroupBlock title="Group B" rounds={progress.groupRounds.B} onSaveStart={onSaveStart} onSaveEnd={onSaveEnd} onSaved={onSaved} />}
 
-            {progress.knockoutStarted && (
-                <>
-                    <BracketBlock title="Golden Bracket" accent="bg-amber-50 border-amber-200 text-amber-700" side={progress.bracket.golden} onSaveStart={onSaveStart} onSaveEnd={onSaveEnd} onSaved={onSaved} />
-                    <BracketBlock title="Silver Bracket" accent="bg-gray-50 border-gray-200 text-gray-700" side={progress.bracket.silver} onSaveStart={onSaveStart} onSaveEnd={onSaveEnd} onSaved={onSaved} />
-                </>
-            )}
+            {progress.knockoutStarted && progress.bracket.map(section => (
+                <BracketBlock key={section.key} section={section} onSaveStart={onSaveStart} onSaveEnd={onSaveEnd} onSaved={onSaved} />
+            ))}
         </div>
     );
 }
@@ -81,30 +85,26 @@ function GroupBlock({
 }
 
 function BracketBlock({
-    title,
-    accent,
-    side,
+    section,
     onSaveStart,
     onSaveEnd,
     onSaved,
 }: {
-    title: string;
-    accent: string;
-    side: BracketSideMatches;
+    section: ChallengerBracketSection;
     onSaveStart: () => void;
     onSaveEnd: () => void;
     onSaved: OnSaved;
 }) {
     const rows: { key: string; label: string; match: ChallengerMatch }[] = [
-        ...side.semifinals.map((match, i) => ({ key: match.id, label: `Semifinal ${i + 1}`, match })),
-        ...(side.final ? [{ key: side.final.id, label: "Final", match: side.final }] : []),
-        ...(side.thirdPlace ? [{ key: side.thirdPlace.id, label: "3rd Place Match", match: side.thirdPlace }] : []),
+        ...section.semifinals.map((match, i) => ({ key: match.id, label: `Semifinal ${i + 1}`, match })),
+        ...(section.final ? [{ key: section.final.id, label: "Final", match: section.final }] : []),
+        ...(section.thirdPlace ? [{ key: section.thirdPlace.id, label: "3rd Place Match", match: section.thirdPlace }] : []),
     ];
 
     return (
         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-            <div className={`px-4 sm:px-5 py-3 border-b ${accent}`}>
-                <span className="font-semibold">{title}</span>
+            <div className={`px-4 sm:px-5 py-3 border-b ${ACCENTS[section.key]}`}>
+                <span className="font-semibold">{section.title}</span>
             </div>
             <div className="divide-y divide-gray-100">
                 {rows.length > 0 ? (

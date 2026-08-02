@@ -215,14 +215,12 @@ export function AdminScoreEntry() {
                         {progress.knockoutStarted && (
                             <ProgressRow
                                 label="Bracket"
-                                scored={[
-                                    ...progress.bracket.golden.semifinals, progress.bracket.golden.final, progress.bracket.golden.thirdPlace,
-                                    ...progress.bracket.silver.semifinals, progress.bracket.silver.final, progress.bracket.silver.thirdPlace,
-                                ].filter((m): m is NonNullable<typeof m> => Boolean(m)).filter(m => scoredIds.has(m.id)).length}
-                                total={[
-                                    ...progress.bracket.golden.semifinals, progress.bracket.golden.final, progress.bracket.golden.thirdPlace,
-                                    ...progress.bracket.silver.semifinals, progress.bracket.silver.final, progress.bracket.silver.thirdPlace,
-                                ].filter((m): m is NonNullable<typeof m> => Boolean(m)).length}
+                                scored={progress.bracket
+                                    .flatMap(section => [...section.semifinals, section.final, section.thirdPlace])
+                                    .filter((m): m is NonNullable<typeof m> => Boolean(m)).filter(m => scoredIds.has(m.id)).length}
+                                total={progress.bracket
+                                    .flatMap(section => [...section.semifinals, section.final, section.thirdPlace])
+                                    .filter((m): m is NonNullable<typeof m> => Boolean(m)).length}
                             />
                         )}
                         {!isCompleted && allScored && (

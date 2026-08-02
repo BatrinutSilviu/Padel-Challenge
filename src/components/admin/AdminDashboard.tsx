@@ -220,7 +220,7 @@ function CreateTournamentForm({ onCreated, onImport }: { onCreated: () => void; 
             }
             createTeamAmericano.mutate({ name: name.trim(), date, division, pointsPerGame, teams: teamSlots.map(([p1, p2]) => ({ player1Id: p1, player2Id: p2 })) });
         } else if (type === "CHALLENGER") {
-            if (teamSlots.length !== 8) return setError("Challenger requires exactly 8 teams.");
+            if (teamSlots.length !== 4 && teamSlots.length !== 8) return setError("Challenger requires 4 or 8 teams.");
             for (let i = 0; i < teamSlots.length; i++) {
                 const [p1, p2] = teamSlots[i];
                 if (!p1 || !p2) return setError(`Team ${i + 1} is incomplete — select both players.`);
@@ -356,10 +356,10 @@ function CreateTournamentForm({ onCreated, onImport }: { onCreated: () => void; 
 
             {(type === "TEAM_AMERICANO" || type === "CHALLENGER" || type === "KING_OF_THE_COURT") ? (
                 <>
-                    {(type === "TEAM_AMERICANO" || type === "KING_OF_THE_COURT") && (
+                    {(type === "TEAM_AMERICANO" || type === "KING_OF_THE_COURT" || type === "CHALLENGER") && (
                         <Field label="Number of teams">
                             <div className="flex gap-2">
-                                {[4, 6, 8].map(n => (
+                                {(type === "CHALLENGER" ? [4, 8] : [4, 6, 8]).map(n => (
                                     <button key={n} type="button" onClick={() => changeNumTeams(n)}
                                         className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${numTeams === n ? "bg-[#FF4200] text-white border-[#FF4200]" : "border-gray-300 text-gray-600 hover:border-[#FF4200]"}`}>
                                         {n}
@@ -374,7 +374,9 @@ function CreateTournamentForm({ onCreated, onImport }: { onCreated: () => void; 
                             <span className="text-sm font-medium text-gray-700">Teams</span>
                             <span className="text-xs text-gray-400">
                                 {type === "CHALLENGER"
-                                    ? "8 teams · groups assigned randomly"
+                                    ? numTeams === 8
+                                        ? "8 teams · 2 groups of 4 · groups assigned randomly"
+                                        : "4 teams · 1 group · final + 3rd place match"
                                     : type === "KING_OF_THE_COURT"
                                     ? `${numTeams / 2} courts · ${totalRounds} rounds`
                                     : `${(numTeams * (numTeams - 1)) / 2} matches · ${numTeams - 1} rounds`}

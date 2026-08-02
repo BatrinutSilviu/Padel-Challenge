@@ -116,23 +116,48 @@ export type BracketSideMatches = {
     thirdPlace?: ChallengerMatch;
 };
 
-export function groupBracketMatches(rounds: ChallengerRound[]): { golden: BracketSideMatches; silver: BracketSideMatches } {
-    const knockoutMatches = rounds.filter(r => r.groupName == null).flatMap(r => r.matches);
+// A knockout stage is either split into Golden/Silver brackets (each fed by two semifinals,
+// 8-team/2-group mode) or a single bracket that goes straight from group standings to the
+// Final and 3rd Place match with no semifinal (4-team/1-group mode).
+export type ChallengerBracketSection = BracketSideMatches & {
+    key: "GOLDEN" | "SILVER" | "MAIN";
+    title: string;
+    hasSemifinals: boolean;
+};
 
-    const bySide = (bracketType: "GOLDEN" | "SILVER"): BracketSideMatches => ({
+export function groupBracketMatches(rounds: ChallengerRound[]): ChallengerBracketSection[] {
+    const knockoutMatches = rounds.filter(r => r.groupName == null).flatMap(r => r.matches);
+    if (knockoutMatches.length === 0) return [];
+
+    const isSplitBracket = knockoutMatches.some(m => m.bracketType === "GOLDEN" || m.bracketType === "SILVER");
+    if (!isSplitBracket) {
+        return [{
+            key: "MAIN",
+            title: "Final",
+            hasSemifinals: false,
+            semifinals: [],
+            final: knockoutMatches.find(m => m.bracketStage === "FINAL"),
+            thirdPlace: knockoutMatches.find(m => m.bracketStage === "THIRD_PLACE"),
+        }];
+    }
+
+    const bySide = (bracketType: "GOLDEN" | "SILVER", title: string): ChallengerBracketSection => ({
+        key: bracketType,
+        title,
+        hasSemifinals: true,
         semifinals: knockoutMatches.filter(m => m.bracketType === bracketType && m.bracketStage === "SEMIFINAL"),
         final: knockoutMatches.find(m => m.bracketType === bracketType && m.bracketStage === "FINAL"),
         thirdPlace: knockoutMatches.find(m => m.bracketType === bracketType && m.bracketStage === "THIRD_PLACE"),
     });
 
-    return { golden: bySide("GOLDEN"), silver: bySide("SILVER") };
+    return [bySide("GOLDEN", "Golden Bracket"), bySide("SILVER", "Silver Bracket")];
 }
 
 export type ChallengerProgress = {
     groupRounds: { A: ChallengerRound[]; B: ChallengerRound[] };
     allGroupScored: boolean;
     knockoutStarted: boolean;
-    bracket: { golden: BracketSideMatches; silver: BracketSideMatches };
+    bracket: ChallengerBracketSection[];
     allBracketScored: boolean;
 };
 
@@ -143,14 +168,13 @@ export function challengerProgress(tournament: { rounds: ChallengerRound[] }): C
     const knockoutStarted = tournament.rounds.some(r => r.groupName == null);
     const bracket = groupBracketMatches(tournament.rounds);
 
-    const bracketMatches = [
-        ...bracket.golden.semifinals, bracket.golden.final, bracket.golden.thirdPlace,
-        ...bracket.silver.semifinals, bracket.silver.final, bracket.silver.thirdPlace,
-    ].filter((m): m is ChallengerMatch => Boolean(m));
+    const bracketMatches = bracket
+        .flatMap(section => [...section.semifinals, section.final, section.thirdPlace])
+        .filter((m): m is ChallengerMatch => Boolean(m));
 
     const allBracketScored =
-        bracket.golden.final != null && bracket.golden.thirdPlace != null &&
-        bracket.silver.final != null && bracket.silver.thirdPlace != null &&
+        bracket.length > 0 &&
+        bracket.every(section => section.final != null && section.thirdPlace != null) &&
         bracketMatches.every(isChallengerMatchScored);
 
     return { groupRounds, allGroupScored, knockoutStarted, bracket, allBracketScored };
