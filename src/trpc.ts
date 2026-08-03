@@ -9,8 +9,12 @@ export const trpcClient = trpc.createClient({
         httpBatchLink({
             url: import.meta.env.VITE_API_URL ?? '/api',
             headers() {
-                const token = localStorage.getItem('admin_token');
-                return token ? { Authorization: `Bearer ${token}` } : {};
+                const adminToken = localStorage.getItem('admin_token');
+                const userToken = localStorage.getItem('user_token');
+                return {
+                    ...(adminToken ? { Authorization: `Bearer ${adminToken}` } : {}),
+                    ...(userToken ? { 'x-user-token': userToken } : {}),
+                };
             },
         }),
     ],

@@ -8,6 +8,7 @@ export function PlayerPage() {
     const { id } = useParams<{ id: string }>();
     const { data: player, isPending, error } = trpc.player.getById.useQuery({ id: id! });
     const { data: allPlayers } = trpc.player.list.useQuery();
+    const { data: individualMatches, isPending: matchesPending } = trpc.individualMatch.list.useQuery({ playerId: id! }, { enabled: !!id });
 
     if (isPending) return <LoadingPage />;
     if (error || !player) return <div className="p-8 text-red-600">Player not found.</div>;
@@ -150,6 +151,38 @@ export function PlayerPage() {
                                 ))}
                             </tbody>
                         </table>
+                    </div>
+                </section>
+
+                <section>
+                    <h2 className="text-xs font-bold uppercase tracking-widest text-[#8E8E93] mb-3">Individual Matches</h2>
+                    {!matchesPending && (individualMatches?.length ?? 0) === 0 && (
+                        <p className="text-[#8E8E93]">No individual matches yet.</p>
+                    )}
+                    <div className="space-y-2.5">
+                        {individualMatches?.map(m => {
+                            const onTeam1 = m.team1Player1.id === player.id || m.team1Player2.id === player.id;
+                            const won = onTeam1 ? m.team1Score > m.team2Score : m.team2Score > m.team1Score;
+                            const partner = onTeam1
+                                ? (m.team1Player1.id === player.id ? m.team1Player2 : m.team1Player1)
+                                : (m.team2Player1.id === player.id ? m.team2Player2 : m.team2Player1);
+                            const opponents = onTeam1 ? [m.team2Player1, m.team2Player2] : [m.team1Player1, m.team1Player2];
+                            return (
+                                <div key={m.id} className="bg-white rounded-2xl border border-[#E5E5EA] shadow-sm px-4 py-3 flex items-center justify-between gap-3">
+                                    <div className="min-w-0">
+                                        <p className="text-sm text-gray-700 truncate">
+                                            w/ <Link to={`/player/${partner.id}`} className="font-semibold hover:underline">{partner.name}</Link>
+                                            {" vs "}
+                                            <Link to={`/player/${opponents[0].id}`} className="hover:underline">{opponents[0].name}</Link> &amp; <Link to={`/player/${opponents[1].id}`} className="hover:underline">{opponents[1].name}</Link>
+                                        </p>
+                                        <p className="text-xs text-[#8E8E93]">{new Date(m.playedAt).toLocaleDateString()}</p>
+                                    </div>
+                                    <span className={`text-sm font-black shrink-0 ${won ? "text-[#FF4200]" : "text-gray-400"}`}>
+                                        {onTeam1 ? `${m.team1Score}–${m.team2Score}` : `${m.team2Score}–${m.team1Score}`}
+                                    </span>
+                                </div>
+                            );
+                        })}
                     </div>
                 </section>
             </main>

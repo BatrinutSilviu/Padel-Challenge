@@ -1,7 +1,9 @@
 import { Link, useLocation } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
 
 export function NavBar() {
     const isAdmin = !!localStorage.getItem("admin_token");
+    const { token, logout } = useAuth();
 
     return (
         <>
@@ -18,6 +20,12 @@ export function NavBar() {
                     </Link>
                     <div className="hidden sm:flex items-center gap-1 sm:gap-2">
                         <Link
+                            to="/matches"
+                            className="text-sm font-semibold px-3 py-2 rounded-lg bg-white/10 text-white hover:bg-white/20 transition-colors whitespace-nowrap"
+                        >
+                            🎾 Matches
+                        </Link>
+                        <Link
                             to="/badges"
                             className="text-sm font-semibold px-3 py-2 rounded-lg bg-white/10 text-white hover:bg-white/20 transition-colors whitespace-nowrap"
                         >
@@ -31,6 +39,29 @@ export function NavBar() {
                                 Admin
                             </Link>
                         )}
+                        {token ? (
+                            <>
+                                <Link
+                                    to="/matches/new"
+                                    className="text-sm font-semibold px-3 py-2 rounded-lg bg-[#FF4200] text-white hover:bg-[#CC3500] transition-colors whitespace-nowrap"
+                                >
+                                    Record Match
+                                </Link>
+                                <button
+                                    onClick={logout}
+                                    className="text-sm font-semibold px-3 py-2 rounded-lg text-white/70 hover:text-white transition-colors whitespace-nowrap"
+                                >
+                                    Log out
+                                </button>
+                            </>
+                        ) : (
+                            <Link
+                                to="/login"
+                                className="text-sm font-semibold px-3 py-2 rounded-lg border border-white/30 text-white hover:bg-white/10 transition-colors whitespace-nowrap"
+                            >
+                                Log in
+                            </Link>
+                        )}
                     </div>
                 </div>
             </header>
@@ -41,7 +72,8 @@ export function NavBar() {
 
 function MobileBottomNav({ isAdmin }: { isAdmin: boolean }) {
     const { pathname } = useLocation();
-    const isHome = !pathname.startsWith("/badges") && !pathname.startsWith("/admin");
+    const isHome = !pathname.startsWith("/badges") && !pathname.startsWith("/admin") && !pathname.startsWith("/matches");
+    const isMatches = pathname.startsWith("/matches");
     const isBadges = pathname.startsWith("/badges");
     const isAdminPage = pathname.startsWith("/admin");
 
@@ -50,6 +82,9 @@ function MobileBottomNav({ isAdmin }: { isAdmin: boolean }) {
             <div className="flex">
                 <BottomTab to="/" label="Home" active={isHome}>
                     <HomeIcon />
+                </BottomTab>
+                <BottomTab to="/matches" label="Matches" active={isMatches}>
+                    <MatchIcon />
                 </BottomTab>
                 <BottomTab to="/badges" label="Badges" active={isBadges}>
                     <StarIcon />
@@ -82,6 +117,14 @@ function HomeIcon() {
     return (
         <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
             <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
+        </svg>
+    );
+}
+
+function MatchIcon() {
+    return (
+        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM7 8a1 1 0 000 2h6a1 1 0 100-2H7zm0 4a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
         </svg>
     );
 }
