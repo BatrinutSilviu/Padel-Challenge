@@ -341,17 +341,17 @@ export function AdminScoreEntry() {
                     </div>
                 )}
 
-                {/* Complete tournament — shown after all rounds (or, for King of the Court,
+                {/* Complete tournament — shown after all rounds (or, for Challenger, only once
+                    every bracket final/third-place match has a score, since the backend never
+                    allows completing a Challenger tournament otherwise; or, for King of the Court,
                     which has no fixed round count, as soon as any round has been scored —
                     even if a further, unfinished round was already started) */}
-                {!isCompleted && (isChallenger ? Boolean(progress?.knockoutStarted) : isKotc ? Boolean(kotcProgressData?.lastScoredRound) : true) && (
+                {!isCompleted && (isChallenger ? Boolean(progress?.allBracketScored) : isKotc ? Boolean(kotcProgressData?.lastScoredRound) : true) && (
                     <div className="space-y-3">
                         {confirmComplete && (
                             <div className="bg-amber-50 border border-amber-300 rounded-xl px-4 sm:px-5 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                                 <p className="text-sm text-amber-800 font-medium">
-                                    {isChallenger
-                                        ? "Not all bracket matches have a score yet. Complete anyway?"
-                                        : isKotc
+                                    {isKotc
                                         ? "Not all matches in the current round have a score yet. Complete anyway?"
                                         : `${totalMatches - scoredCount} match${totalMatches - scoredCount !== 1 ? "es" : ""} still have no score. Complete anyway? Those players will receive 0 points.`}
                                 </p>
