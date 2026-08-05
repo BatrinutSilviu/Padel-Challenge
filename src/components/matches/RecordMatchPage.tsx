@@ -19,9 +19,22 @@ export function RecordMatchPage() {
     const [partnerId, setPartnerId] = useState("");
     const [opponent1Id, setOpponent1Id] = useState("");
     const [opponent2Id, setOpponent2Id] = useState("");
-    const [team1Score, setTeam1Score] = useState("");
-    const [team2Score, setTeam2Score] = useState("");
+    const [sets, setSets] = useState<{ team1: string; team2: string }[]>([{ team1: "", team2: "" }]);
     const [error, setError] = useState("");
+
+    const MAX_SETS = 5;
+
+    function updateSet(i: number, team: "team1" | "team2", value: string) {
+        setSets(prev => prev.map((s, idx) => (idx === i ? { ...s, [team]: value } : s)));
+    }
+
+    function addSet() {
+        setSets(prev => (prev.length >= MAX_SETS ? prev : [...prev, { team1: "", team2: "" }]));
+    }
+
+    function removeSet(i: number) {
+        setSets(prev => (prev.length <= 1 ? prev : prev.filter((_, idx) => idx !== i)));
+    }
 
     const create = trpc.individualMatch.create.useMutation({
         onSuccess: () => {
@@ -37,9 +50,13 @@ export function RecordMatchPage() {
         },
     });
 
-    const n1 = parseInt(team1Score);
-    const n2 = parseInt(team2Score);
-    const scoresValid = !isNaN(n1) && !isNaN(n2) && n1 >= 0 && n2 >= 0 && n1 !== n2;
+    const parsedSets = sets.map(s => ({ team1: parseInt(s.team1), team2: parseInt(s.team2) }));
+    const setsValid = parsedSets.every(s => !isNaN(s.team1) && !isNaN(s.team2) && s.team1 >= 0 && s.team2 >= 0 && s.team1 !== s.team2);
+    const setsWon1 = setsValid ? parsedSets.filter(s => s.team1 > s.team2).length : 0;
+    const setsWon2 = setsValid ? parsedSets.length - setsWon1 : 0;
+    const tied = setsValid && setsWon1 === setsWon2;
+    const scoresValid = setsValid && !tied;
+    const someSetStarted = sets.some(s => s.team1 !== "" || s.team2 !== "");
     const playersValid = !!partnerId && !!opponent1Id && !!opponent2Id &&
         new Set([playerId, partnerId, opponent1Id, opponent2Id]).size === 4;
     const canSubmit = scoresValid && playersValid && !create.isPending;
@@ -54,8 +71,7 @@ export function RecordMatchPage() {
             partnerId,
             opponent1Id,
             opponent2Id,
-            team1Score: n1,
-            team2Score: n2,
+            sets: parsedSets.map(s => ({ team1Games: s.team1, team2Games: s.team2 })),
         });
     }
 
@@ -103,30 +119,65 @@ export function RecordMatchPage() {
                     </div>
 
                     <div className="space-y-2">
-                        <p className="text-xs font-bold uppercase tracking-widest text-[#8E8E93]">Score</p>
-                        <div className="flex items-center justify-center gap-3">
-                            <input
-                                type="text"
-                                inputMode="numeric"
-                                pattern="[0-9]*"
-                                value={team1Score}
-                                onChange={e => setTeam1Score(e.target.value)}
-                                placeholder="0"
-                                className="w-16 text-center border border-gray-300 rounded-lg px-2 py-3 text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-[#FF4200]"
-                            />
-                            <span className="text-gray-300 font-bold text-lg">:</span>
-                            <input
-                                type="text"
-                                inputMode="numeric"
-                                pattern="[0-9]*"
-                                value={team2Score}
-                                onChange={e => setTeam2Score(e.target.value)}
-                                placeholder="0"
-                                className="w-16 text-center border border-gray-300 rounded-lg px-2 py-3 text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-[#FF4200]"
-                            />
+                        <div className="flex items-center justify-between">
+                            <p className="text-xs font-bold uppercase tracking-widest text-[#8E8E93]">Sets</p>
+                            {scoresValid && (
+                                <p className="text-xs font-bold text-[#FF4200]">{setsWon1} – {setsWon2}</p>
+                            )}
                         </div>
-                        {!scoresValid && (team1Score || team2Score) && (
-                            <p className="text-xs text-center text-gray-400">Enter a final, non-tied score</p>
+
+                        <div className="space-y-2">
+                            {sets.map((s, i) => (
+                                <div key={i} className="flex items-center gap-2 bg-gray-50 rounded-lg pl-3 pr-1.5 py-1.5">
+                                    <span className="text-xs font-bold text-gray-400 w-10 shrink-0">Set {i + 1}</span>
+                                    <div className="flex items-center justify-center gap-2 flex-1">
+                                        <input
+                                            type="text"
+                                            inputMode="numeric"
+                                            pattern="[0-9]*"
+                                            value={s.team1}
+                                            onChange={e => updateSet(i, "team1", e.target.value)}
+                                            placeholder="0"
+                                            className="w-14 text-center border border-gray-300 rounded-lg px-2 py-2.5 text-base font-semibold focus:outline-none focus:ring-2 focus:ring-[#FF4200]"
+                                        />
+                                        <span className="text-gray-300 font-bold">:</span>
+                                        <input
+                                            type="text"
+                                            inputMode="numeric"
+                                            pattern="[0-9]*"
+                                            value={s.team2}
+                                            onChange={e => updateSet(i, "team2", e.target.value)}
+                                            placeholder="0"
+                                            className="w-14 text-center border border-gray-300 rounded-lg px-2 py-2.5 text-base font-semibold focus:outline-none focus:ring-2 focus:ring-[#FF4200]"
+                                        />
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => removeSet(i)}
+                                        disabled={sets.length <= 1}
+                                        className="w-9 h-9 shrink-0 flex items-center justify-center rounded-lg text-gray-300 hover:text-red-400 hover:bg-red-50 disabled:opacity-0 disabled:pointer-events-none transition-colors"
+                                        aria-label={`Remove set ${i + 1}`}
+                                    >
+                                        ✕
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+
+                        {sets.length < MAX_SETS && (
+                            <button
+                                type="button"
+                                onClick={addSet}
+                                className="w-full text-sm font-semibold text-[#FF4200] border border-dashed border-[#FF4200]/40 rounded-lg py-2.5 hover:bg-[#FF4200]/5 transition-colors"
+                            >
+                                + Add set
+                            </button>
+                        )}
+
+                        {!scoresValid && someSetStarted && (
+                            <p className="text-xs text-center text-gray-400">
+                                {tied ? "Sets are tied — add a deciding set" : "Enter a final, non-tied score for each set"}
+                            </p>
                         )}
                     </div>
 

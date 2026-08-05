@@ -177,9 +177,16 @@ export function PlayerPage() {
                                         </p>
                                         <p className="text-xs text-[#8E8E93]">{new Date(m.playedAt).toLocaleDateString()}</p>
                                     </div>
-                                    <span className={`text-sm font-black shrink-0 ${won ? "text-[#FF4200]" : "text-gray-400"}`}>
-                                        {onTeam1 ? `${m.team1Score}–${m.team2Score}` : `${m.team2Score}–${m.team1Score}`}
-                                    </span>
+                                    <div className="text-right shrink-0">
+                                        <span className={`text-sm font-black block ${won ? "text-[#FF4200]" : "text-gray-400"}`}>
+                                            {onTeam1 ? `${m.team1Score}–${m.team2Score}` : `${m.team2Score}–${m.team1Score}`}
+                                        </span>
+                                        {m.sets.length > 0 && (
+                                            <span className="text-xs text-[#8E8E93] font-medium">
+                                                {m.sets.map(s => onTeam1 ? `${s.team1Games}-${s.team2Games}` : `${s.team2Games}-${s.team1Games}`).join(", ")}
+                                            </span>
+                                        )}
+                                    </div>
                                 </div>
                             );
                         })}

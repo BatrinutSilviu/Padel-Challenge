@@ -46,6 +46,11 @@ export function MatchesPage() {
                                 </div>
                                 <div className="shrink-0 text-center">
                                     <span className="text-lg font-black text-[#1A1A2E]">{m.team1Score} – {m.team2Score}</span>
+                                    {m.sets.length > 0 && (
+                                        <p className="text-xs text-[#8E8E93] font-medium">
+                                            {m.sets.map(s => `${s.team1Games}-${s.team2Games}`).join(", ")}
+                                        </p>
+                                    )}
                                     <p className="text-xs text-[#8E8E93]">{new Date(m.playedAt).toLocaleDateString()}</p>
                                 </div>
                                 <div className="sm:flex-1 text-center sm:text-left">

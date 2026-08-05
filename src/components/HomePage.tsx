@@ -2,6 +2,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { trpc } from "../trpc";
 import { NavBar } from "./NavBar";
 import { useState } from "react";
+import { useAuth } from "../contexts/AuthContext";
 
 import { DIVISION_NAMES, DIVISION_BADGES, DIVISION_COLORS, divisionLabel } from "../lib/divisions";
 import { TournamentType, TOURNAMENT_TYPE_LABELS } from "../lib/tournaments";
@@ -18,6 +19,8 @@ export function HomePage() {
         <div className="min-h-screen bg-[#F5F5F7]">
             <NavBar />
             <main className="max-w-5xl mx-auto px-3 sm:px-4 py-6 sm:py-8 pb-24 sm:pb-8">
+                <RecordMatchBanner />
+
                 <div className="flex gap-1 bg-white border border-[#E5E5EA] rounded-2xl p-1 mb-6 w-full sm:w-fit shadow-sm">
                     {(["divisions", "players", "tournaments"] as Tab[]).map(t => (
                         <button
@@ -42,6 +45,28 @@ export function HomePage() {
     );
 }
 
+
+function RecordMatchBanner() {
+    const { token } = useAuth();
+
+    return (
+        <Link
+            to="/matches/new"
+            className="group flex items-center justify-between gap-4 bg-[#333366] rounded-2xl px-5 py-4 mb-6 shadow-sm hover:shadow-md hover:bg-[#3D3D75] transition-all"
+        >
+            <div className="flex items-center gap-3 min-w-0">
+                <span className="text-2xl shrink-0">🎾</span>
+                <div className="min-w-0">
+                    <p className="font-black text-white text-sm sm:text-base truncate">Played a match with friends?</p>
+                    <p className="text-xs sm:text-sm text-white/60 font-medium truncate">Log it to update your ELO and climb the rankings.</p>
+                </div>
+            </div>
+            <span className="shrink-0 text-sm font-bold px-4 py-2 rounded-xl bg-[#FF4200] text-white group-hover:bg-[#CC3500] transition-colors whitespace-nowrap">
+                {token ? "Record Match" : "Log in to record"}
+            </span>
+        </Link>
+    );
+}
 
 function DivisionsTab() {
     const { data, isPending } = trpc.division.list.useQuery();
