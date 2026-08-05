@@ -50,6 +50,57 @@ export function AdminDashboard({ onLogout }: { onLogout: () => void }) {
     );
 }
 
+function TournamentNameEditor({ id, name }: { id: string; name: string }) {
+    const qc = useQueryClient();
+    const [editing, setEditing] = useState(false);
+    const [value, setValue] = useState(name);
+
+    const rename = trpc.tournament.rename.useMutation({
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: getQueryKey(trpc.tournament.list) });
+            setEditing(false);
+        },
+    });
+
+    function save() {
+        const trimmed = value.trim();
+        if (!trimmed || trimmed === name) {
+            setValue(name);
+            setEditing(false);
+            return;
+        }
+        rename.mutate({ id, name: trimmed });
+    }
+
+    if (editing) {
+        return (
+            <input
+                autoFocus
+                value={value}
+                disabled={rename.isPending}
+                onChange={e => setValue(e.target.value)}
+                onBlur={save}
+                onKeyDown={e => {
+                    if (e.key === "Enter") { e.preventDefault(); save(); }
+                    if (e.key === "Escape") { setValue(name); setEditing(false); }
+                }}
+                className="font-medium text-gray-800 bg-white border border-[#FF4200] rounded px-1.5 py-0.5 -my-0.5 w-full max-w-xs focus:outline-none"
+            />
+        );
+    }
+
+    return (
+        <button
+            type="button"
+            onClick={() => { setValue(name); setEditing(true); }}
+            className="font-medium text-gray-800 truncate text-left hover:underline decoration-dotted underline-offset-2"
+            title="Click to rename"
+        >
+            {name}
+        </button>
+    );
+}
+
 function TournamentsTab() {
     const qc = useQueryClient();
     const { data, isPending } = trpc.tournament.list.useQuery();
@@ -75,8 +126,8 @@ function TournamentsTab() {
                     {active.map(t => (
                         <div key={t.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white rounded-lg border border-yellow-200 px-4 py-3">
                             <div className="min-w-0">
-                                <span className="font-medium text-gray-800 block truncate">{t.name}</span>
-                                <span className="text-xs text-gray-400">{divisionLabel(t.division)} · {new Date(t.date).toLocaleDateString()} · {TOURNAMENT_TYPE_LABELS[t.type as TournamentType] ?? t.type}</span>
+                                <TournamentNameEditor id={t.id} name={t.name} />
+                                <span className="text-xs text-gray-400 block">{divisionLabel(t.division)} · {new Date(t.date).toLocaleDateString()} · {TOURNAMENT_TYPE_LABELS[t.type as TournamentType] ?? t.type}</span>
                             </div>
                             <div className="flex items-center gap-2 self-start sm:self-auto shrink-0">
                                 <Link
@@ -105,8 +156,8 @@ function TournamentsTab() {
                     {others.map(t => (
                         <div key={t.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-white rounded-lg border border-gray-200 px-4 py-3">
                             <div className="min-w-0">
-                                <span className="font-medium text-gray-800 block truncate">{t.name}</span>
-                                <span className="text-xs text-gray-400">{divisionLabel(t.division)} · {new Date(t.date).toLocaleDateString()} · {TOURNAMENT_TYPE_LABELS[t.type as TournamentType] ?? t.type}</span>
+                                <TournamentNameEditor id={t.id} name={t.name} />
+                                <span className="text-xs text-gray-400 block">{divisionLabel(t.division)} · {new Date(t.date).toLocaleDateString()} · {TOURNAMENT_TYPE_LABELS[t.type as TournamentType] ?? t.type}</span>
                             </div>
                             <div className="flex items-center gap-2 self-start sm:self-auto shrink-0">
                                 <StatusBadge status={t.status} />
