@@ -9,6 +9,7 @@ import { challengerProgress, isChallengerMatchScored } from "../../lib/challenge
 import { ChallengerScoreEntry } from "./ChallengerScoreEntry";
 import { isKotcMatchScored, kotcProgress } from "../../lib/kingOfTheCourt";
 import { KingOfTheCourtScoreEntry } from "./KingOfTheCourtScoreEntry";
+import { PlayerPicker } from "../PlayerPicker";
 
 export function AdminScoreEntry() {
     const { id } = useParams<{ id: string }>();
@@ -18,8 +19,11 @@ export function AdminScoreEntry() {
     const [scoredIds, setScoredIds] = useState<Set<string>>(() => new Set());
     const [pendingSaves, setPendingSaves] = useState(0);
     const [recalcSuccess, setRecalcSuccess] = useState(false);
+    const [participantsOpen, setParticipantsOpen] = useState(false);
+    const [replacingId, setReplacingId] = useState<string | null>(null);
 
     const { data: tournament, isPending, error } = trpc.tournament.getById.useQuery({ id: id! });
+    const allPlayersQuery = trpc.division.allPlayers.useQuery();
 
     useEffect(() => {
         if (!tournament) return;
@@ -69,6 +73,13 @@ export function AdminScoreEntry() {
     const advanceKotcRound = trpc.tournament.advanceKingOfTheCourtRound.useMutation({
         onSuccess: () => {
             qc.invalidateQueries({ queryKey: getQueryKey(trpc.tournament.getById, { id: id! }) });
+        },
+    });
+
+    const swapParticipant = trpc.tournament.swapParticipant.useMutation({
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: getQueryKey(trpc.tournament.getById, { id: id! }) });
+            setReplacingId(null);
         },
     });
 
@@ -203,6 +214,70 @@ export function AdminScoreEntry() {
                         )}
                     </div>
                 </div>
+
+                {/* Participants */}
+                {!isCompleted && (
+                    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                        <button
+                            type="button"
+                            onClick={() => setParticipantsOpen(v => !v)}
+                            className="w-full flex items-center justify-between px-4 sm:px-5 py-3 text-sm font-medium text-gray-700"
+                        >
+                            <span>Participants ({tournament.participants.length})</span>
+                            <svg
+                                className={`w-4 h-4 text-gray-400 transition-transform ${participantsOpen ? "rotate-180" : ""}`}
+                                fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"
+                            >
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                            </svg>
+                        </button>
+                        {participantsOpen && (
+                            <div className="border-t border-gray-100 divide-y divide-gray-100">
+                                {tournament.participants.map(p => (
+                                    <div key={p.id} className="px-4 sm:px-5 py-3 flex items-center gap-3">
+                                        <span className="text-sm text-gray-800 flex-1 min-w-0 truncate">{p.player.name}</span>
+                                        {replacingId === p.playerId ? (
+                                            <div className="flex items-center gap-2 shrink-0">
+                                                <PlayerPicker
+                                                    value=""
+                                                    onChange={(newId) => {
+                                                        if (!newId) return;
+                                                        const newPlayerName = allPlayersQuery.data?.find(x => x.id === newId)?.name ?? "the new player";
+                                                        if (!confirm(`Replace ${p.player.name} with ${newPlayerName}? Any scores already recorded for ${p.player.name} will transfer to ${newPlayerName}.`)) return;
+                                                        swapParticipant.mutate({ tournamentId: id!, oldPlayerId: p.playerId, newPlayerId: newId });
+                                                    }}
+                                                    players={allPlayersQuery.data ?? []}
+                                                    excludeIds={new Set(tournament.participants.map(x => x.playerId))}
+                                                    placeholder="Choose replacement"
+                                                    division={tournament.division}
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setReplacingId(null)}
+                                                    className="text-xs text-gray-400 hover:text-gray-600 shrink-0"
+                                                >
+                                                    Cancel
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <button
+                                                type="button"
+                                                onClick={() => setReplacingId(p.playerId)}
+                                                disabled={swapParticipant.isPending}
+                                                className="text-xs font-medium text-[#FF4200] hover:underline shrink-0 disabled:opacity-50"
+                                            >
+                                                Replace
+                                            </button>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                        {swapParticipant.error && (
+                            <p className="px-4 sm:px-5 pb-3 text-xs text-red-500">{swapParticipant.error.message}</p>
+                        )}
+                    </div>
+                )}
 
                 {/* Progress bar */}
                 {isChallenger && progress ? (

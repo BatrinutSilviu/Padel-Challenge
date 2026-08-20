@@ -7,6 +7,7 @@ import { getQueryKey } from "@trpc/react-query";
 import { DIVISION_NAMES, divisionLabel } from "../../lib/divisions";
 import { TournamentType, TOURNAMENT_TYPE_LABELS } from "../../lib/tournaments";
 import { PlayerPicker } from "../PlayerPicker";
+import { AddPlayerInline } from "../AddPlayerInline";
 
 type Tab = "players" | "tournaments" | "new-tournament";
 
@@ -206,6 +207,7 @@ function CreateTournamentForm({ onCreated, onImport }: { onCreated: () => void; 
     const [totalRounds, setTotalRounds] = useState(7);
     const [totalRoundsInput, setTotalRoundsInput] = useState("7");
     const [error, setError] = useState("");
+    const [addingPlayer, setAddingPlayer] = useState(false);
 
     const divisionPlayersQuery = trpc.division.players.useQuery({ division });
     const allPlayersQuery = trpc.division.allPlayers.useQuery();
@@ -440,8 +442,8 @@ function CreateTournamentForm({ onCreated, onImport }: { onCreated: () => void; 
                                 <div key={i} className="flex items-start gap-2">
                                     <span className="text-sm font-medium text-gray-500 w-14 shrink-0 pt-2.5">Team {i + 1}</span>
                                     <div className="flex-1 flex flex-col sm:flex-row gap-2">
-                                        <PlayerPicker value={p1} onChange={id => updateTeamSlot(i, 0, id)} players={allPlayers} excludeIds={new Set([...assignedIds].filter(id => id !== p1))} placeholder="Player 1" />
-                                        <PlayerPicker value={p2} onChange={id => updateTeamSlot(i, 1, id)} players={allPlayers} excludeIds={new Set([...assignedIds].filter(id => id !== p2))} placeholder="Player 2" />
+                                        <PlayerPicker value={p1} onChange={id => updateTeamSlot(i, 0, id)} players={allPlayers} excludeIds={new Set([...assignedIds].filter(id => id !== p1))} placeholder="Player 1" division={division} />
+                                        <PlayerPicker value={p2} onChange={id => updateTeamSlot(i, 1, id)} players={allPlayers} excludeIds={new Set([...assignedIds].filter(id => id !== p2))} placeholder="Player 2" division={division} />
                                     </div>
                                 </div>
                             );
@@ -505,6 +507,28 @@ function CreateTournamentForm({ onCreated, onImport }: { onCreated: () => void; 
                                 </button>
                             )}
                         </div>
+                        {addingPlayer ? (
+                            <div className="mb-2">
+                                <AddPlayerInline
+                                    defaultName={playerFilter}
+                                    defaultDivision={division}
+                                    onCreated={(p) => {
+                                        setAddingPlayer(false);
+                                        setPlayerFilter("");
+                                        togglePlayer(p.id);
+                                    }}
+                                    onCancel={() => setAddingPlayer(false)}
+                                />
+                            </div>
+                        ) : (
+                            <button
+                                type="button"
+                                onClick={() => setAddingPlayer(true)}
+                                className="text-sm font-medium text-[#FF4200] hover:underline mb-2"
+                            >
+                                + Add new player
+                            </button>
+                        )}
                         {divisionPlayersQuery.isPending && <p className="text-gray-500 text-sm">Loading…</p>}
                         {!q && divisionPlayers.length < maxPlayers && !divisionPlayersQuery.isPending && (
                             <p className="text-amber-600 text-sm">{divisionLabel(division)} only has {divisionPlayers.length} players — need {maxPlayers}.</p>
