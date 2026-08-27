@@ -10,11 +10,13 @@ import { ChallengerScoreEntry } from "./ChallengerScoreEntry";
 import { isKotcMatchScored, kotcProgress } from "../../lib/kingOfTheCourt";
 import { KingOfTheCourtScoreEntry } from "./KingOfTheCourtScoreEntry";
 import { PlayerPicker } from "../PlayerPicker";
+import { useAdminSession, LoginPage, SessionExpiredModal } from "./AdminAuth";
 
 export function AdminScoreEntry() {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const qc = useQueryClient();
+    const { token, sessionExpired, handleLogin } = useAdminSession();
     const [confirmComplete, setConfirmComplete] = useState(false);
     const [scoredIds, setScoredIds] = useState<Set<string>>(() => new Set());
     const [pendingSaves, setPendingSaves] = useState(0);
@@ -154,6 +156,7 @@ export function AdminScoreEntry() {
         qc.invalidateQueries({ queryKey: getQueryKey(trpc.tournament.getById, { id: id! }) });
     }, [qc, id]);
 
+    if (!token && !sessionExpired) return <LoginPage onLogin={handleLogin} />;
     if (isPending) return <LoadingPage />;
     if (error || !tournament) return <div className="p-8 text-red-600">Tournament not found.</div>;
 
@@ -177,6 +180,7 @@ export function AdminScoreEntry() {
     }
 
     return (
+        <>
         <div className="min-h-screen bg-gray-50">
             <NavBar />
             <main className="max-w-4xl mx-auto px-3 sm:px-4 pt-6 pb-24 sm:py-8 space-y-5">
@@ -493,6 +497,8 @@ export function AdminScoreEntry() {
                 )}
             </main>
         </div>
+        {sessionExpired && <SessionExpiredModal onLogin={handleLogin} />}
+        </>
     );
 }
 
