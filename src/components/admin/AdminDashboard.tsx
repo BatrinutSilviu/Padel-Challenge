@@ -9,7 +9,14 @@ import { TournamentType, TOURNAMENT_TYPE_LABELS } from "../../lib/tournaments";
 import { PlayerPicker } from "../PlayerPicker";
 import { AddPlayerInline } from "../AddPlayerInline";
 
-type Tab = "players" | "tournaments" | "new-tournament";
+type Tab = "players" | "tournaments" | "new-tournament" | "export";
+
+const TAB_LABELS: Record<Tab, string> = {
+    tournaments: "Tournaments",
+    "new-tournament": "New Tournament",
+    players: "Players",
+    export: "Export",
+};
 
 
 export function AdminDashboard({ onLogout }: { onLogout: () => void }) {
@@ -23,7 +30,7 @@ export function AdminDashboard({ onLogout }: { onLogout: () => void }) {
             <main className="max-w-5xl mx-auto px-3 sm:px-4 pt-6 pb-24 sm:py-8">
                 <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-between mb-6">
                     <div className="flex gap-1 bg-white border border-gray-200 rounded-xl p-1 w-fit overflow-x-auto">
-                        {(["tournaments", "new-tournament", "players"] as Tab[]).map(t => (
+                        {(["tournaments", "new-tournament", "players", "export"] as Tab[]).map(t => (
                             <button
                                 key={t}
                                 onClick={() => setTab(t)}
@@ -31,7 +38,7 @@ export function AdminDashboard({ onLogout }: { onLogout: () => void }) {
                                     tab === t ? "bg-[#FF4200] text-white" : "text-gray-600 hover:text-gray-900"
                                 }`}
                             >
-                                {t === "new-tournament" ? "New Tournament" : t.charAt(0).toUpperCase() + t.slice(1)}
+                                {TAB_LABELS[t]}
                             </button>
                         ))}
                     </div>
@@ -46,6 +53,7 @@ export function AdminDashboard({ onLogout }: { onLogout: () => void }) {
                 {tab === "tournaments" && <TournamentsTab />}
                 {tab === "new-tournament" && <NewTournamentTab onCreated={() => setTab("tournaments")} />}
                 {tab === "players" && <PlayersTab />}
+                {tab === "export" && <ExportTab />}
             </main>
         </div>
     );
@@ -1070,6 +1078,88 @@ function PlayersTab() {
             </div>
         </div>
     );
+}
+
+function ExportTab() {
+    const today = new Date();
+    const firstOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    const [startDate, setStartDate] = useState(toDateInputValue(firstOfMonth));
+    const [endDate, setEndDate] = useState(toDateInputValue(today));
+
+    const { data, isFetching, error } = trpc.tournament.participantsByDateRange.useQuery(
+        { startDate, endDate },
+        { enabled: !!startDate && !!endDate }
+    );
+
+    const males = data?.players.filter(p => p.gender === "MALE") ?? [];
+    const females = data?.players.filter(p => p.gender === "FEMALE") ?? [];
+
+    function handleDownload() {
+        if (!data) return;
+        const rows = [["Name", "Gender"], ...data.players.map(p => [p.name, p.gender === "MALE" ? "Male" : "Female"])];
+        downloadCsv(`participants_${startDate}_to_${endDate}.csv`, rows);
+    }
+
+    return (
+        <div className="space-y-6 max-w-2xl">
+            <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-4">
+                <h2 className="text-base font-semibold text-gray-800">Export Participants</h2>
+                <p className="text-sm text-gray-500">
+                    Download every player who took part in a tournament within the selected date range, split by gender.
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <Field label="From">
+                        <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className={input} />
+                    </Field>
+                    <Field label="To">
+                        <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className={input} />
+                    </Field>
+                </div>
+
+                {error && <p className="text-sm text-red-500">{error.message}</p>}
+
+                {data && (
+                    <div className="text-sm text-gray-600 space-y-2">
+                        <p>
+                            {data.tournaments.length} tournament{data.tournaments.length === 1 ? "" : "s"} found · {data.players.length} unique participant{data.players.length === 1 ? "" : "s"} ({males.length} male, {females.length} female)
+                        </p>
+                        {data.tournaments.length > 0 && (
+                            <ul className="text-xs text-gray-400 space-y-0.5">
+                                {data.tournaments.map(t => (
+                                    <li key={t.id}>{new Date(t.date).toLocaleDateString()} — {t.name}</li>
+                                ))}
+                            </ul>
+                        )}
+                    </div>
+                )}
+
+                <button
+                    type="button"
+                    onClick={handleDownload}
+                    disabled={!data || data.players.length === 0 || isFetching}
+                    className="inline-flex items-center gap-1.5 text-sm font-medium bg-[#FF4200] text-white px-4 py-2 rounded-lg hover:bg-[#e63c00] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                    <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
+                    Download CSV
+                </button>
+            </div>
+        </div>
+    );
+}
+
+function toDateInputValue(d: Date): string {
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+function downloadCsv(filename: string, rows: string[][]) {
+    const csv = rows.map(r => r.map(cell => `"${cell.replace(/"/g, '""')}"`).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
 }
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
