@@ -566,7 +566,7 @@ function MatchScoreRow({
         return readLocalScore(match.id, pointsPerGame) ? 'confirming' : 'editing';
     });
     const [mobileSheetOpen, setMobileSheetOpen] = useState(false);
-    const [keyboardHeight, setKeyboardHeight] = useState(0);
+    const [viewportRect, setViewportRect] = useState<{ top: number; height: number } | null>(null);
     const [error, setError] = useState("");
     const unlockTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const sheetInputRef = useRef<HTMLInputElement>(null);
@@ -597,16 +597,28 @@ function MatchScoreRow({
         }
     }, [mobileSheetOpen]);
 
+    // iOS Safari keeps `position: fixed` anchored to the layout viewport, not
+    // the visual one — when the keyboard opens, the visual viewport both
+    // shrinks AND scrolls (offsetTop > 0), so tracking height alone (as we
+    // used to) still leaves the sheet positioned against the pre-keyboard
+    // layout and it drifts off-screen. Track both and size/position the
+    // overlay to the visual viewport directly instead of guessing an offset.
     useEffect(() => {
-        if (!mobileSheetOpen) { setKeyboardHeight(0); return; }
-        function onVVResize() {
+        if (!mobileSheetOpen) { setViewportRect(null); return; }
+        function update() {
             const vv = window.visualViewport;
-            if (vv) setKeyboardHeight(Math.max(0, window.innerHeight - vv.height));
+            if (vv) setViewportRect({ top: vv.offsetTop, height: vv.height });
         }
-        window.visualViewport?.addEventListener('resize', onVVResize);
-        onVVResize();
-        return () => window.visualViewport?.removeEventListener('resize', onVVResize);
+        update();
+        window.visualViewport?.addEventListener('resize', update);
+        window.visualViewport?.addEventListener('scroll', update);
+        return () => {
+            window.visualViewport?.removeEventListener('resize', update);
+            window.visualViewport?.removeEventListener('scroll', update);
+        };
     }, [mobileSheetOpen]);
+
+    const keyboardOpen = !!viewportRect && viewportRect.height < window.innerHeight - 50;
 
     const update = trpc.tournament.updateMatchScore.useMutation({
         onSuccess: (data) => {
@@ -828,15 +840,12 @@ function MatchScoreRow({
 
             {/* Mobile bottom sheet */}
             {mobileSheetOpen && (
-                <div className="sm:hidden fixed inset-0 z-[60]">
+                <div
+                    className="sm:hidden fixed inset-x-0 z-[60]"
+                    style={{ top: viewportRect?.top ?? 0, height: viewportRect?.height ?? '100dvh' }}
+                >
                     <div className="absolute inset-0 bg-black/50" onClick={() => { if (status !== 'saving') setMobileSheetOpen(false); }} />
-                    <div
-                        className="absolute left-0 right-0 bg-white rounded-t-2xl flex flex-col"
-                        style={{
-                            bottom: keyboardHeight,
-                            maxHeight: `calc(100vh - ${keyboardHeight}px - 3rem)`,
-                        }}
-                    >
+                    <div className="absolute left-0 right-0 bottom-0 max-h-full bg-white rounded-t-2xl flex flex-col">
                         {/* Scrollable content — shrinks when keyboard appears */}
                         <div className="overflow-y-auto flex-1 px-5 pt-4 pb-3">
                             <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-4" />
@@ -893,7 +902,7 @@ function MatchScoreRow({
                         </div>
 
                         {/* Sticky footer — always visible above keyboard */}
-                        <div className="shrink-0 px-5 pt-3 border-t border-gray-100" style={{ paddingBottom: keyboardHeight > 0 ? 16 : 40 }}>
+                        <div className="shrink-0 px-5 pt-3 border-t border-gray-100" style={{ paddingBottom: keyboardOpen ? 16 : 40 }}>
                             {status === 'saving' ? (
                                 <p className="text-center text-sm text-gray-400 py-3.5">Saving…</p>
                             ) : (
