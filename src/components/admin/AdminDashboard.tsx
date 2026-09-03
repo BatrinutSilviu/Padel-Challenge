@@ -1096,7 +1096,8 @@ function ExportTab() {
 
     function handleDownload() {
         if (!data) return;
-        const rows = [["Name", "Gender"], ...data.players.map(p => [p.name, p.gender === "MALE" ? "Male" : "Female"])];
+        const ordered = [...males, ...females];
+        const rows = [["Name", "Gender"], ...ordered.map(p => [p.name, p.gender === "MALE" ? "Male" : "Female"])];
         downloadCsv(`participants_${startDate}_to_${endDate}.csv`, rows);
     }
 
