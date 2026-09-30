@@ -8,8 +8,10 @@ type Participant = {
 
 // Renders a team's players stacked together under one rank — used by formats where
 // finalRank is assigned per-team (both teammates share the same rank), e.g. Challenger
-// and King of the Court.
-export function TeamFinalStandings({ participants }: { participants: Participant[] }) {
+// and King of the Court. Formats where several teams share a rank (Masters: both
+// semifinal losers are 3rd) pass `partnerOf` (player id → teammate id) so each team
+// still gets its own row.
+export function TeamFinalStandings({ participants, partnerOf }: { participants: Participant[]; partnerOf?: Map<string, string> }) {
     const sorted = [...participants]
         .filter(p => p.finalRank != null)
         .sort((a, b) => (a.finalRank ?? 0) - (b.finalRank ?? 0));
@@ -18,7 +20,9 @@ export function TeamFinalStandings({ participants }: { participants: Participant
     const rows: { rank: number; players: Participant[] }[] = [];
     for (const p of sorted) {
         if (seen.has(p.id)) continue;
-        const teammates = sorted.filter(x => x.finalRank === p.finalRank);
+        const teammates = partnerOf
+            ? sorted.filter(x => x.id === p.id || x.player.id === partnerOf.get(p.player.id))
+            : sorted.filter(x => x.finalRank === p.finalRank);
         teammates.forEach(t => seen.add(t.id));
         rows.push({ rank: p.finalRank ?? 0, players: teammates });
     }
@@ -36,7 +40,7 @@ export function TeamFinalStandings({ participants }: { participants: Participant
                     </thead>
                     <tbody>
                         {rows.map(({ rank, players }) => (
-                            <tr key={rank} className="border-b border-[#F5F5F7] last:border-0 hover:bg-[#F5F5F7] transition-colors">
+                            <tr key={players[0].id} className="border-b border-[#F5F5F7] last:border-0 hover:bg-[#F5F5F7] transition-colors">
                                 <td className="px-4 py-3 align-top">
                                     <RankMedal rank={rank} />
                                 </td>

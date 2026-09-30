@@ -5,7 +5,9 @@ import { trpc } from "../../trpc";
 import { useQueryClient } from "@tanstack/react-query";
 import { getQueryKey } from "@trpc/react-query";
 import { DIVISION_NAMES, divisionLabel } from "../../lib/divisions";
-import { TournamentType, TOURNAMENT_TYPE_LABELS } from "../../lib/tournaments";
+import { TournamentType, TOURNAMENT_TYPE_LABELS, capacityOptions, isTeamBasedType } from "../../lib/tournaments";
+import { RECOMMENDED_MASTERS_FORMAT, STAGE_INFO, mastersKnockoutStages, mastersTeamCount, type MastersFormat } from "../../lib/masters";
+import { MastersFormatPicker } from "./MastersFormatPicker";
 import { PlayerPicker } from "../PlayerPicker";
 import { AddPlayerInline } from "../AddPlayerInline";
 
@@ -113,8 +115,9 @@ function TournamentNameEditor({ id, name }: { id: string; name: string }) {
 function TournamentsTab() {
     const qc = useQueryClient();
     const { data, isPending } = trpc.tournament.list.useQuery();
+    const signups = data?.filter(t => t.status === "UPCOMING") ?? [];
     const active = data?.filter(t => t.status === "IN_PROGRESS") ?? [];
-    const others = data?.filter(t => t.status !== "IN_PROGRESS") ?? [];
+    const others = data?.filter(t => t.status === "COMPLETED") ?? [];
 
     const deleteTournament = trpc.tournament.delete.useMutation({
         onSuccess: () => qc.invalidateQueries({ queryKey: getQueryKey(trpc.tournament.list) }),
@@ -127,6 +130,40 @@ function TournamentsTab() {
 
     return (
         <div className="space-y-6">
+            {signups.length > 0 && (
+                <section>
+                    <h2 className="text-lg font-semibold text-gray-700 mb-3">Sign-ups</h2>
+                    <div className="space-y-2">
+                        {signups.map(t => (
+                            <div key={t.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white rounded-lg border border-sky-200 px-4 py-3">
+                                <div className="min-w-0">
+                                    <TournamentNameEditor id={t.id} name={t.name} />
+                                    <span className="text-xs text-gray-400 block">
+                                        {divisionLabel(t.division)} · {new Date(t.date).toLocaleDateString()} · {TOURNAMENT_TYPE_LABELS[t.type as TournamentType] ?? t.type}
+                                        {" · "}{t._count.participants}{t.maxPlayers !== null ? `/${t.maxPlayers}` : ""} signed up
+                                        {!t.registrationOpen && " · closed"}
+                                    </span>
+                                </div>
+                                <div className="flex items-center gap-2 self-start sm:self-auto shrink-0">
+                                    <Link
+                                        to={`/admin/tournament/${t.id}`}
+                                        className="inline-flex items-center gap-1.5 text-sm font-medium bg-sky-600 text-white px-4 py-2 rounded-lg hover:bg-sky-700 transition-colors"
+                                    >
+                                        Manage sign-ups
+                                    </Link>
+                                    <button
+                                        onClick={() => handleDelete(t.id, t.name)}
+                                        className="inline-flex items-center gap-1.5 text-sm font-medium border border-red-200 text-red-500 px-3 py-2 rounded-lg hover:bg-red-50 hover:border-red-400 transition-colors"
+                                    >
+                                        Delete
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </section>
+            )}
+
             <section>
                 <h2 className="text-lg font-semibold text-gray-700 mb-3">In Progress</h2>
                 {isPending && <p className="text-gray-500">Loading…</p>}
@@ -206,11 +243,19 @@ function CreateTournamentForm({ onCreated, onImport }: { onCreated: () => void; 
     const [type, setType] = useState<TournamentType>("AMERICANO");
     const [pointsPerGame, setPointsPerGame] = useState(32);
     const [maxPlayers, setMaxPlayers] = useState(8);
+    // Sign-up mode: create the tournament empty and let players claim the spots
+    // themselves; the draw is generated later, when an admin starts it.
+    const [signupMode, setSignupMode] = useState(false);
+    const [capacity, setCapacity] = useState(8);
+    // Lei per person, advertised on the sign-up sheet. Blank = not shown.
+    const [entryFee, setEntryFee] = useState("");
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
     const [playerFilter, setPlayerFilter] = useState("");
     // Team Americano state
     const [numTeams, setNumTeams] = useState(4);
     const [teamSlots, setTeamSlots] = useState<[string, string][]>(() => Array.from({ length: 4 }, () => ["", ""]));
+    // Masters state
+    const [mastersFormat, setMastersFormat] = useState<MastersFormat>(RECOMMENDED_MASTERS_FORMAT);
     // King of the Court state
     const [totalRounds, setTotalRounds] = useState(7);
     const [totalRoundsInput, setTotalRoundsInput] = useState("7");
@@ -223,9 +268,11 @@ function CreateTournamentForm({ onCreated, onImport }: { onCreated: () => void; 
     const divisionPlayers = divisionPlayersQuery.data ?? [];
     const allPlayers = allPlayersQuery.data ?? [];
     const q = playerFilter.trim().toLowerCase();
+    // In sign-up mode the list is a head start on the spots, not the full draw.
+    const playerCap = signupMode ? capacity : maxPlayers;
     const selectedPlayers = allPlayers.filter(p => selectedIds.includes(p.id));
     const unselectedPlayers = (() => {
-        if (selectedIds.length >= maxPlayers) return [];
+        if (selectedIds.length >= playerCap) return [];
         if (q) return allPlayers.filter(p => p.name.toLowerCase().includes(q) && !selectedIds.includes(p.id));
         return divisionPlayers.filter(p => !selectedIds.includes(p.id));
     })();
@@ -242,10 +289,22 @@ function CreateTournamentForm({ onCreated, onImport }: { onCreated: () => void; 
         onSuccess: onCreated,
         onError: (e) => setError(e.message),
     });
+    const createMasters = trpc.tournament.createMasters.useMutation({
+        onSuccess: onCreated,
+        onError: (e) => setError(e.message),
+    });
     const createKingOfTheCourt = trpc.tournament.createKingOfTheCourt.useMutation({
         onSuccess: onCreated,
         onError: (e) => setError(e.message),
     });
+    const createOpen = trpc.tournament.createOpen.useMutation({
+        onSuccess: onCreated,
+        onError: (e) => setError(e.message),
+    });
+
+    const capacities = capacityOptions(type);
+    const isPending = create.isPending || createTeamAmericano.isPending || createChallenger.isPending
+        || createMasters.isPending || createKingOfTheCourt.isPending || createOpen.isPending;
 
     function changeNumTeams(n: number) {
         setNumTeams(n);
@@ -255,6 +314,21 @@ function CreateTournamentForm({ onCreated, onImport }: { onCreated: () => void; 
     function selectType(t: TournamentType) {
         setType(t);
         if (t === "CHALLENGER") changeNumTeams(8);
+        if (t === "MASTERS") {
+            changeNumTeams(mastersTeamCount(mastersFormat));
+            setCapacity(mastersTeamCount(mastersFormat) * 2);
+            return;
+        }
+        const allowed = capacityOptions(t);
+        if (!allowed.includes(capacity)) setCapacity(allowed[0]);
+    }
+
+    function changeMastersFormat(format: MastersFormat) {
+        setMastersFormat(format);
+        const teams = mastersTeamCount(format);
+        changeNumTeams(teams);
+        setCapacity(teams * 2);
+        setSelectedIds(prev => prev.slice(0, teams * 2));
     }
 
     function updateTeamSlot(i: number, slot: 0 | 1, playerId: string) {
@@ -264,7 +338,7 @@ function CreateTournamentForm({ onCreated, onImport }: { onCreated: () => void; 
     function togglePlayer(id: string) {
         setSelectedIds(prev => {
             if (prev.includes(id)) return prev.filter(x => x !== id);
-            if (prev.length >= maxPlayers) return prev;
+            if (prev.length >= playerCap) return prev;
             if (playerFilter) setPlayerFilter("");
             return [...prev, id];
         });
@@ -274,6 +348,15 @@ function CreateTournamentForm({ onCreated, onImport }: { onCreated: () => void; 
         e.preventDefault();
         setError("");
         if (!name.trim()) return setError("Tournament name is required.");
+        if (signupMode) {
+            const fee = entryFee.trim() === "" ? null : Number(entryFee);
+            if (fee !== null && (!Number.isInteger(fee) || fee < 0)) return setError("Entry fee must be a whole number of lei.");
+            createOpen.mutate({
+                name: name.trim(), date, division, type, pointsPerGame, totalRounds, maxPlayers: capacity, entryFee: fee, playerIds: selectedIds,
+                ...(type === "MASTERS" ? mastersFormat : {}),
+            });
+            return;
+        }
         if (type === "TEAM_AMERICANO") {
             for (let i = 0; i < teamSlots.length; i++) {
                 const [p1, p2] = teamSlots[i];
@@ -289,6 +372,15 @@ function CreateTournamentForm({ onCreated, onImport }: { onCreated: () => void; 
                 if (p1 === p2) return setError(`Team ${i + 1} has the same player in both slots.`);
             }
             createChallenger.mutate({ name: name.trim(), date, division, pointsPerGame: 32, teams: teamSlots.map(([p1, p2]) => ({ player1Id: p1, player2Id: p2 })) });
+        } else if (type === "MASTERS") {
+            const teamsNeeded = mastersTeamCount(mastersFormat);
+            if (teamSlots.length !== teamsNeeded) return setError(`${mastersFormat.groupCount} groups of ${mastersFormat.teamsPerGroup} needs ${teamsNeeded} teams.`);
+            for (let i = 0; i < teamSlots.length; i++) {
+                const [p1, p2] = teamSlots[i];
+                if (!p1 || !p2) return setError(`Team ${i + 1} is incomplete — select both players.`);
+                if (p1 === p2) return setError(`Team ${i + 1} has the same player in both slots.`);
+            }
+            createMasters.mutate({ name: name.trim(), date, division, ...mastersFormat, teams: teamSlots.map(([p1, p2]) => ({ player1Id: p1, player2Id: p2 })) });
         } else if (type === "KING_OF_THE_COURT") {
             for (let i = 0; i < teamSlots.length; i++) {
                 const [p1, p2] = teamSlots[i];
@@ -351,7 +443,7 @@ function CreateTournamentForm({ onCreated, onImport }: { onCreated: () => void; 
 
             <Field label="Type">
                 <div className="flex flex-wrap gap-2">
-                    {(["AMERICANO", "AMERICANO_CHAMPIONS", "AMERICANO_GIRLS", "CHALLENGER", "TEAM_AMERICANO", "KING_OF_THE_COURT"] as TournamentType[]).map(t => (
+                    {(["AMERICANO", "AMERICANO_CHAMPIONS", "AMERICANO_GIRLS", "CHALLENGER", "TEAM_AMERICANO", "KING_OF_THE_COURT", "MASTERS"] as TournamentType[]).map(t => (
                         <button
                             key={t}
                             type="button"
@@ -368,7 +460,29 @@ function CreateTournamentForm({ onCreated, onImport }: { onCreated: () => void; 
                 </div>
             </Field>
 
-            {type !== "CHALLENGER" && type !== "KING_OF_THE_COURT" && (
+            <Field label="Players">
+                <div className="flex flex-wrap gap-2">
+                    {[
+                        { value: false, label: "Set the full line-up now" },
+                        { value: true, label: "Let players sign up" },
+                    ].map(({ value, label }) => (
+                        <button
+                            key={label}
+                            type="button"
+                            onClick={() => { setSignupMode(value); setError(""); }}
+                            className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${
+                                signupMode === value
+                                    ? "bg-[#FF4200] text-white border-[#FF4200]"
+                                    : "border-gray-300 text-gray-600 hover:border-[#FF4200]"
+                            }`}
+                        >
+                            {label}
+                        </button>
+                    ))}
+                </div>
+            </Field>
+
+            {type !== "CHALLENGER" && type !== "KING_OF_THE_COURT" && type !== "MASTERS" && (
                 <Field label="Points per game">
                     <div className="flex flex-wrap gap-2">
                         {[16, 24, 32, 40].map(p => (
@@ -416,9 +530,55 @@ function CreateTournamentForm({ onCreated, onImport }: { onCreated: () => void; 
                 </Field>
             )}
 
-            {(type === "TEAM_AMERICANO" || type === "CHALLENGER" || type === "KING_OF_THE_COURT") ? (
+            {type === "MASTERS" && (
+                <Field label="Group stage">
+                    <MastersFormatPicker value={mastersFormat} onChange={changeMastersFormat} />
+                </Field>
+            )}
+
+            {signupMode && type !== "MASTERS" && (
+                <Field label="Spots">
+                    <div className="flex flex-wrap gap-2">
+                        {capacities.map(n => (
+                            <button
+                                key={n}
+                                type="button"
+                                onClick={() => { setCapacity(n); setSelectedIds(prev => prev.slice(0, n)); }}
+                                className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${
+                                    capacity === n
+                                        ? "bg-[#FF4200] text-white border-[#FF4200]"
+                                        : "border-gray-300 text-gray-600 hover:border-[#FF4200]"
+                                }`}
+                            >
+                                {n}
+                            </button>
+                        ))}
+                    </div>
+                    <p className="text-xs text-gray-400 mt-2">
+                        Players claim the open spots from the tournament page — add anyone you already
+                        know is coming below. You generate the draw afterwards from the Sign-ups
+                        list{isTeamBasedType(type) ? ", pairing them into teams then." : "."}
+                    </p>
+                </Field>
+            )}
+
+            {signupMode && (
+                <Field label="Entry fee (lei / person)">
+                    <input
+                        type="number"
+                        min={0}
+                        inputMode="numeric"
+                        value={entryFee}
+                        onChange={e => setEntryFee(e.target.value)}
+                        placeholder="Optional"
+                        className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF4200] bg-white w-28"
+                    />
+                </Field>
+            )}
+
+            {(!signupMode && isTeamBasedType(type)) ? (
                 <>
-                    {(type === "TEAM_AMERICANO" || type === "KING_OF_THE_COURT" || type === "CHALLENGER") && (
+                    {type !== "MASTERS" && (
                         <Field label="Number of teams">
                             <div className="flex gap-2">
                                 {(type === "CHALLENGER" ? [4, 8] : [4, 6, 8]).map(n => (
@@ -435,7 +595,9 @@ function CreateTournamentForm({ onCreated, onImport }: { onCreated: () => void; 
                         <div className="flex items-center justify-between">
                             <span className="text-sm font-medium text-gray-700">Teams</span>
                             <span className="text-xs text-gray-400">
-                                {type === "CHALLENGER"
+                                {type === "MASTERS"
+                                    ? `${numTeams} teams · ${mastersFormat.groupCount} × ${mastersFormat.teamsPerGroup} · top 2 ${mastersFormat.groupCount === 1 ? "play the Final" : `to the ${STAGE_INFO[mastersKnockoutStages(mastersFormat.groupCount)[0]].title.toLowerCase()}`}`
+                                    : type === "CHALLENGER"
                                     ? numTeams === 8
                                         ? "8 teams · 2 groups of 4 · groups assigned randomly"
                                         : "4 teams · 1 group · final + 3rd place match"
@@ -460,36 +622,40 @@ function CreateTournamentForm({ onCreated, onImport }: { onCreated: () => void; 
                 </>
             ) : (
                 <>
-                    <Field label="Number of players">
-                        <div className="flex gap-2">
-                            {[8, 12, 16].map(n => (
-                                <button
-                                    key={n}
-                                    type="button"
-                                    onClick={() => { setMaxPlayers(n); setSelectedIds([]); }}
-                                    className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${
-                                        maxPlayers === n
-                                            ? "bg-[#FF4200] text-white border-[#FF4200]"
-                                            : "border-gray-300 text-gray-600 hover:border-[#FF4200]"
-                                    }`}
-                                >
-                                    {n}
-                                </button>
-                            ))}
-                        </div>
-                    </Field>
+                    {!signupMode && (
+                        <Field label="Number of players">
+                            <div className="flex gap-2">
+                                {[8, 12, 16].map(n => (
+                                    <button
+                                        key={n}
+                                        type="button"
+                                        onClick={() => { setMaxPlayers(n); setSelectedIds([]); }}
+                                        className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${
+                                            maxPlayers === n
+                                                ? "bg-[#FF4200] text-white border-[#FF4200]"
+                                                : "border-gray-300 text-gray-600 hover:border-[#FF4200]"
+                                        }`}
+                                    >
+                                        {n}
+                                    </button>
+                                ))}
+                            </div>
+                        </Field>
+                    )}
 
                     <div className="space-y-1">
                         <div className="sticky top-14 z-20 -mx-5 sm:-mx-6 px-5 sm:px-6 py-2 bg-white border-b border-gray-100 flex items-center justify-between">
-                            <span className="text-sm font-medium text-gray-700">Players</span>
+                            <span className="text-sm font-medium text-gray-700">
+                                {signupMode ? "Add players now (optional)" : "Players"}
+                            </span>
                             <span className={`text-sm font-semibold px-2.5 py-0.5 rounded-full transition-colors ${
-                                selectedIds.length === maxPlayers
+                                selectedIds.length === playerCap
                                     ? "bg-[#FF4200] text-white"
                                     : selectedIds.length > 0
                                     ? "bg-[#FF4200]/10 text-[#FF4200]"
                                     : "bg-gray-100 text-gray-600"
                             }`}>
-                                {selectedIds.length} / {maxPlayers}
+                                {selectedIds.length} / {playerCap}
                             </span>
                         </div>
                         <div className="relative mb-2 pt-1">
@@ -538,7 +704,7 @@ function CreateTournamentForm({ onCreated, onImport }: { onCreated: () => void; 
                             </button>
                         )}
                         {divisionPlayersQuery.isPending && <p className="text-gray-500 text-sm">Loading…</p>}
-                        {!q && divisionPlayers.length < maxPlayers && !divisionPlayersQuery.isPending && (
+                        {!signupMode && !q && divisionPlayers.length < maxPlayers && !divisionPlayersQuery.isPending && (
                             <p className="text-amber-600 text-sm">{divisionLabel(division)} only has {divisionPlayers.length} players — need {maxPlayers}.</p>
                         )}
                         {q && unselectedPlayers.length === 0 && !allPlayersQuery.isPending && (
@@ -581,10 +747,10 @@ function CreateTournamentForm({ onCreated, onImport }: { onCreated: () => void; 
 
             <button
                 type="submit"
-                disabled={create.isPending || createTeamAmericano.isPending || createChallenger.isPending || createKingOfTheCourt.isPending}
+                disabled={isPending}
                 className="w-full sm:w-auto bg-[#FF4200] text-white rounded-lg px-5 py-2.5 text-sm font-medium hover:bg-[#CC3500] disabled:opacity-50 transition-colors"
             >
-                {(create.isPending || createTeamAmericano.isPending || createChallenger.isPending || createKingOfTheCourt.isPending) ? "Creating…" : "Create & Generate Schedule"}
+                {isPending ? "Creating…" : signupMode ? "Open Sign-ups" : "Create & Generate Schedule"}
             </button>
         </form>
     );

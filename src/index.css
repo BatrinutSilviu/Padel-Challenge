@@ -1,2 +1,17 @@
 @import "tailwindcss";
 @import "./styles/globals.css";
+
+/* Masters TV live board */
+@keyframes live-flash {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 66, 0, 0); background-color: transparent; }
+  50% { box-shadow: 0 0 0 3px rgba(255, 66, 0, 0.9); background-color: rgba(255, 66, 0, 0.2); }
+}
+.live-flash { animation: live-flash 1.4s ease-in-out 5; }
+
+@keyframes live-scene-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+.live-scene-in { animation: live-scene-in 0.6s ease-out; }
+
+@keyframes confetti-fall {
+  from { transform: translate(0, -2rem) rotate(0deg); }
+  to { transform: translate(var(--drift, 0), 110vh) rotate(720deg); }
+}

@@ -7,7 +7,7 @@ const ACCENTS: Record<ChallengerBracketSection["key"], string> = {
     MAIN: "bg-orange-50 border-[#FF4200]/20 text-[#FF4200]",
 };
 
-type OnSaved = (
+export type OnSaved = (
     matchId: string,
     team1Score: number,
     team2Score: number,
@@ -41,7 +41,7 @@ export function ChallengerScoreEntry({
     );
 }
 
-function GroupBlock({
+export function GroupBlock({
     title,
     rounds,
     onSaveStart,

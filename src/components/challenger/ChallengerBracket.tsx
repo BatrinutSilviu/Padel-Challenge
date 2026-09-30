@@ -106,7 +106,7 @@ function BracketSection({ section }: { section: ChallengerBracketSection }) {
     );
 }
 
-function BracketMatchCard({
+export function BracketMatchCard({
     match,
     placeholder,
     placeholderLeft,

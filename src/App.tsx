@@ -11,6 +11,7 @@ import { SignupPage } from "./components/auth/SignupPage";
 import { RequireAuth } from "./components/auth/RequireAuth";
 import { RecordMatchPage } from "./components/matches/RecordMatchPage";
 import { MatchesPage } from "./components/matches/MatchesPage";
+import { LatestLiveBoard, MastersLiveBoard } from "./components/masters/MastersLiveBoard";
 
 export default function App() {
     return (
@@ -18,6 +19,8 @@ export default function App() {
             <Route path="/" element={<HomePage />} />
             <Route path="/division/:id" element={<DivisionPage />} />
             <Route path="/tournament/:id" element={<TournamentPage />} />
+            <Route path="/tournament/:id/live" element={<MastersLiveBoard />} />
+            <Route path="/live" element={<LatestLiveBoard />} />
             <Route path="/player/:id" element={<PlayerPage />} />
             <Route path="/badges" element={<BadgesPage />} />
             <Route path="/login" element={<LoginPage />} />

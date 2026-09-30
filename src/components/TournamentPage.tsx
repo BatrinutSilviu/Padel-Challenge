@@ -7,10 +7,16 @@ import { useState } from "react";
 import { StatusBadge } from "./HomePage";
 import { ChallengerView } from "./challenger/ChallengerView";
 import { KingOfTheCourtView } from "./kingOfTheCourt/KingOfTheCourtView";
+import { MastersView } from "./masters/MastersView";
+import { TournamentSignup } from "./TournamentSignup";
 
 export function TournamentPage() {
     const { id } = useParams<{ id: string }>();
-    const { data: tournament, isPending, error } = trpc.tournament.getById.useQuery({ id: id! });
+    const { data: tournament, isPending, error } = trpc.tournament.getById.useQuery(
+        { id: id! },
+        // Keep partial results fresh while the tournament is being played.
+        { refetchInterval: query => (query.state.data?.status === "IN_PROGRESS" ? 15_000 : false) },
+    );
     const [expandedRound, setExpandedRound] = useState<number | null>(null);
 
     if (isPending) return <LoadingPage />;
@@ -39,15 +45,21 @@ export function TournamentPage() {
                                 {new Date(tournament.date).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}
                                 {" · "}{divisionLabel(tournament.division)}
                                 {" · "}{tournamentTypeLabel(tournament.type)}
-                                {" · "}{tournament.participants.length} players
+                                {" · "}{tournament.status === "UPCOMING"
+                                    ? `${tournament.participants.length}${tournament.maxPlayers !== null ? `/${tournament.maxPlayers}` : ""} signed up`
+                                    : `${tournament.participants.length} players`}
                             </p>
                         </div>
                         <StatusBadge status={tournament.status} />
                     </div>
                 </div>
 
-                {tournament.type === "CHALLENGER" ? (
+                {tournament.status === "UPCOMING" ? (
+                    <TournamentSignup tournament={tournament} />
+                ) : tournament.type === "CHALLENGER" ? (
                     <ChallengerView tournament={tournament} />
+                ) : tournament.type === "MASTERS" ? (
+                    <MastersView tournament={tournament} />
                 ) : tournament.type === "KING_OF_THE_COURT" ? (
                     <KingOfTheCourtView tournament={tournament} />
                 ) : (

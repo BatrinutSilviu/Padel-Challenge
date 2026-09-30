@@ -36,7 +36,7 @@ export function ChallengerView({ tournament }: { tournament: TournamentData }) {
     );
 }
 
-function GroupSection({ title, rounds }: { title: string; rounds: ChallengerRound[] }) {
+export function GroupSection({ title, rounds }: { title: string; rounds: ChallengerRound[] }) {
     const standings = computeGroupStandings(rounds);
 
     return (

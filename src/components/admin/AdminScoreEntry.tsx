@@ -7,10 +7,14 @@ import { useQueryClient } from "@tanstack/react-query";
 import { getQueryKey } from "@trpc/react-query";
 import { challengerProgress, isChallengerMatchScored } from "../../lib/challenger";
 import { ChallengerScoreEntry } from "./ChallengerScoreEntry";
+import { STAGE_INFO, mastersProgress } from "../../lib/masters";
+import { MastersScoreEntry } from "./MastersScoreEntry";
+import type { MatchSet } from "../../lib/challenger";
 import { isKotcMatchScored, kotcProgress } from "../../lib/kingOfTheCourt";
 import { KingOfTheCourtScoreEntry } from "./KingOfTheCourtScoreEntry";
 import { PlayerPicker } from "../PlayerPicker";
 import { useAdminSession, LoginPage, SessionExpiredModal } from "./AdminAuth";
+import { TournamentSignupAdmin } from "./TournamentSignupAdmin";
 
 export function AdminScoreEntry() {
     const { id } = useParams<{ id: string }>();
@@ -30,7 +34,7 @@ export function AdminScoreEntry() {
     useEffect(() => {
         if (!tournament) return;
         const ppg = tournament.pointsPerGame;
-        const isScored = tournament.type === "CHALLENGER"
+        const isScored = tournament.type === "CHALLENGER" || tournament.type === "MASTERS"
             ? isChallengerMatchScored
             : tournament.type === "KING_OF_THE_COURT"
             ? isKotcMatchScored
@@ -67,6 +71,12 @@ export function AdminScoreEntry() {
     });
 
     const startKnockout = trpc.tournament.startChallengerKnockout.useMutation({
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: getQueryKey(trpc.tournament.getById, { id: id! }) });
+        },
+    });
+
+    const startMastersKnockout = trpc.tournament.startMastersKnockout.useMutation({
         onSuccess: () => {
             qc.invalidateQueries({ queryKey: getQueryKey(trpc.tournament.getById, { id: id! }) });
         },
@@ -131,6 +141,24 @@ export function AdminScoreEntry() {
         qc.invalidateQueries({ queryKey: getQueryKey(trpc.tournament.getById, { id: id! }) });
     }, [qc, id]);
 
+    // Masters matches are scored per set: patch the sets alongside the sets-won totals.
+    // Also refetch, since the last score of a knockout stage draws the next one server-side.
+    const handleMastersSaved = useCallback((matchId: string, team1Score: number, team2Score: number, sets: MatchSet[]) => {
+        setScoredIds(prev => new Set([...prev, matchId]));
+        const queryKey = getQueryKey(trpc.tournament.getById, { id: id! }, 'query');
+        qc.setQueryData(queryKey, (old: typeof tournament) => {
+            if (!old) return old;
+            return {
+                ...old,
+                rounds: old.rounds.map(r => ({
+                    ...r,
+                    matches: r.matches.map(m => m.id === matchId ? { ...m, team1Score, team2Score, sets } : m),
+                })),
+            };
+        });
+        qc.invalidateQueries({ queryKey: getQueryKey(trpc.tournament.getById, { id: id! }) });
+    }, [qc, id]);
+
     // Separate from handleSaved: King of the Court's 4th argument (goldenPointWinner) is
     // not positionally compatible with handleSaved's tiebreak-point pair, and saving the
     // last match of a round can auto-create a whole new round server-side, which a
@@ -160,19 +188,55 @@ export function AdminScoreEntry() {
     if (isPending) return <LoadingPage />;
     if (error || !tournament) return <div className="p-8 text-red-600">Tournament not found.</div>;
 
+    // Not started yet — there are no matches to score, only a sign-up sheet to manage.
+    if (tournament.status === "UPCOMING") {
+        return (
+            <>
+                <TournamentSignupAdmin tournament={tournament} />
+                {sessionExpired && <SessionExpiredModal onLogin={handleLogin} />}
+            </>
+        );
+    }
+
     const isCompleted = tournament.status === "COMPLETED";
     const isChallenger = tournament.type === "CHALLENGER";
     const isKotc = tournament.type === "KING_OF_THE_COURT";
+    const isMasters = tournament.type === "MASTERS";
+    // Challenger, King of the Court and Masters rank by their own format rules, so a
+    // points-based recalculation doesn't apply to them.
+    const canRecalculate = !isChallenger && !isKotc && !isMasters;
     const progress = isChallenger ? challengerProgress(tournament) : null;
+    const mastersProgressData = isMasters ? mastersProgress(tournament) : null;
     const kotcProgressData = isKotc ? kotcProgress(tournament) : null;
     const totalMatches = tournament.rounds.flatMap(r => r.matches).length;
     const scoredCount = scoredIds.size;
     const allScored = isChallenger
         ? (progress?.allBracketScored ?? false)
+        : isMasters
+        ? (mastersProgressData?.finalScored ?? false)
         : isKotc
         ? Boolean(kotcProgressData?.lastScoredRound)
         : scoredCount === totalMatches;
     const isSaving = pendingSaves > 0;
+
+    // Challenger and Masters: the group stage ends when the admin draws the knockout
+    // stage, which is only possible once every group match has a score.
+    const groupStage = isChallenger && progress
+        ? {
+            matches: [...progress.groupRounds.A, ...progress.groupRounds.B].flatMap(r => r.matches),
+            knockoutStarted: progress.knockoutStarted,
+            mutation: startKnockout,
+            label: "Finish group stage & start knockout",
+        }
+        : isMasters && mastersProgressData
+        ? {
+            matches: mastersProgressData.groupMatches,
+            knockoutStarted: mastersProgressData.knockoutStarted,
+            mutation: startMastersKnockout,
+            label: `Finish group stage & start the ${mastersProgressData.stages[0].key === "FINAL" ? "Final" : STAGE_INFO[mastersProgressData.stages[0].key].title.toLowerCase()}`,
+        }
+        : null;
+    const groupMatchesLeft = groupStage ? groupStage.matches.filter(m => !scoredIds.has(m.id)).length : 0;
 
     function handleComplete() {
         if (!allScored) { setConfirmComplete(true); return; }
@@ -200,17 +264,7 @@ export function AdminScoreEntry() {
                                 View results →
                             </Link>
                         )}
-                        {isChallenger && progress && progress.allGroupScored && !progress.knockoutStarted && (
-                            <button
-                                onClick={() => startKnockout.mutate({ id: id! })}
-                                disabled={startKnockout.isPending || isSaving}
-                                title={isSaving ? "Waiting for scores to save…" : undefined}
-                                className="bg-amber-500 text-white rounded-lg px-4 py-2 text-sm font-semibold hover:bg-amber-600 disabled:opacity-50 transition-colors"
-                            >
-                                {startKnockout.isPending ? "Starting…" : "Start Knockout Stage"}
-                            </button>
-                        )}
-                        {!isChallenger && !isKotc && (
+                        {canRecalculate && (
                             <button
                                 onClick={() => { setRecalcSuccess(false); recalculate.mutate({ id: id! }); }}
                                 disabled={recalculate.isPending || isSaving}
@@ -311,6 +365,24 @@ export function AdminScoreEntry() {
                             <p className="text-xs text-[#FF4200]">All scores saved — ready to complete.</p>
                         )}
                     </div>
+                ) : isMasters && mastersProgressData ? (
+                    <div className="bg-white rounded-xl border border-gray-200 px-4 sm:px-5 py-4 space-y-3">
+                        <ProgressRow
+                            label="Group stage"
+                            scored={mastersProgressData.groupMatches.filter(m => scoredIds.has(m.id)).length}
+                            total={mastersProgressData.groupMatches.length}
+                        />
+                        {mastersProgressData.knockoutStarted && (
+                            <ProgressRow
+                                label="Knockout"
+                                scored={mastersProgressData.bracketMatches.filter(m => scoredIds.has(m.id)).length}
+                                total={mastersProgressData.knockoutMatchCount}
+                            />
+                        )}
+                        {!isCompleted && allScored && (
+                            <p className="text-xs text-[#FF4200]">All scores saved — ready to complete.</p>
+                        )}
+                    </div>
                 ) : isKotc && kotcProgressData ? (
                     <div className="bg-white rounded-xl border border-gray-200 px-4 sm:px-5 py-4 space-y-3">
                         <ProgressRow
@@ -347,14 +419,9 @@ export function AdminScoreEntry() {
                     </div>
                 )}
 
-                {startKnockout.error && (
-                    <p className="text-sm text-red-500 bg-red-50 border border-red-200 rounded-lg px-4 py-2">
-                        {startKnockout.error.message}
-                    </p>
-                )}
 
                 {/* Recalculate success banner */}
-                {!isChallenger && !isKotc && recalcSuccess && (
+                {canRecalculate && recalcSuccess && (
                     <div className="bg-green-50 border border-green-200 rounded-xl px-4 py-3 flex items-center justify-between gap-3">
                         <p className="text-sm text-green-700 font-medium">Results recalculated successfully.</p>
                         <div className="flex items-center gap-3 shrink-0">
@@ -366,7 +433,7 @@ export function AdminScoreEntry() {
                     </div>
                 )}
 
-                {!isChallenger && !isKotc && recalculate.error && (
+                {canRecalculate && recalculate.error && (
                     <p className="text-sm text-red-500 bg-red-50 border border-red-200 rounded-lg px-4 py-2">
                         {recalculate.error.message}
                     </p>
@@ -389,6 +456,13 @@ export function AdminScoreEntry() {
                         onSaveStart={handleSaveStart}
                         onSaveEnd={handleSaveEnd}
                         onSaved={handleSaved}
+                    />
+                ) : isMasters ? (
+                    <MastersScoreEntry
+                        tournament={tournament}
+                        onSaveStart={handleSaveStart}
+                        onSaveEnd={handleSaveEnd}
+                        onSaved={handleMastersSaved}
                     />
                 ) : isKotc ? (
                     <KingOfTheCourtScoreEntry
@@ -425,12 +499,38 @@ export function AdminScoreEntry() {
                     </div>
                 )}
 
+                {groupStage && !groupStage.knockoutStarted && !isCompleted && (
+                    <div className="space-y-2">
+                        <button
+                            onClick={() => groupStage.mutation.mutate({ id: id! })}
+                            disabled={groupMatchesLeft > 0 || groupStage.mutation.isPending || isSaving}
+                            className="w-full bg-amber-500 text-white rounded-xl px-5 py-4 text-base font-bold shadow-sm hover:bg-amber-600 disabled:bg-gray-200 disabled:text-gray-500 disabled:shadow-none transition-colors"
+                        >
+                            {groupStage.mutation.isPending
+                                ? "Starting…"
+                                : isSaving
+                                ? "Saving scores…"
+                                : groupStage.label}
+                        </button>
+                        {groupMatchesLeft > 0 && (
+                            <p className="text-xs text-gray-400 text-center">
+                                {groupMatchesLeft} group match{groupMatchesLeft !== 1 ? "es" : ""} still need a score.
+                            </p>
+                        )}
+                        {groupStage.mutation.error && (
+                            <p className="text-sm text-red-500 bg-red-50 border border-red-200 rounded-lg px-4 py-2">
+                                {groupStage.mutation.error.message}
+                            </p>
+                        )}
+                    </div>
+                )}
+
                 {/* Complete tournament — shown after all rounds (or, for Challenger, only once
                     every bracket final/third-place match has a score, since the backend never
                     allows completing a Challenger tournament otherwise; or, for King of the Court,
                     which has no fixed round count, as soon as any round has been scored —
                     even if a further, unfinished round was already started) */}
-                {!isCompleted && (isChallenger ? Boolean(progress?.allBracketScored) : isKotc ? Boolean(kotcProgressData?.lastScoredRound) : true) && (
+                {!isCompleted && (isChallenger || isMasters ? allScored : isKotc ? Boolean(kotcProgressData?.lastScoredRound) : true) && (
                     <div className="space-y-3">
                         {confirmComplete && (
                             <div className="bg-amber-50 border border-amber-300 rounded-xl px-4 sm:px-5 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">

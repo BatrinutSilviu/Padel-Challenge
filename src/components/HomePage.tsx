@@ -248,9 +248,39 @@ function TournamentsTab() {
         .filter(t => typeFilter === "ALL" || t.type === typeFilter);
 
     const activeDivisions = [...new Set((data ?? []).map(t => t.division))].sort((a, b) => a - b);
+    const openForSignup = (data ?? []).filter(t => t.status === "UPCOMING" && t.registrationOpen);
 
     return (
         <div className="space-y-4">
+            {openForSignup.length > 0 && (
+                <section className="space-y-2">
+                    <h2 className="text-xs font-bold uppercase tracking-widest text-[#8E8E93]">Open for sign-up</h2>
+                    {openForSignup.map(t => {
+                        const spotsLeft = t.maxPlayers === null ? null : Math.max(0, t.maxPlayers - t._count.participants);
+                        return (
+                            <Link
+                                key={t.id}
+                                to={`/tournament/${t.id}`}
+                                className="flex items-center justify-between gap-3 bg-white rounded-2xl border border-[#FF4200]/30 px-4 py-3.5 hover:border-[#FF4200] hover:shadow-sm transition-all"
+                            >
+                                <div className="min-w-0">
+                                    <span className="font-bold text-[#1A1A2E] block truncate">{t.name}</span>
+                                    <span className="text-xs text-[#8E8E93] font-medium">
+                                        {divisionLabel(t.division)} · {new Date(t.date).toLocaleDateString()}
+                                        {spotsLeft !== null && ` · ${spotsLeft} spot${spotsLeft !== 1 ? "s" : ""} left`}
+                                    </span>
+                                </div>
+                                <span className={`text-xs font-bold px-3 py-1.5 rounded-xl shrink-0 whitespace-nowrap ${
+                                    spotsLeft === 0 ? "bg-[#F5F5F7] text-[#8E8E93]" : "bg-[#FF4200] text-white"
+                                }`}>
+                                    {spotsLeft === 0 ? "Full" : "Join"}
+                                </span>
+                            </Link>
+                        );
+                    })}
+                </section>
+            )}
+
             <div className="bg-white border border-[#E5E5EA] rounded-2xl p-4 space-y-3 shadow-sm">
                 <div className="flex flex-col gap-2">
                     <span className="text-xs font-bold uppercase tracking-widest text-[#8E8E93]">Division</span>
@@ -269,7 +299,7 @@ function TournamentsTab() {
                 <div className="flex flex-col gap-2">
                     <span className="text-xs font-bold uppercase tracking-widest text-[#8E8E93]">Type</span>
                     <div className="flex flex-wrap gap-1.5">
-                        {(["ALL", "AMERICANO", "AMERICANO_CHAMPIONS", "AMERICANO_GIRLS", "CHALLENGER", "TEAM_AMERICANO"] as const).map(type => (
+                        {(["ALL", "AMERICANO", "AMERICANO_CHAMPIONS", "AMERICANO_GIRLS", "CHALLENGER", "TEAM_AMERICANO", "MASTERS"] as const).map(type => (
                             <FilterChip key={type} active={typeFilter === type} onClick={() => setTypeFilter(type)}>
                                 {type === "ALL" ? "All" : TOURNAMENT_TYPE_LABELS[type]}
                             </FilterChip>

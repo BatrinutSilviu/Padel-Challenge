@@ -4,6 +4,10 @@
 
 export type ChallengerPlayer = { id: string; name: string };
 
+// One set of a Masters match. A deciding group-stage tiebreak is stored as the last row,
+// with isTiebreak set and its points in team1Games/team2Games.
+export type MatchSet = { setNumber: number; team1Games: number; team2Games: number; isTiebreak: boolean };
+
 export type ChallengerMatch = {
     id: string;
     team1Score: number;
@@ -12,6 +16,8 @@ export type ChallengerMatch = {
     team2TiebreakPoints: number | null;
     bracketType: string | null;
     bracketStage: string | null;
+    // Masters only — for those matches team1Score/team2Score are sets won, not games.
+    sets?: MatchSet[];
     team1Player1: ChallengerPlayer;
     team1Player2: ChallengerPlayer;
     team2Player1: ChallengerPlayer;
@@ -60,6 +66,7 @@ export function groupRoundsByGroup(rounds: ChallengerRound[]): { A: ChallengerRo
 
 export type GroupStanding = {
     team: ChallengerTeam;
+    played: number;
     wins: number;
     gameDiff: number;
     rank: number;
@@ -80,17 +87,35 @@ function challengerHeadToHead(a: ChallengerTeam, b: ChallengerTeam, matches: Cha
     return 0;
 }
 
+// Games won by each side. A match scored per set (Masters) adds up its sets, with a
+// deciding tiebreak counting as one game to its winner — mirrors matchGames on the backend.
+export function matchGames(m: { team1Score: number; team2Score: number; sets?: MatchSet[] }): [number, number] {
+    if (!m.sets || m.sets.length === 0) return [m.team1Score, m.team2Score];
+    let g1 = 0;
+    let g2 = 0;
+    for (const s of m.sets) {
+        if (s.isTiebreak) {
+            if (s.team1Games > s.team2Games) g1++;
+            else g2++;
+        } else {
+            g1 += s.team1Games;
+            g2 += s.team2Games;
+        }
+    }
+    return [g1, g2];
+}
+
 // Ranked by match wins desc, then total game difference desc, then the head-to-head
 // result of the direct match between the tied teams — matches the backend's
 // computeChallengerGroupStandings exactly.
 export function computeGroupStandings(groupRounds: ChallengerRound[]): GroupStanding[] {
     const matches = groupRounds.flatMap(r => r.matches);
-    type Stat = { team: ChallengerTeam; wins: number; gameDiff: number };
+    type Stat = { team: ChallengerTeam; played: number; wins: number; gameDiff: number };
     const stats = new Map<string, Stat>();
 
     const ensure = (p1: ChallengerPlayer, p2: ChallengerPlayer) => {
         const key = teamKey(p1.id, p2.id);
-        if (!stats.has(key)) stats.set(key, { team: { player1: p1, player2: p2 }, wins: 0, gameDiff: 0 });
+        if (!stats.has(key)) stats.set(key, { team: { player1: p1, player2: p2 }, played: 0, wins: 0, gameDiff: 0 });
         return stats.get(key)!;
     };
 
@@ -99,8 +124,11 @@ export function computeGroupStandings(groupRounds: ChallengerRound[]): GroupStan
         const t2 = ensure(m.team2Player1, m.team2Player2);
         if (!isChallengerMatchScored(m)) continue;
 
-        t1.gameDiff += m.team1Score - m.team2Score;
-        t2.gameDiff += m.team2Score - m.team1Score;
+        const [games1, games2] = matchGames(m);
+        t1.played++;
+        t2.played++;
+        t1.gameDiff += games1 - games2;
+        t2.gameDiff += games2 - games1;
         if (m.team1Score > m.team2Score) t1.wins++;
         else if (m.team2Score > m.team1Score) t2.wins++;
     }
@@ -207,8 +235,14 @@ export function isValidChallengerSetScore(
     return false;
 }
 
-// Formats a set score for display, e.g. "6-4" or "7-6" with a "(TB 7-3)" suffix.
+// Formats a score for display: "6-4", "7-6 (TB 7-3)", or set by set for a Masters
+// match, e.g. "6-3 4-6 [10-8]" with a deciding tiebreak in brackets.
 export function formatChallengerScore(m: ChallengerMatch): string {
+    if (m.sets && m.sets.length > 0) {
+        return m.sets
+            .map(s => (s.isTiebreak ? `[${s.team1Games}-${s.team2Games}]` : `${s.team1Games}-${s.team2Games}`))
+            .join(" ");
+    }
     const base = `${m.team1Score}-${m.team2Score}`;
     if (m.team1TiebreakPoints != null && m.team2TiebreakPoints != null) {
         return `${base} (TB ${m.team1TiebreakPoints}-${m.team2TiebreakPoints})`;
