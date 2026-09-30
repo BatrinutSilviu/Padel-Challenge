@@ -9,6 +9,7 @@ import { capacityOptions, isTeamBasedType, playerCountError, tournamentTypeLabel
 import { PlayerPicker } from "../PlayerPicker";
 import { mastersFormatOf } from "../../lib/masters";
 import { MastersFormatPicker } from "./MastersFormatPicker";
+import { TeamNumber } from "./TeamNumber";
 
 type TournamentData = NonNullable<ReturnType<typeof trpc.tournament.getById.useQuery>["data"]>;
 
@@ -216,9 +217,9 @@ export function TournamentSignupAdmin({ tournament }: { tournament: TournamentDa
                             const assignedIds = new Set(teamSlots.flat().filter(Boolean));
                             const pickerPlayers = registered.map(p => p.player);
                             return (
-                                <div key={i} className="flex items-start gap-2">
-                                    <span className="text-sm font-medium text-gray-500 w-14 shrink-0 pt-2.5">Team {i + 1}</span>
-                                    <div className="flex-1 flex flex-col sm:flex-row gap-2">
+                                <div key={i} className="flex items-center gap-2">
+                                    <TeamNumber index={i} />
+                                    <div className="flex-1 min-w-0 grid grid-cols-2 gap-2">
                                         <PlayerPicker
                                             value={p1}
                                             onChange={id => setTeamSlots(prev => prev.map((t, idx) => idx === i ? [id, t[1]] : t))}
@@ -232,6 +233,7 @@ export function TournamentSignupAdmin({ tournament }: { tournament: TournamentDa
                                             players={pickerPlayers}
                                             excludeIds={new Set([...assignedIds].filter(id => id !== p2))}
                                             placeholder="Player 2"
+                                            align="right"
                                         />
                                     </div>
                                 </div>

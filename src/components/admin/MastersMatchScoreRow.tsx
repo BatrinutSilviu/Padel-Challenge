@@ -169,10 +169,7 @@ export function MastersMatchScoreRow({
 
     return (
         <div className="px-4 sm:px-5 py-4">
-            <div className="flex items-center justify-between mb-3">
-                <p className={label === "Final" ? "text-xs font-bold uppercase tracking-wide text-[#FF4200]" : "text-xs text-gray-400"}>{label}</p>
-                <p className="text-[11px] text-gray-400">{stage === "GROUP" ? "2 sets · tiebreak at 1-1" : "Best of 3 sets"}</p>
-            </div>
+            <p className={`mb-3 ${label === "Final" ? "text-xs font-bold uppercase tracking-wide text-[#FF4200]" : "text-xs text-gray-400"}`}>{label}</p>
 
             <div className="grid items-center gap-x-2 gap-y-2" style={{ gridTemplateColumns: `minmax(0,1fr) repeat(${columns}, 3.25rem) 1.5rem` }}>
                 <span />

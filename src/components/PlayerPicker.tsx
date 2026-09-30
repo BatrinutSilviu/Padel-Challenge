@@ -8,6 +8,7 @@ export function PlayerPicker({
     excludeIds,
     placeholder = "Pick player",
     division,
+    align = "left",
 }: {
     value: string;
     onChange: (id: string) => void;
@@ -15,6 +16,9 @@ export function PlayerPicker({
     excludeIds: Set<string>;
     placeholder?: string;
     division?: number;
+    // Which edge the dropdown lines up with — "right" for a picker on the right-hand
+    // side of a narrow screen, so the (wider) dropdown doesn't run off it.
+    align?: "left" | "right";
 }) {
     const [open, setOpen] = useState(false);
     const [search, setSearch] = useState("");
@@ -40,7 +44,7 @@ export function PlayerPicker({
                 {selected ? selected.name : placeholder}
             </button>
             {open && (
-                <div className="absolute z-30 top-full left-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden min-w-[220px]">
+                <div className={`absolute z-30 top-full ${align === "right" ? "right-0" : "left-0"} mt-1 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden min-w-[220px]`}>
                     {!adding && (
                         <div className="p-2 border-b border-gray-100">
                             <input

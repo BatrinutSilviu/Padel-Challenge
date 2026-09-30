@@ -8,6 +8,7 @@ import { DIVISION_NAMES, divisionLabel } from "../../lib/divisions";
 import { TournamentType, TOURNAMENT_TYPE_LABELS, capacityOptions, isTeamBasedType } from "../../lib/tournaments";
 import { RECOMMENDED_MASTERS_FORMAT, STAGE_INFO, mastersKnockoutStages, mastersTeamCount, type MastersFormat } from "../../lib/masters";
 import { MastersFormatPicker } from "./MastersFormatPicker";
+import { TeamNumber } from "./TeamNumber";
 import { PlayerPicker } from "../PlayerPicker";
 import { AddPlayerInline } from "../AddPlayerInline";
 
@@ -30,25 +31,32 @@ export function AdminDashboard({ onLogout }: { onLogout: () => void }) {
         <div className="min-h-screen bg-gray-50">
             <NavBar />
             <main className="max-w-5xl mx-auto px-3 sm:px-4 pt-6 pb-24 sm:py-8">
-                <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-between mb-6">
-                    <div className="flex flex-wrap gap-1 bg-white border border-gray-200 rounded-xl p-1">
+                {/* One row on every screen: on a phone each tab is as wide as its label, Logout beside them. */}
+                <div className="flex items-center gap-2 sm:gap-3 sm:justify-between mb-5 sm:mb-6">
+                    <div className="flex-1 sm:flex-none flex gap-1 bg-white border border-gray-200 rounded-xl p-1">
                         {(["tournaments", "new-tournament", "players", "export"] as Tab[]).map(t => (
                             <button
                                 key={t}
                                 onClick={() => setTab(t)}
-                                className={`px-4 py-1.5 md:px-6 md:py-2.5 rounded-lg text-sm md:text-base font-medium whitespace-nowrap transition-colors ${
+                                className={`flex-auto sm:flex-none px-2 py-2 sm:px-4 sm:py-1.5 md:px-6 md:py-2.5 rounded-lg text-xs sm:text-sm md:text-base font-medium whitespace-nowrap transition-colors ${
                                     tab === t ? "bg-[#FF4200] text-white" : "text-gray-600 hover:text-gray-900"
                                 }`}
                             >
-                                {TAB_LABELS[t]}
+                                {t === "new-tournament" ? (
+                                    <><span className="sm:hidden">+ New</span><span className="hidden sm:inline">{TAB_LABELS[t]}</span></>
+                                ) : TAB_LABELS[t]}
                             </button>
                         ))}
                     </div>
                     <button
                         onClick={onLogout}
-                        className="text-sm font-medium px-3 py-1.5 rounded-lg border border-gray-300 text-gray-600 hover:border-red-300 hover:text-red-500 transition-colors self-start sm:self-auto"
+                        aria-label="Logout"
+                        className="shrink-0 text-sm font-medium px-2.5 py-2 sm:px-3 sm:py-1.5 rounded-lg border border-gray-300 bg-white text-gray-600 hover:border-red-300 hover:text-red-500 transition-colors"
                     >
-                        Logout
+                        <svg className="w-4 h-4 sm:hidden" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
+                        </svg>
+                        <span className="hidden sm:inline">Logout</span>
                     </button>
                 </div>
 
@@ -609,11 +617,11 @@ function CreateTournamentForm({ onCreated, onImport }: { onCreated: () => void; 
                         {teamSlots.map(([p1, p2], i) => {
                             const assignedIds = new Set(teamSlots.flat().filter(Boolean));
                             return (
-                                <div key={i} className="flex items-start gap-2">
-                                    <span className="text-sm font-medium text-gray-500 w-14 shrink-0 pt-2.5">Team {i + 1}</span>
-                                    <div className="flex-1 flex flex-col sm:flex-row gap-2">
+                                <div key={i} className="flex items-center gap-2">
+                                    <TeamNumber index={i} />
+                                    <div className="flex-1 min-w-0 grid grid-cols-2 gap-2">
                                         <PlayerPicker value={p1} onChange={id => updateTeamSlot(i, 0, id)} players={allPlayers} excludeIds={new Set([...assignedIds].filter(id => id !== p1))} placeholder="Player 1" division={division} />
-                                        <PlayerPicker value={p2} onChange={id => updateTeamSlot(i, 1, id)} players={allPlayers} excludeIds={new Set([...assignedIds].filter(id => id !== p2))} placeholder="Player 2" division={division} />
+                                        <PlayerPicker value={p2} onChange={id => updateTeamSlot(i, 1, id)} players={allPlayers} excludeIds={new Set([...assignedIds].filter(id => id !== p2))} placeholder="Player 2" division={division} align="right" />
                                     </div>
                                 </div>
                             );
@@ -644,7 +652,7 @@ function CreateTournamentForm({ onCreated, onImport }: { onCreated: () => void; 
                     )}
 
                     <div className="space-y-1">
-                        <div className="sticky top-14 z-20 -mx-5 sm:-mx-6 px-5 sm:px-6 py-2 bg-white border-b border-gray-100 flex items-center justify-between">
+                        <div className="sticky top-[50px] z-20 -mx-5 sm:-mx-6 px-5 sm:px-6 py-2 bg-white border-b border-gray-100 flex items-center justify-between">
                             <span className="text-sm font-medium text-gray-700">
                                 {signupMode ? "Add players now (optional)" : "Players"}
                             </span>
