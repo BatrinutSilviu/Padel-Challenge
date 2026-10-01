@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { getQueryKey } from "@trpc/react-query";
@@ -9,7 +9,7 @@ import { capacityOptions, isTeamBasedType, playerCountError, tournamentTypeLabel
 import { PlayerPicker } from "../PlayerPicker";
 import { mastersFormatOf } from "../../lib/masters";
 import { MastersFormatPicker } from "./MastersFormatPicker";
-import { TeamNumber } from "./TeamNumber";
+import { MastersGroupHeading, TeamNumber } from "./TeamNumber";
 
 type TournamentData = NonNullable<ReturnType<typeof trpc.tournament.getById.useQuery>["data"]>;
 
@@ -204,20 +204,25 @@ export function TournamentSignupAdmin({ tournament }: { tournament: TournamentDa
                         <div className="flex items-center justify-between gap-3">
                             <div>
                                 <p className="text-sm font-semibold text-gray-700">Teams</p>
-                                <p className="text-xs text-gray-400">Paired in sign-up order — change any pair before starting.</p>
+                                <p className="text-xs text-gray-400">
+                                    Paired in sign-up order — change any pair before starting.
+                                    {isMasters && " Groups are filled in team order."}
+                                </p>
                             </div>
-                            <button
+                            {!isMasters && <button
                                 onClick={shufflePairs}
                                 className="text-sm font-medium px-3 py-1.5 rounded-lg border border-gray-300 text-gray-600 hover:border-[#FF4200] hover:text-[#FF4200] transition-colors shrink-0"
                             >
                                 Shuffle
-                            </button>
+                            </button>}
                         </div>
                         {teamSlots.map(([p1, p2], i) => {
                             const assignedIds = new Set(teamSlots.flat().filter(Boolean));
                             const pickerPlayers = registered.map(p => p.player);
                             return (
-                                <div key={i} className="flex items-center gap-2">
+                                <Fragment key={i}>
+                                {isMasters && <MastersGroupHeading index={i} teamsPerGroup={mastersFormat.teamsPerGroup} />}
+                                <div className="flex items-center gap-2">
                                     <TeamNumber index={i} />
                                     <div className="flex-1 min-w-0 grid grid-cols-2 gap-2">
                                         <PlayerPicker
@@ -237,6 +242,7 @@ export function TournamentSignupAdmin({ tournament }: { tournament: TournamentDa
                                         />
                                     </div>
                                 </div>
+                                </Fragment>
                             );
                         })}
                     </div>

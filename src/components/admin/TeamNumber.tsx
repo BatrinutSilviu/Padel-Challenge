@@ -6,3 +6,13 @@ export function TeamNumber({ index }: { index: number }) {
         </span>
     );
 }
+
+// Masters groups are filled in team order, so a heading marks where each group starts.
+export function MastersGroupHeading({ index, teamsPerGroup }: { index: number; teamsPerGroup: number }) {
+    if (index % teamsPerGroup !== 0) return null;
+    return (
+        <p className={`text-xs font-semibold uppercase tracking-wide text-[#FF4200] ${index > 0 ? "pt-2" : ""}`}>
+            Group {String.fromCharCode(65 + index / teamsPerGroup)}
+        </p>
+    );
+}

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { NavBar } from "../NavBar";
 import { trpc } from "../../trpc";
@@ -8,7 +8,7 @@ import { DIVISION_NAMES, divisionLabel } from "../../lib/divisions";
 import { TournamentType, TOURNAMENT_TYPE_LABELS, capacityOptions, isTeamBasedType } from "../../lib/tournaments";
 import { RECOMMENDED_MASTERS_FORMAT, STAGE_INFO, mastersKnockoutStages, mastersTeamCount, type MastersFormat } from "../../lib/masters";
 import { MastersFormatPicker } from "./MastersFormatPicker";
-import { TeamNumber } from "./TeamNumber";
+import { MastersGroupHeading, TeamNumber } from "./TeamNumber";
 import { PlayerPicker } from "../PlayerPicker";
 import { AddPlayerInline } from "../AddPlayerInline";
 
@@ -604,7 +604,7 @@ function CreateTournamentForm({ onCreated, onImport }: { onCreated: () => void; 
                             <span className="text-sm font-medium text-gray-700">Teams</span>
                             <span className="text-xs text-gray-400">
                                 {type === "MASTERS"
-                                    ? `${numTeams} teams · ${mastersFormat.groupCount} × ${mastersFormat.teamsPerGroup} · top 2 ${mastersFormat.groupCount === 1 ? "play the Final" : `to the ${STAGE_INFO[mastersKnockoutStages(mastersFormat.groupCount)[0]].title.toLowerCase()}`}`
+                                    ? `${numTeams} teams · ${mastersFormat.groupCount} × ${mastersFormat.teamsPerGroup} · groups in team order · top 2 ${mastersFormat.groupCount === 1 ? "play the Final" : `to the ${STAGE_INFO[mastersKnockoutStages(mastersFormat.groupCount)[0]].title.toLowerCase()}`}`
                                     : type === "CHALLENGER"
                                     ? numTeams === 8
                                         ? "8 teams · 2 groups of 4 · groups assigned randomly"
@@ -617,13 +617,16 @@ function CreateTournamentForm({ onCreated, onImport }: { onCreated: () => void; 
                         {teamSlots.map(([p1, p2], i) => {
                             const assignedIds = new Set(teamSlots.flat().filter(Boolean));
                             return (
-                                <div key={i} className="flex items-center gap-2">
+                                <Fragment key={i}>
+                                {type === "MASTERS" && <MastersGroupHeading index={i} teamsPerGroup={mastersFormat.teamsPerGroup} />}
+                                <div className="flex items-center gap-2">
                                     <TeamNumber index={i} />
                                     <div className="flex-1 min-w-0 grid grid-cols-2 gap-2">
                                         <PlayerPicker value={p1} onChange={id => updateTeamSlot(i, 0, id)} players={allPlayers} excludeIds={new Set([...assignedIds].filter(id => id !== p1))} placeholder="Player 1" division={division} />
                                         <PlayerPicker value={p2} onChange={id => updateTeamSlot(i, 1, id)} players={allPlayers} excludeIds={new Set([...assignedIds].filter(id => id !== p2))} placeholder="Player 2" division={division} align="right" />
                                     </div>
                                 </div>
+                                </Fragment>
                             );
                         })}
                     </div>
