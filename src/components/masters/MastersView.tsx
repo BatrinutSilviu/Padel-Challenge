@@ -29,7 +29,7 @@ export function MastersView({ tournament }: { tournament: TournamentData }) {
                         📺 TV mode
                     </Link>
                 </div>
-                <MastersBracket stages={progress.stages} />
+                <MastersBracket stages={progress.stages} courtOf={progress.courtOf} />
             </section>
 
             <section>
@@ -39,7 +39,7 @@ export function MastersView({ tournament }: { tournament: TournamentData }) {
                 </p>
                 <div className={`grid grid-cols-1 gap-4 ${groupCount > 1 ? "lg:grid-cols-2" : ""}`}>
                     {progress.groups.map(g => (
-                        <GroupSection key={g} title={groupCount === 1 ? "Group" : `Group ${g}`} rounds={progress.groupRounds[g]} />
+                        <GroupSection key={g} title={groupCount === 1 ? "Group" : `Group ${g}`} rounds={progress.groupRounds[g]} courtOf={progress.courtOf} />
                     ))}
                 </div>
             </section>

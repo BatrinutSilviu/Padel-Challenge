@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, type ReactNode } from "react";
 import { trpc } from "../../trpc";
 import { formatChallengerScore, isChallengerMatchScored, type ChallengerMatch, type MatchSet } from "../../lib/challenger";
 import { checkMastersScore, isValidSet, mastersStage } from "../../lib/masters";
@@ -51,12 +51,14 @@ function computeInitial(match: ChallengerMatch): { cells: Cells; status: ScoreSt
 export function MastersMatchScoreRow({
     match,
     label,
+    aside,
     onSaveStart,
     onSaveEnd,
     onSaved,
 }: {
     match: ChallengerMatch;
     label: string;
+    aside?: ReactNode; // shown at the right of the label, e.g. the court picker
     onSaveStart: () => void;
     onSaveEnd: () => void;
     onSaved: OnMastersSaved;
@@ -169,7 +171,10 @@ export function MastersMatchScoreRow({
 
     return (
         <div className="px-4 sm:px-5 py-4">
-            <p className={`mb-3 ${label === "Final" ? "text-xs font-bold uppercase tracking-wide text-[#FF4200]" : "text-xs text-gray-400"}`}>{label}</p>
+            <div className="mb-3 flex items-center justify-between gap-3">
+                <p className={label.startsWith("Final") ? "text-xs font-bold uppercase tracking-wide text-[#FF4200]" : "text-xs text-gray-400"}>{label}</p>
+                {aside}
+            </div>
 
             <div className="grid items-center gap-x-2 gap-y-2" style={{ gridTemplateColumns: `minmax(0,1fr) repeat(${columns}, 3.25rem) 1.5rem` }}>
                 <span />

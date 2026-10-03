@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { isChallengerMatchScored } from "../../lib/challenger";
-import { STAGE_INFO, mastersProgress, type MastersMatch, type MastersRound } from "../../lib/masters";
+import { STAGE_INFO, courtName, mastersKnockoutCourt, mastersProgress, type MastersMatch, type MastersRound } from "../../lib/masters";
+import { MastersCourtPicker } from "./MastersCourtPicker";
 import { MastersMatchScoreRow, type OnMastersSaved } from "./MastersMatchScoreRow";
 
 const KNOCKOUT = "knockout";
@@ -23,7 +24,7 @@ export function MastersScoreEntry({
     const progress = mastersProgress(tournament);
     const rows: { label: string; match: MastersMatch }[] = progress.stages.flatMap(stage =>
         stage.slots.flatMap((slot, i) => slot.match
-            ? [{ label: stage.key === "FINAL" ? "Final" : `${STAGE_INFO[stage.key].one} ${i + 1}`, match: slot.match }]
+            ? [{ label: `${stage.key === "FINAL" ? "Final" : `${STAGE_INFO[stage.key].one} ${i + 1}`} · ${courtName(progress.courtOf.get(slot.match.id) ?? mastersKnockoutCourt(i))}`, match: slot.match }]
             : []),
     );
     // The first stage that hasn't been drawn yet, if the knockout is under way.
@@ -32,6 +33,15 @@ export function MastersScoreEntry({
         ? nextStage.key === "FINAL" ? "The Final is" : `The ${STAGE_INFO[nextStage.key].title.toLowerCase()} are`
         : null;
     const rowProps = { onSaveStart, onSaveEnd, onSaved };
+    const courtPicker = (match: MastersMatch) => (
+        <MastersCourtPicker
+            tournamentId={tournament.id}
+            matchId={match.id}
+            court={progress.courtOf.get(match.id)}
+            autoCourt={progress.autoCourtOf.get(match.id)}
+            isSet={match.court != null}
+        />
+    );
     const singleGroup = progress.groups.length === 1;
 
     const sections = [
@@ -119,8 +129,8 @@ export function MastersScoreEntry({
                                     <span className="text-xs font-bold uppercase tracking-wide text-gray-500">Round {ri + 1}</span>
                                 </div>
                                 <div className="divide-y divide-gray-100">
-                                    {round.matches.map((match, mi) => (
-                                        <MastersMatchScoreRow key={match.id} match={match} label={`Court ${mi + 1}`} {...rowProps} />
+                                    {round.matches.map(match => (
+                                        <MastersMatchScoreRow key={match.id} match={match} label={courtName(progress.courtOf.get(match.id)!)} aside={courtPicker(match)} {...rowProps} />
                                     ))}
                                 </div>
                             </div>
@@ -132,7 +142,7 @@ export function MastersScoreEntry({
                     <SectionHeader title="Knockout" note="Best of 3 sets" accent />
                     <div className="divide-y divide-gray-100">
                         {rows.map(({ label, match }) => (
-                            <MastersMatchScoreRow key={match.id} match={match} label={label} {...rowProps} />
+                            <MastersMatchScoreRow key={match.id} match={match} label={label} aside={courtPicker(match)} {...rowProps} />
                         ))}
                     </div>
                     {nextStageNote && (

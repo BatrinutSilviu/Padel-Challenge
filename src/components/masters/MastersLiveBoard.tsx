@@ -20,6 +20,8 @@ import {
 } from "../../lib/challenger";
 import {
     STAGE_INFO,
+    isIndoorCourt,
+    mastersKnockoutCourt,
     mastersProgress,
     slotLabel,
     type MastersProgress,
@@ -447,8 +449,12 @@ function GroupsScene({
                                 )}
                                 {visible.map((round, i) => (
                                     <div key={round.id}>
-                                        <p className="px-2 mb-0.5 text-xs font-bold uppercase tracking-widest text-[#9FD2DD]/70">Round {start + i + 1}</p>
-                                        {round.matches.map(m => <GroupMatchRow key={m.id} match={m} flash={flashing.has(m.id)} />)}
+                                        <p className="px-2 mb-0.5 text-xs font-bold uppercase tracking-widest text-[#9FD2DD]/70">
+                                            Round {start + i + 1}
+                                            {round.matches.length > 0 && round.matches.every(m => isIndoorCourt(progress.courtOf.get(m.id)!)) && " · Indoor"}
+                                            {round.matches.length > 0 && round.matches.every(m => !isIndoorCourt(progress.courtOf.get(m.id)!)) && " · Outdoor"}
+                                        </p>
+                                        {round.matches.map(m => <GroupMatchRow key={m.id} match={m} court={progress.courtOf.get(m.id)} flash={flashing.has(m.id)} />)}
                                     </div>
                                 ))}
                             </div>
@@ -460,11 +466,19 @@ function GroupsScene({
     );
 }
 
-function GroupMatchRow({ match, flash }: { match: ChallengerMatch; flash: boolean }) {
+function GroupMatchRow({ match, court, flash }: { match: ChallengerMatch; court?: number; flash: boolean }) {
     return (
-        <div className={`rounded-xl bg-white/[0.03] px-3 py-0.5 mb-1 last:mb-0 ${flash ? "live-flash" : ""}`}>
-            <SetsLine match={match} side={1} />
-            <SetsLine match={match} side={2} />
+        <div className={`flex items-center gap-2 rounded-xl bg-white/[0.03] pl-2 pr-3 py-0.5 mb-1 last:mb-0 ${flash ? "live-flash" : ""}`}>
+            {court != null && (
+                <span className="shrink-0 w-7 text-center leading-none" title={`Court ${court}`}>
+                    <span className="block text-[9px] font-bold uppercase tracking-wider text-white/35">Ct</span>
+                    <span className="block text-lg font-black text-[#9FD2DD]/80 tabular-nums">{court}</span>
+                </span>
+            )}
+            <div className="flex-1 min-w-0">
+                <SetsLine match={match} side={1} />
+                <SetsLine match={match} side={2} />
+            </div>
         </div>
     );
 }
@@ -557,7 +571,7 @@ function BracketScene({
                         {stage.slots.map((slot, i) => (
                             <KnockoutCard
                                 key={i}
-                                label={slotLabel(stage.key, i)}
+                                label={`${slotLabel(stage.key, i)} · Court ${(slot.match && progress.courtOf.get(slot.match.id)) ?? mastersKnockoutCourt(i)}`}
                                 match={slot.match}
                                 slots={[resolve(slot.sources[0]), resolve(slot.sources[1])]}
                                 flash={!!slot.match && flashing.has(slot.match.id)}

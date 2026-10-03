@@ -1,10 +1,10 @@
 import type { CSSProperties, ReactNode } from "react";
-import { STAGE_INFO, slotLabel, type MastersKnockoutStage } from "../../lib/masters";
+import { STAGE_INFO, mastersKnockoutCourt, slotLabel, type MastersKnockoutStage } from "../../lib/masters";
 import { BracketMatchCard } from "../challenger/ChallengerBracket";
 
 // First knockout round → … → Final, left to right on wide screens and stacked on
 // phones. Stages not drawn yet show where their teams will come from.
-export function MastersBracket({ stages }: { stages: MastersKnockoutStage[] }) {
+export function MastersBracket({ stages, courtOf }: { stages: MastersKnockoutStage[]; courtOf: Map<string, number> }) {
     return (
         <div
             className="bg-white rounded-2xl border border-[#E5E5EA] shadow-sm p-4 sm:p-6 grid grid-cols-1 md:[grid-template-columns:repeat(var(--stages),minmax(0,1fr))] gap-6 md:gap-4"
@@ -13,7 +13,7 @@ export function MastersBracket({ stages }: { stages: MastersKnockoutStage[] }) {
             {stages.map(stage => (
                 <Stage key={stage.key} title={STAGE_INFO[stage.key].title} accent={stage.key === "FINAL"}>
                     {stage.slots.map((slot, i) => (
-                        <Slot key={i} label={stage.key === "FINAL" ? null : slotLabel(stage.key, i)}>
+                        <Slot key={i} label={`${stage.key === "FINAL" ? "" : `${slotLabel(stage.key, i)} · `}Court ${(slot.match && courtOf.get(slot.match.id)) ?? mastersKnockoutCourt(i)}`}>
                             {slot.match
                                 ? <BracketMatchCard match={slot.match} />
                                 : <BracketMatchCard placeholderLeft={slot.sources[0].label} placeholderRight={slot.sources[1].label} />}
@@ -34,10 +34,10 @@ function Stage({ title, accent, children }: { title: string; accent?: boolean; c
     );
 }
 
-function Slot({ label, children }: { label: string | null; children: ReactNode }) {
+function Slot({ label, children }: { label: string; children: ReactNode }) {
     return (
         <div>
-            {label && <p className="text-[10px] font-bold uppercase tracking-widest text-[#C7C7CC] mb-1">{label}</p>}
+            <p className="text-[10px] font-bold uppercase tracking-widest text-[#C7C7CC] mb-1">{label}</p>
             {children}
         </div>
     );

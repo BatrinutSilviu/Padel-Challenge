@@ -7,6 +7,7 @@ import {
     isChallengerMatchScored,
     type ChallengerRound,
 } from "../../lib/challenger";
+import { isIndoorCourt } from "../../lib/masters";
 import { ChallengerBracket } from "./ChallengerBracket";
 import { TeamFinalStandings } from "../TeamFinalStandings";
 
@@ -36,7 +37,8 @@ export function ChallengerView({ tournament }: { tournament: TournamentData }) {
     );
 }
 
-export function GroupSection({ title, rounds }: { title: string; rounds: ChallengerRound[] }) {
+// courtOf (Masters only): match id → court, shown under each score.
+export function GroupSection({ title, rounds, courtOf }: { title: string; rounds: ChallengerRound[]; courtOf?: Map<string, number> }) {
     const standings = computeGroupStandings(rounds);
 
     return (
@@ -73,8 +75,14 @@ export function GroupSection({ title, rounds }: { title: string; rounds: Challen
             <div className="space-y-2">
                 {rounds.map((round, i) => (
                     <div key={round.id} className="bg-white rounded-2xl border border-[#E5E5EA] overflow-hidden shadow-sm">
-                        <div className="px-4 py-2.5 bg-[#F5F5F7] border-b border-[#E5E5EA]">
+                        <div className="px-4 py-2.5 bg-[#F5F5F7] border-b border-[#E5E5EA] flex items-center justify-between gap-3">
                             <span className="text-xs font-bold uppercase tracking-widest text-[#8E8E93]">Round {i + 1}</span>
+                            {courtOf && round.matches.length > 0 && (
+                                <span className="text-xs font-semibold text-[#8E8E93]">
+                                    {round.matches.every(m => isIndoorCourt(courtOf.get(m.id)!)) ? "Indoor"
+                                        : round.matches.every(m => !isIndoorCourt(courtOf.get(m.id)!)) ? "Outdoor" : null}
+                                </span>
+                            )}
                         </div>
                         <div className="divide-y divide-[#F5F5F7]">
                             {round.matches.map(match => (
@@ -87,6 +95,9 @@ export function GroupSection({ title, rounds }: { title: string; rounds: Challen
                                         <span className={`text-base font-black tabular-nums ${isChallengerMatchScored(match) ? "text-[#FF4200]" : "text-[#E5E5EA]"}`}>
                                             {formatChallengerScore(match)}
                                         </span>
+                                        {courtOf?.has(match.id) && (
+                                            <p className="text-[10px] font-bold uppercase tracking-widest text-[#8E8E93] whitespace-nowrap">Court {courtOf.get(match.id)}</p>
+                                        )}
                                     </div>
                                     <div className="text-left">
                                         <Link to={`/player/${match.team2Player1.id}`} className="font-semibold text-[#1A1A2E] hover:text-[#FF4200] text-sm block truncate transition-colors">{match.team2Player1.name}</Link>

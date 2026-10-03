@@ -72,6 +72,37 @@ export function mastersFirstRoundDraw(groupCount: number): [MastersSeed, Masters
     ];
 }
 
+// ─── Courts ─────────────────────────────────────────────────────────────────────
+// Courts 1–2 are indoors, 3–4 outdoors. The admin can put any match on a given court
+// (stored on the match); every other match follows the default rotation below.
+// By default a group round is played on one side, so every
+// team in a group plays under the same conditions in every round — and teams are only
+// ranked against their own group. Groups pair up (A/B, C/D, …) to share the four courts:
+// the first starts indoors, the second outdoors, and both swap sides every round. With
+// 4 teams per group: A indoor–outdoor–indoor, B outdoor–indoor–outdoor.
+export const MASTERS_COURT_COUNT = 4;
+
+export function isIndoorCourt(court: number): boolean {
+    return court <= 2;
+}
+
+export function courtName(court: number): string {
+    return `Court ${court} · ${isIndoorCourt(court) ? "Indoor" : "Outdoor"}`;
+}
+
+// Courts for the matches of a group's round, in match order. A round with more than two
+// matches (6 teams per group) spills over onto the other side.
+export function mastersGroupRoundCourts(groupIndex: number, roundIndex: number, matchCount: number): number[] {
+    const side = (groupIndex + roundIndex) % 2; // 0 indoors, 1 outdoors
+    return Array.from({ length: matchCount }, (_, i) => ((side * 2 + i) % MASTERS_COURT_COUNT) + 1);
+}
+
+// Knockout matches fill the courts in bracket order: the quarterfinals take all four,
+// both semifinals are indoors (same conditions for both), the Final on court 1.
+export function mastersKnockoutCourt(slotIndex: number): number {
+    return (slotIndex % MASTERS_COURT_COUNT) + 1;
+}
+
 // Shown on the sign-up sheet so players know what they're signing up for.
 export function mastersFormatNotes(f: MastersFormat): string[] {
     const firstStage = STAGE_INFO[mastersKnockoutStages(f.groupCount)[0]];
@@ -88,7 +119,8 @@ export function mastersFormatNotes(f: MastersFormat): string[] {
 
 // ─── Progress ───────────────────────────────────────────────────────────────────
 
-export type MastersMatch = ChallengerMatch & { bracketPosition: number | null };
+// court: set by the admin, null to follow the default rotation.
+export type MastersMatch = ChallengerMatch & { bracketPosition: number | null; court?: number | null };
 export type MastersRound = Omit<ChallengerRound, "matches"> & { matches: MastersMatch[] };
 
 // Where a knockout slot's team comes from: a group placing (first round) or the winner
@@ -115,6 +147,10 @@ export type MastersProgress = {
     knockoutMatchCount: number; // once fully drawn
     final?: MastersMatch;
     finalScored: boolean;
+    // match id → court, for every group match and every knockout match drawn so far:
+    // the admin's pick if there is one, else the default rotation (autoCourtOf).
+    courtOf: Map<string, number>;
+    autoCourtOf: Map<string, number>;
 };
 
 export function mastersProgress(tournament: {
@@ -157,6 +193,19 @@ export function mastersProgress(tournament: {
     });
     const final = stages[stages.length - 1].slots[0].match;
 
+    const autoCourtOf = new Map<string, number>();
+    groups.forEach((g, gi) => groupRounds[g].forEach((round, ri) => {
+        const courts = mastersGroupRoundCourts(gi, ri, round.matches.length);
+        round.matches.forEach((m, mi) => autoCourtOf.set(m.id, courts[mi]));
+    }));
+    for (const stage of stages) {
+        stage.slots.forEach((slot, i) => { if (slot.match) autoCourtOf.set(slot.match.id, mastersKnockoutCourt(i)); });
+    }
+    const courtOf = new Map(tournament.rounds.flatMap(r => r.matches).flatMap(m => {
+        const court = m.court ?? autoCourtOf.get(m.id);
+        return court != null ? [[m.id, court] as const] : [];
+    }));
+
     return {
         format,
         groups,
@@ -169,6 +218,8 @@ export function mastersProgress(tournament: {
         knockoutMatchCount: format.groupCount * 2 - 1,
         final,
         finalScored: final != null && isChallengerMatchScored(final),
+        courtOf,
+        autoCourtOf,
     };
 }
 
