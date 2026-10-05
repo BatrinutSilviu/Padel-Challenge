@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { isChallengerMatchScored } from "../../lib/challenger";
-import { STAGE_INFO, courtName, mastersKnockoutCourt, mastersProgress, type MastersMatch, type MastersRound } from "../../lib/masters";
+import { MASTERS_THIRD_PLACE_COURT, STAGE_INFO, courtName, mastersKnockoutCourt, mastersProgress, type MastersMatch, type MastersRound } from "../../lib/masters";
 import { MastersCourtPicker } from "./MastersCourtPicker";
 import { MastersMatchScoreRow, type OnMastersSaved } from "./MastersMatchScoreRow";
 
@@ -22,11 +22,16 @@ export function MastersScoreEntry({
     onSaved: OnMastersSaved;
 }) {
     const progress = mastersProgress(tournament);
-    const rows: { label: string; match: MastersMatch }[] = progress.stages.flatMap(stage =>
-        stage.slots.flatMap((slot, i) => slot.match
+    const thirdPlaceMatch = progress.thirdPlace?.match;
+    const rows: { label: string; match: MastersMatch }[] = progress.stages.flatMap(stage => [
+        // Drawn with the Final, and listed just before it.
+        ...(stage.key === "FINAL" && thirdPlaceMatch
+            ? [{ label: `3rd Place · ${courtName(progress.courtOf.get(thirdPlaceMatch.id) ?? MASTERS_THIRD_PLACE_COURT)}`, match: thirdPlaceMatch }]
+            : []),
+        ...stage.slots.flatMap((slot, i) => slot.match
             ? [{ label: `${stage.key === "FINAL" ? "Final" : `${STAGE_INFO[stage.key].one} ${i + 1}`} · ${courtName(progress.courtOf.get(slot.match.id) ?? mastersKnockoutCourt(i))}`, match: slot.match }]
             : []),
-    );
+    ]);
     // The first stage that hasn't been drawn yet, if the knockout is under way.
     const nextStage = progress.stages.find(stage => stage.slots.every(slot => !slot.match));
     const nextStageNote = nextStage

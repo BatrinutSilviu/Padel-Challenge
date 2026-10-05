@@ -29,7 +29,7 @@ export function MastersView({ tournament }: { tournament: TournamentData }) {
                         📺 TV mode
                     </Link>
                 </div>
-                <MastersBracket stages={progress.stages} courtOf={progress.courtOf} />
+                <MastersBracket stages={progress.stages} thirdPlace={progress.thirdPlace} courtOf={progress.courtOf} />
             </section>
 
             <section>

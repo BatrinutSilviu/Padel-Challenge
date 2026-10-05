@@ -213,7 +213,7 @@ export function AdminScoreEntry() {
     const allScored = isChallenger
         ? (progress?.allBracketScored ?? false)
         : isMasters
-        ? (mastersProgressData?.finalScored ?? false)
+        ? (mastersProgressData?.knockoutComplete ?? false)
         : isKotc
         ? Boolean(kotcProgressData?.lastScoredRound)
         : scoredCount === totalMatches;

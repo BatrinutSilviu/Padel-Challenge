@@ -1,5 +1,6 @@
 // Pure helpers for the Masters tournament format: fixed teams drawn into groups (4 groups
-// of 4 recommended), the top 2 of each group into a knockout bracket — no 3rd place match.
+// of 4 recommended), the top 2 of each group into a knockout bracket, plus a 3rd place match
+// between the semifinal losers.
 // Matches are scored set by set (see checkMastersScore); team1Score/team2Score hold sets
 // won, so "is it scored" and "who won" helpers from ./challenger still apply.
 import { isChallengerMatchScored, type ChallengerMatch, type ChallengerRound } from "./challenger";
@@ -103,6 +104,9 @@ export function mastersKnockoutCourt(slotIndex: number): number {
     return (slotIndex % MASTERS_COURT_COUNT) + 1;
 }
 
+// The 3rd place match goes next to the Final, on the other indoor court.
+export const MASTERS_THIRD_PLACE_COURT = 2;
+
 // Shown on the sign-up sheet so players know what they're signing up for.
 export function mastersFormatNotes(f: MastersFormat): string[] {
     const firstStage = STAGE_INFO[mastersKnockoutStages(f.groupCount)[0]];
@@ -112,6 +116,7 @@ export function mastersFormatNotes(f: MastersFormat): string[] {
         f.groupCount === 1
             ? "The top 2 play the Final"
             : `The top 2 of each group go through to the ${firstStage.title.toLowerCase()}`,
+        ...(f.groupCount === 1 ? [] : ["The semifinal losers play a 3rd place match"]),
         "Group matches: 2 sets, with a tiebreak at one set all · Knockout: best of 3 sets",
         "Saturday: group stage · Sunday: knockout stage",
     ];
@@ -123,15 +128,17 @@ export function mastersFormatNotes(f: MastersFormat): string[] {
 export type MastersMatch = ChallengerMatch & { bracketPosition: number | null; court?: number | null };
 export type MastersRound = Omit<ChallengerRound, "matches"> & { matches: MastersMatch[] };
 
-// Where a knockout slot's team comes from: a group placing (first round) or the winner
-// of a slot in the previous stage.
+// Where a knockout slot's team comes from: a group placing (first round), or the winner
+// (the loser, for the 3rd place match) of a slot in the previous stage.
 export type MastersSlotSource =
     | { kind: "seed"; seed: MastersSeed; label: string }
-    | { kind: "winner"; stage: KnockoutStageKey; index: number; label: string };
+    | { kind: "winner" | "loser"; stage: KnockoutStageKey; index: number; label: string };
+
+export type MastersSlot = { match?: MastersMatch; sources: [MastersSlotSource, MastersSlotSource] };
 
 export type MastersKnockoutStage = {
     key: KnockoutStageKey;
-    slots: { match?: MastersMatch; sources: [MastersSlotSource, MastersSlotSource] }[];
+    slots: MastersSlot[];
 };
 
 export type MastersProgress = {
@@ -147,6 +154,10 @@ export type MastersProgress = {
     knockoutMatchCount: number; // once fully drawn
     final?: MastersMatch;
     finalScored: boolean;
+    // Semifinal losers' match — none with a single group, which goes straight to the Final.
+    thirdPlace?: MastersSlot;
+    // Final and 3rd place match both scored: the tournament can be completed.
+    knockoutComplete: boolean;
     // match id → court, for every group match and every knockout match drawn so far:
     // the admin's pick if there is one, else the default rotation (autoCourtOf).
     courtOf: Map<string, number>;
@@ -192,6 +203,17 @@ export function mastersProgress(tournament: {
         };
     });
     const final = stages[stages.length - 1].slots[0].match;
+    const thirdPlaceMatch = knockoutMatches.find(m => m.bracketStage === "THIRD_PLACE");
+    // A Final drawn without a 3rd place match predates it — there's none to play then.
+    const thirdPlace: MastersSlot | undefined = stageKeys.includes("SEMIFINAL") && (thirdPlaceMatch || !final)
+        ? {
+            match: thirdPlaceMatch,
+            sources: ([0, 1] as const).map(index => (
+                { kind: "loser", stage: "SEMIFINAL", index, label: `Loser ${slotLabel("SEMIFINAL", index)}` }
+            )) as [MastersSlotSource, MastersSlotSource],
+        }
+        : undefined;
+    const finalScored = final != null && isChallengerMatchScored(final);
 
     const autoCourtOf = new Map<string, number>();
     groups.forEach((g, gi) => groupRounds[g].forEach((round, ri) => {
@@ -201,6 +223,7 @@ export function mastersProgress(tournament: {
     for (const stage of stages) {
         stage.slots.forEach((slot, i) => { if (slot.match) autoCourtOf.set(slot.match.id, mastersKnockoutCourt(i)); });
     }
+    if (thirdPlace?.match) autoCourtOf.set(thirdPlace.match.id, MASTERS_THIRD_PLACE_COURT);
     const courtOf = new Map(tournament.rounds.flatMap(r => r.matches).flatMap(m => {
         const court = m.court ?? autoCourtOf.get(m.id);
         return court != null ? [[m.id, court] as const] : [];
@@ -215,9 +238,11 @@ export function mastersProgress(tournament: {
         knockoutStarted: knockoutMatches.length > 0,
         stages,
         bracketMatches: knockoutMatches,
-        knockoutMatchCount: format.groupCount * 2 - 1,
+        knockoutMatchCount: format.groupCount * 2 - 1 + (thirdPlace ? 1 : 0),
         final,
-        finalScored: final != null && isChallengerMatchScored(final),
+        finalScored,
+        thirdPlace,
+        knockoutComplete: finalScored && (!thirdPlace || (thirdPlace.match != null && isChallengerMatchScored(thirdPlace.match))),
         courtOf,
         autoCourtOf,
     };

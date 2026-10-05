@@ -19,6 +19,7 @@ import {
     type GroupStanding,
 } from "../../lib/challenger";
 import {
+    MASTERS_THIRD_PLACE_COURT,
     STAGE_INFO,
     isIndoorCourt,
     mastersKnockoutCourt,
@@ -142,7 +143,11 @@ function WinnersPanel({ id, compact }: { id: string; compact: boolean }) {
     const semifinals = progress.stages.find(stage => stage.key === "SEMIFINAL")?.slots ?? [];
     const champion = winnerOf(final);
     const runnerUp = loserOf(final);
-    const thirds = semifinals.map(slot => loserOf(slot.match)).filter((t): t is ChallengerTeam => Boolean(t));
+    // Tournaments from before the 3rd place match have two teams sharing 3rd.
+    const thirdPlaceWinner = winnerOf(progress.thirdPlace?.match);
+    const thirds = thirdPlaceWinner
+        ? [thirdPlaceWinner]
+        : semifinals.map(slot => loserOf(slot.match)).filter((t): t is ChallengerTeam => Boolean(t));
 
     return (
         <section className="min-h-0 flex flex-col">
@@ -539,7 +544,7 @@ function BracketScene({
     standings: Standings;
     flashing: Set<string>;
 }) {
-    const { stages, final } = progress;
+    const { stages, final, thirdPlace } = progress;
     // Before the draw, show who would go through if the group stage ended now; later
     // stages show the winners so far.
     const resolve = (source: MastersSlotSource): SlotInfo => {
@@ -548,8 +553,8 @@ function BracketScene({
             const scoredAny = progress.groupRounds[group].some(r => r.matches.some(isChallengerMatchScored));
             return { label: source.label, team: scoredAny ? standings[group][rank - 1]?.team : undefined };
         }
-        const prev = stages.find(st => st.key === source.stage);
-        return { label: source.label, team: winnerOf(prev?.slots[source.index]?.match) };
+        const prev = stages.find(st => st.key === source.stage)?.slots[source.index]?.match;
+        return { label: source.label, team: source.kind === "loser" ? loserOf(prev) : winnerOf(prev) };
     };
     const scored = (m?: ChallengerMatch) => m != null && isChallengerMatchScored(m);
     const sizeOf = (key: string, slots: number): CardSize => (key === "FINAL" ? "lg" : slots >= 8 ? "sm" : "md");
@@ -567,7 +572,7 @@ function BracketScene({
 
             {stages.map(stage => (
                 <Fragment key={stage.key}>
-                    <div className="flex flex-col justify-around min-h-0">
+                    <div className="relative flex flex-col justify-around min-h-0">
                         {stage.slots.map((slot, i) => (
                             <KnockoutCard
                                 key={i}
@@ -578,6 +583,18 @@ function BracketScene({
                                 size={sizeOf(stage.key, stage.slots.length)}
                             />
                         ))}
+                        {/* Pinned to the bottom, so the Final stays centred where the bracket lines meet it. */}
+                        {stage.key === "FINAL" && thirdPlace && (
+                            <div className="absolute inset-x-0 bottom-0">
+                                <KnockoutCard
+                                    label={`3rd Place · Court ${(thirdPlace.match && progress.courtOf.get(thirdPlace.match.id)) ?? MASTERS_THIRD_PLACE_COURT}`}
+                                    match={thirdPlace.match}
+                                    slots={[resolve(thirdPlace.sources[0]), resolve(thirdPlace.sources[1])]}
+                                    flash={!!thirdPlace.match && flashing.has(thirdPlace.match.id)}
+                                    size="md"
+                                />
+                            </div>
+                        )}
                     </div>
                     <Connector done={stage.slots.map(slot => scored(slot.match))} />
                 </Fragment>
