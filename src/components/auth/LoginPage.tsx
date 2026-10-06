@@ -69,7 +69,7 @@ export function LoginPage() {
                     </button>
                     <p className="text-sm text-center text-gray-500">
                         New here?{" "}
-                        <Link to="/signup" className="text-[#FF4200] font-semibold hover:underline">
+                        <Link to={searchParams.get("redirect") ? `/signup?redirect=${encodeURIComponent(searchParams.get("redirect")!)}` : "/signup"} className="text-[#FF4200] font-semibold hover:underline">
                             Create an account
                         </Link>
                     </p>

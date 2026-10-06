@@ -273,7 +273,7 @@ function TournamentsTab() {
                                 <span className={`text-xs font-bold px-3 py-1.5 rounded-xl shrink-0 whitespace-nowrap ${
                                     spotsLeft === 0 ? "bg-[#F5F5F7] text-[#8E8E93]" : "bg-[#FF4200] text-white"
                                 }`}>
-                                    {spotsLeft === 0 ? "Full" : "Join"}
+                                    {spotsLeft === 0 ? "Waiting list" : "Join"}
                                 </span>
                             </Link>
                         );

@@ -46,7 +46,7 @@ export function TournamentPage() {
                                 {" · "}{divisionLabel(tournament.division)}
                                 {" · "}{tournamentTypeLabel(tournament.type)}
                                 {" · "}{tournament.status === "UPCOMING"
-                                    ? `${tournament.participants.length}${tournament.maxPlayers !== null ? `/${tournament.maxPlayers}` : ""} signed up`
+                                    ? `${tournament.participants.filter(p => p.confirmed).length}${tournament.maxPlayers !== null ? `/${tournament.maxPlayers}` : ""} confirmed`
                                     : `${tournament.participants.length} players`}
                             </p>
                         </div>

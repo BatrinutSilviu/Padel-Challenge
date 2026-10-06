@@ -38,7 +38,7 @@ export function SignupPage() {
         onSuccess: (data) => {
             login(data.token);
             toast.success("Account created!");
-            navigate(searchParams.get("redirect") ?? "/matches/new");
+            navigate(searchParams.get("redirect") ?? "/");
         },
         onError: (e) => setError(e.message),
     });

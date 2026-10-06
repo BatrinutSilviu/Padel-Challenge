@@ -148,7 +148,7 @@ function TournamentsTab() {
                                     <TournamentNameEditor id={t.id} name={t.name} />
                                     <span className="text-xs text-gray-400 block">
                                         {divisionLabel(t.division)} · {new Date(t.date).toLocaleDateString()} · {TOURNAMENT_TYPE_LABELS[t.type as TournamentType] ?? t.type}
-                                        {" · "}{t._count.participants}{t.maxPlayers !== null ? `/${t.maxPlayers}` : ""} signed up
+                                        {" · "}{t._count.participants}{t.maxPlayers !== null ? `/${t.maxPlayers}` : ""} confirmed
                                         {!t.registrationOpen && " · closed"}
                                     </span>
                                 </div>
