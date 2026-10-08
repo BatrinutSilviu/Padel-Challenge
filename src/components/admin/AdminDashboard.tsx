@@ -8,7 +8,7 @@ import { DIVISION_NAMES, divisionLabel } from "../../lib/divisions";
 import { TournamentType, TOURNAMENT_TYPE_LABELS, capacityOptions, isTeamBasedType } from "../../lib/tournaments";
 import { RECOMMENDED_MASTERS_FORMAT, STAGE_INFO, mastersKnockoutStages, mastersTeamCount, type MastersFormat } from "../../lib/masters";
 import { MastersFormatPicker } from "./MastersFormatPicker";
-import { MastersGroupHeading, TeamNumber } from "./TeamNumber";
+import { GroupHeading, TeamNumber } from "./TeamNumber";
 import { PlayerPicker } from "../PlayerPicker";
 import { AddPlayerInline } from "../AddPlayerInline";
 
@@ -618,7 +618,7 @@ function CreateTournamentForm({ onCreated, onImport }: { onCreated: () => void; 
                             const assignedIds = new Set(teamSlots.flat().filter(Boolean));
                             return (
                                 <Fragment key={i}>
-                                {type === "MASTERS" && <MastersGroupHeading index={i} teamsPerGroup={mastersFormat.teamsPerGroup} />}
+                                {type === "MASTERS" && <GroupHeading index={i} teamsPerGroup={mastersFormat.teamsPerGroup} />}
                                 <div className="flex items-center gap-2">
                                     <TeamNumber index={i} />
                                     <div className="flex-1 min-w-0 grid grid-cols-2 gap-2">

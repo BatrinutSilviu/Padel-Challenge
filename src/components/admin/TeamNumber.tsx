@@ -7,8 +7,9 @@ export function TeamNumber({ index }: { index: number }) {
     );
 }
 
-// Masters groups are filled in team order, so a heading marks where each group starts.
-export function MastersGroupHeading({ index, teamsPerGroup }: { index: number; teamsPerGroup: number }) {
+// Challenger and Masters groups are filled in team order, so a heading marks where
+// each group starts.
+export function GroupHeading({ index, teamsPerGroup }: { index: number; teamsPerGroup: number }) {
     if (index % teamsPerGroup !== 0) return null;
     return (
         <p className={`text-xs font-semibold uppercase tracking-wide text-[#FF4200] ${index > 0 ? "pt-2" : ""}`}>
