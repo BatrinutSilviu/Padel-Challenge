@@ -5,15 +5,15 @@ import { trpc } from "../../trpc";
 export function useAdminSession() {
     const [token, setToken] = useState<string | null>(() => localStorage.getItem("admin_token"));
     const [sessionExpired, setSessionExpired] = useState(false);
-    const pendingRetryRef = useRef<(() => void) | null>(null);
+    const pendingRetriesRef = useRef<(() => void)[]>([]);
 
     function handleLogin(t: string) {
         localStorage.setItem("admin_token", t);
         setToken(t);
         setSessionExpired(false);
-        const retry = pendingRetryRef.current;
-        pendingRetryRef.current = null;
-        if (retry) retry();
+        const retries = pendingRetriesRef.current;
+        pendingRetriesRef.current = [];
+        retries.forEach(retry => retry());
     }
 
     function handleLogout() {
@@ -24,7 +24,8 @@ export function useAdminSession() {
 
     useEffect(() => {
         function onExpired(e: Event) {
-            pendingRetryRef.current = (e as CustomEvent).detail?.retry ?? null;
+            const retry = (e as CustomEvent).detail?.retry;
+            if (retry) pendingRetriesRef.current.push(retry);
             setSessionExpired(true);
         }
         window.addEventListener('admin-session-expired', onExpired);

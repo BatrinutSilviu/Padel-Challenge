@@ -12,14 +12,23 @@ const USER_SCOPED_ROUTERS = ['individualMatch'];
 
 function handleUnauthorized(error: unknown, routerName: string | undefined, retry: () => void) {
     if ((error as any)?.data?.code !== 'UNAUTHORIZED') return;
+    // A wrong password at login is not an expired session
+    if (routerName === 'auth') return;
 
-    if (routerName && USER_SCOPED_ROUTERS.includes(routerName)) {
-        localStorage.removeItem('user_token');
-        window.dispatchEvent(new CustomEvent('user-session-expired', { detail: { retry } }));
-    } else {
-        localStorage.removeItem('admin_token');
-        window.dispatchEvent(new CustomEvent('admin-session-expired', { detail: { retry } }));
+    const userScoped = !!routerName && USER_SCOPED_ROUTERS.includes(routerName);
+    const storageKey = userScoped ? 'user_token' : 'admin_token';
+    const sentToken = (error as any)[userScoped ? 'sentUserToken' : 'sentAdminToken'] ?? null;
+    const currentToken = localStorage.getItem(storageKey);
+
+    // The request went out with an older token than the one stored now (e.g. it was in
+    // flight while the user logged in again), so the fresh session is fine — just retry.
+    if (sentToken !== currentToken) {
+        if (currentToken) retry();
+        return;
     }
+
+    localStorage.removeItem(storageKey);
+    window.dispatchEvent(new CustomEvent(userScoped ? 'user-session-expired' : 'admin-session-expired', { detail: { retry } }));
 }
 
 const queryClient = new QueryClient({
