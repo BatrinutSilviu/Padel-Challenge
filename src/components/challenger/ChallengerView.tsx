@@ -8,6 +8,7 @@ import {
     type ChallengerRound,
 } from "../../lib/challenger";
 import { isIndoorCourt } from "../../lib/masters";
+import { challengerFormatOf } from "../../lib/tournaments";
 import { ChallengerBracket } from "./ChallengerBracket";
 import { TeamFinalStandings } from "../TeamFinalStandings";
 
@@ -23,7 +24,13 @@ export function ChallengerView({ tournament }: { tournament: TournamentData }) {
 
             <section>
                 <h2 className="text-xs font-bold uppercase tracking-widest text-[#8E8E93] mb-3">Bracket</h2>
-                <ChallengerBracket bracket={progress.bracket} knockoutStarted={progress.knockoutStarted} hasGroupB={hasGroupB} />
+                <ChallengerBracket
+                    bracket={progress.bracket}
+                    placement={progress.placement}
+                    format={challengerFormatOf(tournament)}
+                    knockoutStarted={progress.knockoutStarted}
+                    hasGroupB={hasGroupB}
+                />
             </section>
 
             <section>

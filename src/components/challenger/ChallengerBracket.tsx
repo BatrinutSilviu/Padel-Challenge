@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
-import { formatChallengerScore, type ChallengerBracketSection, type ChallengerMatch } from "../../lib/challenger";
+import { formatChallengerScore, placementMatchTitle, type ChallengerBracketSection, type ChallengerMatch } from "../../lib/challenger";
+import type { ChallengerFormat } from "../../lib/tournaments";
 
 const ACCENTS: Record<ChallengerBracketSection["key"], string> = {
     GOLDEN: "border-amber-200 bg-amber-50 text-amber-700",
@@ -9,19 +10,31 @@ const ACCENTS: Record<ChallengerBracketSection["key"], string> = {
 
 export function ChallengerBracket({
     bracket,
+    placement,
+    format,
     knockoutStarted,
     hasGroupB,
 }: {
     bracket: ChallengerBracketSection[];
+    placement: ChallengerMatch[];
+    format: ChallengerFormat;
     knockoutStarted: boolean;
     hasGroupB: boolean;
 }) {
     if (!knockoutStarted) {
         return (
             <div className="bg-white rounded-2xl border border-[#E5E5EA] p-5 shadow-sm text-sm text-[#8E8E93]">
-                Knockout stage not started yet.
+                {format === "PLACEMENT" ? "Placement matches not started yet." : "Knockout stage not started yet."}
                 <div className="mt-2 space-y-1 text-xs">
-                    {hasGroupB ? (
+                    {format === "PLACEMENT" ? (
+                        <p>
+                            Every team plays the team that finished in the same place in the other group:
+                            {" "}<span className="font-bold text-[#FF4200]">Final:</span> A #1 vs B #1 &middot;
+                            {" "}<span className="font-bold text-gray-500">3rd Place:</span> A #2 vs B #2 &middot;
+                            {" "}<span className="font-bold text-gray-500">5th Place:</span> A #3 vs B #3 &middot;
+                            {" "}<span className="font-bold text-gray-500">7th Place:</span> A #4 vs B #4
+                        </p>
+                    ) : hasGroupB ? (
                         <>
                             <p><span className="font-bold text-amber-600">Golden:</span> Group A #1 vs Group B #2 &middot; Group B #1 vs Group A #2</p>
                             <p><span className="font-bold text-gray-500">Silver:</span> Group A #3 vs Group B #4 &middot; Group A #4 vs Group B #3</p>
@@ -33,6 +46,8 @@ export function ChallengerBracket({
             </div>
         );
     }
+
+    if (placement.length > 0) return <PlacementSection matches={placement} />;
 
     return (
         <div className="space-y-5">
@@ -101,6 +116,27 @@ function BracketSection({ section }: { section: ChallengerBracketSection }) {
                         <BracketMatchCard placeholderLeft="Group #3" placeholderRight="Group #4" />
                     )}
                 </div>
+            </div>
+        </div>
+    );
+}
+
+function PlacementSection({ matches }: { matches: ChallengerMatch[] }) {
+    return (
+        <div className="bg-white rounded-2xl border border-[#E5E5EA] overflow-hidden shadow-sm">
+            <div className={`px-4 py-2.5 border-b ${ACCENTS.MAIN}`}>
+                <span className="font-bold text-sm">Placement Matches</span>
+            </div>
+            <div className="p-4 sm:p-6 space-y-5">
+                {matches.map((match, i) => (
+                    <div key={match.id} className={i > 0 ? "pt-5 border-t border-dashed border-[#E5E5EA]" : ""}>
+                        <p className={`text-xs font-bold uppercase tracking-widest mb-3 ${i === 0 ? "text-[#FF4200]" : "text-[#8E8E93]"}`}>
+                            {placementMatchTitle(match.bracketPosition ?? i + 1)}
+                            <span className="ml-2 font-semibold normal-case tracking-normal">A #{match.bracketPosition ?? i + 1} vs B #{match.bracketPosition ?? i + 1}</span>
+                        </p>
+                        <BracketMatchCard match={match} />
+                    </div>
+                ))}
             </div>
         </div>
     );

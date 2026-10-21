@@ -36,17 +36,29 @@ export const CAPACITY_OPTIONS: Record<TournamentType, number[]> = {
     MASTERS: [32], // really set by the group layout — see mastersFormatOf
 };
 
-export function capacityOptions(type: string): number[] {
+export function capacityOptions(type: string, challengerFormat?: ChallengerFormat): number[] {
+    if (type === "CHALLENGER" && challengerFormat === "PLACEMENT") return [16];
     return CAPACITY_OPTIONS[type as TournamentType] ?? CAPACITY_OPTIONS.AMERICANO;
+}
+
+// What follows a Challenger's group stage — mirrors the backend. BRACKETS is the
+// Golden/Silver knockout (stored as null); PLACEMENT pairs the two groups place by place.
+export type ChallengerFormat = "BRACKETS" | "PLACEMENT";
+
+export function challengerFormatOf(t: { challengerFormat?: string | null }): ChallengerFormat {
+    return t.challengerFormat === "PLACEMENT" ? "PLACEMENT" : "BRACKETS";
 }
 
 // Mirrors playerCountError() in the backend's tournament router, so the admin UI
 // can explain why a sign-up sheet can't be started yet without a round trip.
-export function playerCountError(type: string, count: number, masters?: MastersFormat): string | null {
+export function playerCountError(type: string, count: number, masters?: MastersFormat, challengerFormat?: ChallengerFormat): string | null {
     switch (type) {
         case "TEAM_AMERICANO":
             return count >= 8 && count % 2 === 0 ? null : "Team Americano needs an even number of players (at least 8)";
         case "CHALLENGER":
+            if (challengerFormat === "PLACEMENT") {
+                return count === 16 ? null : "Challenger with placement matches needs exactly 16 players (8 teams)";
+            }
             return count === 8 || count === 16 ? null : "Challenger needs exactly 8 or 16 players (4 or 8 teams)";
         case "MASTERS": {
             const format = masters ?? RECOMMENDED_MASTERS_FORMAT;

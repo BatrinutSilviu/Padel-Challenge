@@ -1,4 +1,4 @@
-import { challengerProgress, type ChallengerBracketSection, type ChallengerMatch, type ChallengerRound } from "../../lib/challenger";
+import { challengerProgress, placementMatchTitle, type ChallengerBracketSection, type ChallengerMatch, type ChallengerRound } from "../../lib/challenger";
 import { ChallengerMatchScoreRow } from "./ChallengerMatchScoreRow";
 
 const ACCENTS: Record<ChallengerBracketSection["key"], string> = {
@@ -33,6 +33,26 @@ export function ChallengerScoreEntry({
         <div className="space-y-4">
             <GroupBlock title={hasGroupB ? "Group A" : "Group"} rounds={progress.groupRounds.A} onSaveStart={onSaveStart} onSaveEnd={onSaveEnd} onSaved={onSaved} />
             {hasGroupB && <GroupBlock title="Group B" rounds={progress.groupRounds.B} onSaveStart={onSaveStart} onSaveEnd={onSaveEnd} onSaved={onSaved} />}
+
+            {progress.placement.length > 0 && (
+                <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                    <div className={`px-4 sm:px-5 py-3 border-b ${ACCENTS.MAIN}`}>
+                        <span className="font-semibold">Placement Matches</span>
+                    </div>
+                    <div className="divide-y divide-gray-100">
+                        {progress.placement.map((match, i) => (
+                            <ChallengerMatchScoreRow
+                                key={match.id}
+                                match={match}
+                                label={`${placementMatchTitle(match.bracketPosition ?? i + 1)} · A #${match.bracketPosition ?? i + 1} vs B #${match.bracketPosition ?? i + 1}`}
+                                onSaveStart={onSaveStart}
+                                onSaveEnd={onSaveEnd}
+                                onSaved={onSaved}
+                            />
+                        ))}
+                    </div>
+                </div>
+            )}
 
             {progress.knockoutStarted && progress.bracket.map(section => (
                 <BracketBlock key={section.key} section={section} onSaveStart={onSaveStart} onSaveEnd={onSaveEnd} onSaved={onSaved} />

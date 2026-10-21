@@ -5,6 +5,8 @@ import { getQueryKey } from "@trpc/react-query";
 import { trpc } from "../trpc";
 import { useAuth } from "../contexts/AuthContext";
 import { mastersFormatNotes, mastersFormatOf } from "../lib/masters";
+import { challengerFormatNotes } from "../lib/challenger";
+import { challengerFormatOf } from "../lib/tournaments";
 import { isTeamBasedType } from "../lib/tournaments";
 import { PlayerPicker } from "./PlayerPicker";
 import { cleanPlayerName, playerNameError } from "../lib/playerName";
@@ -109,7 +111,9 @@ export function TournamentSignup({ tournament }: { tournament: TournamentData })
                                     <span>
                                         You're on the waiting list{myPartnerName && ` with ${myPartnerName}`}
                                         <span className="block text-xs font-medium text-[#8E8E93]">
-                                            Your spot is confirmed once you've paid{tournament.entryFee !== null && ` the ${tournament.entryFee} lei entry fee`} and an admin has checked it.
+                                            Your spot is confirmed once you've paid{tournament.advanceFee !== null
+                                                ? ` the ${tournament.advanceFee} lei advance`
+                                                : tournament.entryFee !== null && ` the ${tournament.entryFee} lei entry fee`} and an admin has checked it.
                                         </span>
                                     </span>
                                 </span>
@@ -192,18 +196,38 @@ export function TournamentSignup({ tournament }: { tournament: TournamentData })
                 {error && <p className="text-sm text-red-500 mt-3">{error}</p>}
             </div>
 
-            {(tournament.entryFee !== null || tournament.type === "MASTERS") && (
+            {(tournament.entryFee !== null || tournament.advanceFee !== null || tournament.type === "MASTERS" || tournament.type === "CHALLENGER") && (
                 <div className="px-5 sm:px-6 py-4 border-b border-[#F5F5F7] space-y-3">
-                    {tournament.entryFee !== null && (
-                        <p className="text-sm text-[#1A1A2E]">
-                            <span className="font-bold">Entry fee:</span> {tournament.entryFee} lei / person
-                        </p>
+                    {(tournament.entryFee !== null || tournament.advanceFee !== null) && (
+                        <div className="space-y-0.5">
+                            {tournament.entryFee !== null && (
+                                <p className="text-sm text-[#1A1A2E]">
+                                    <span className="font-bold">Entry fee:</span> {tournament.entryFee} lei / person
+                                </p>
+                            )}
+                            {tournament.advanceFee !== null && (
+                                <p className="text-sm text-[#1A1A2E]">
+                                    <span className="font-bold">Advance to confirm your spot:</span> {tournament.advanceFee} lei / person
+                                    {tournament.entryFee !== null && (
+                                        <span className="text-[#8E8E93]"> — the other {tournament.entryFee - tournament.advanceFee} lei later</span>
+                                    )}
+                                </p>
+                            )}
+                        </div>
                     )}
                     {tournament.type === "MASTERS" && (
                         <div>
                             <p className="text-xs font-bold uppercase tracking-widest text-[#8E8E93] mb-2">How it's played</p>
                             <ul className="space-y-1 text-sm text-[#1A1A2E] list-disc pl-5">
                                 {mastersFormatNotes(mastersFormatOf(tournament)).map(note => <li key={note}>{note}</li>)}
+                            </ul>
+                        </div>
+                    )}
+                    {tournament.type === "CHALLENGER" && (
+                        <div>
+                            <p className="text-xs font-bold uppercase tracking-widest text-[#8E8E93] mb-2">How it's played</p>
+                            <ul className="space-y-1 text-sm text-[#1A1A2E] list-disc pl-5">
+                                {challengerFormatNotes(challengerFormatOf(tournament), tournament.maxPlayers).map(note => <li key={note}>{note}</li>)}
                             </ul>
                         </div>
                     )}

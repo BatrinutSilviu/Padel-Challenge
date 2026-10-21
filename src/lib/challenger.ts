@@ -1,6 +1,6 @@
-// Pure helpers for the Challenger tournament format (8 fixed teams, 2 groups of 4,
-// golden/silver knockout bracket). No React here — shared by the public tournament
-// view and the admin score-entry screen.
+// Pure helpers for the Challenger tournament format (8 fixed teams, 2 groups of 4, then a
+// golden/silver knockout bracket or placement matches). No React here — shared by the
+// public tournament view and the admin score-entry screen.
 
 export type ChallengerPlayer = { id: string; name: string };
 
@@ -16,6 +16,8 @@ export type ChallengerMatch = {
     team2TiebreakPoints: number | null;
     bracketType: string | null;
     bracketStage: string | null;
+    // Challenger placement: the group position both teams finished in. Masters: the bracket slot.
+    bracketPosition?: number | null;
     // Masters only — for those matches team1Score/team2Score are sets won, not games.
     sets?: MatchSet[];
     team1Player1: ChallengerPlayer;
@@ -181,11 +183,46 @@ export function groupBracketMatches(rounds: ChallengerRound[]): ChallengerBracke
     return [bySide("GOLDEN", "Golden Bracket"), bySide("SILVER", "Silver Bracket")];
 }
 
+// The "How it's played" bullets on a Challenger sign-up sheet. 8 players make a single group.
+export function challengerFormatNotes(format: "BRACKETS" | "PLACEMENT", maxPlayers: number | null): string[] {
+    const singleGroup = format === "BRACKETS" && maxPlayers === 8;
+    return [
+        singleGroup
+            ? "Teams of 2, in 1 group of 4 — everyone plays everyone"
+            : "Teams of 2, in 2 groups of 4 — everyone plays everyone in their group",
+        "Every match is one set; a 6-6 set is decided by a tiebreak",
+        ...(singleGroup
+            ? ["The top 2 play the Final, #3 and #4 play for 3rd place"]
+            : format === "PLACEMENT"
+            ? [
+                "After the groups every team plays once more, against the team that finished in the same place in the other group",
+                "A #1 vs B #1 play the Final, A #2 vs B #2 for 3rd place, A #3 vs B #3 for 5th, A #4 vs B #4 for 7th",
+            ]
+            : [
+                "Top 2 of each group go to the Golden bracket, bottom 2 to the Silver",
+                "Each bracket plays semifinals, then a Final and a 3rd place match",
+            ]),
+    ];
+}
+
+// Placement format: the teams that finished Nth in their groups play for places 2N-1 and 2N.
+export function placementMatchTitle(position: number): string {
+    return position === 1 ? "Final" : `${ordinal(position * 2 - 1)} Place Match`;
+}
+
+function ordinal(n: number): string {
+    return n === 1 ? "1st" : n === 2 ? "2nd" : n === 3 ? "3rd" : `${n}th`;
+}
+
 export type ChallengerProgress = {
     groupRounds: { A: ChallengerRound[]; B: ChallengerRound[] };
     allGroupScored: boolean;
     knockoutStarted: boolean;
     bracket: ChallengerBracketSection[];
+    // Placement format only, ordered by group position; empty otherwise.
+    placement: ChallengerMatch[];
+    // Every knockout match drawn so far, of either format.
+    bracketMatches: ChallengerMatch[];
     allBracketScored: boolean;
 };
 
@@ -194,18 +231,26 @@ export function challengerProgress(tournament: { rounds: ChallengerRound[] }): C
     const groupMatches = [...groupRounds.A, ...groupRounds.B].flatMap(r => r.matches);
     const allGroupScored = groupMatches.length > 0 && groupMatches.every(isChallengerMatchScored);
     const knockoutStarted = tournament.rounds.some(r => r.groupName == null);
-    const bracket = groupBracketMatches(tournament.rounds);
+    const placement = tournament.rounds
+        .filter(r => r.groupName == null)
+        .flatMap(r => r.matches)
+        .filter(m => m.bracketStage === "PLACEMENT")
+        .sort((a, b) => (a.bracketPosition ?? 0) - (b.bracketPosition ?? 0));
+    const bracket = placement.length > 0 ? [] : groupBracketMatches(tournament.rounds);
 
-    const bracketMatches = bracket
-        .flatMap(section => [...section.semifinals, section.final, section.thirdPlace])
-        .filter((m): m is ChallengerMatch => Boolean(m));
+    const bracketMatches = placement.length > 0
+        ? placement
+        : bracket
+            .flatMap(section => [...section.semifinals, section.final, section.thirdPlace])
+            .filter((m): m is ChallengerMatch => Boolean(m));
 
-    const allBracketScored =
-        bracket.length > 0 &&
-        bracket.every(section => section.final != null && section.thirdPlace != null) &&
-        bracketMatches.every(isChallengerMatchScored);
+    const allBracketScored = placement.length > 0
+        ? placement.every(isChallengerMatchScored)
+        : bracket.length > 0 &&
+            bracket.every(section => section.final != null && section.thirdPlace != null) &&
+            bracketMatches.every(isChallengerMatchScored);
 
-    return { groupRounds, allGroupScored, knockoutStarted, bracket, allBracketScored };
+    return { groupRounds, allGroupScored, knockoutStarted, bracket, placement, bracketMatches, allBracketScored };
 }
 
 // Client-side mirror of the backend's validateChallengerSetScore, used only to decide

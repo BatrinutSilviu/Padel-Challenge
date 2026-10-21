@@ -5,10 +5,12 @@ import { trpc } from "../../trpc";
 import { useQueryClient } from "@tanstack/react-query";
 import { getQueryKey } from "@trpc/react-query";
 import { DIVISION_NAMES, divisionLabel } from "../../lib/divisions";
-import { TournamentType, TOURNAMENT_TYPE_LABELS, capacityOptions, isTeamBasedType } from "../../lib/tournaments";
+import { TournamentType, TOURNAMENT_TYPE_LABELS, capacityOptions, isTeamBasedType, type ChallengerFormat } from "../../lib/tournaments";
 import { RECOMMENDED_MASTERS_FORMAT, STAGE_INFO, mastersKnockoutStages, mastersTeamCount, type MastersFormat } from "../../lib/masters";
 import { MastersFormatPicker } from "./MastersFormatPicker";
+import { ChallengerFormatPicker } from "./ChallengerFormatPicker";
 import { GroupHeading, TeamNumber } from "./TeamNumber";
+import { FeeInputs } from "./FeeInputs";
 import { PlayerPicker } from "../PlayerPicker";
 import { AddPlayerInline } from "../AddPlayerInline";
 
@@ -257,6 +259,7 @@ function CreateTournamentForm({ onCreated, onImport }: { onCreated: () => void; 
     const [capacity, setCapacity] = useState(8);
     // Lei per person, advertised on the sign-up sheet. Blank = not shown.
     const [entryFee, setEntryFee] = useState("");
+    const [advanceFee, setAdvanceFee] = useState("");
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
     const [playerFilter, setPlayerFilter] = useState("");
     // Team Americano state
@@ -264,6 +267,8 @@ function CreateTournamentForm({ onCreated, onImport }: { onCreated: () => void; 
     const [teamSlots, setTeamSlots] = useState<[string, string][]>(() => Array.from({ length: 4 }, () => ["", ""]));
     // Masters state
     const [mastersFormat, setMastersFormat] = useState<MastersFormat>(RECOMMENDED_MASTERS_FORMAT);
+    // Challenger state
+    const [challengerFormat, setChallengerFormat] = useState<ChallengerFormat>("BRACKETS");
     // King of the Court state
     const [totalRounds, setTotalRounds] = useState(7);
     const [totalRoundsInput, setTotalRoundsInput] = useState("7");
@@ -310,7 +315,7 @@ function CreateTournamentForm({ onCreated, onImport }: { onCreated: () => void; 
         onError: (e) => setError(e.message),
     });
 
-    const capacities = capacityOptions(type);
+    const capacities = capacityOptions(type, challengerFormat);
     const isPending = create.isPending || createTeamAmericano.isPending || createChallenger.isPending
         || createMasters.isPending || createKingOfTheCourt.isPending || createOpen.isPending;
 
@@ -327,8 +332,17 @@ function CreateTournamentForm({ onCreated, onImport }: { onCreated: () => void; 
             setCapacity(mastersTeamCount(mastersFormat) * 2);
             return;
         }
-        const allowed = capacityOptions(t);
+        const allowed = capacityOptions(t, challengerFormat);
         if (!allowed.includes(capacity)) setCapacity(allowed[0]);
+    }
+
+    // Placement matches pair the two groups, so they need all 8 teams.
+    function changeChallengerFormat(format: ChallengerFormat) {
+        setChallengerFormat(format);
+        if (format === "PLACEMENT") {
+            changeNumTeams(8);
+            setCapacity(16);
+        }
     }
 
     function changeMastersFormat(format: MastersFormat) {
@@ -359,9 +373,13 @@ function CreateTournamentForm({ onCreated, onImport }: { onCreated: () => void; 
         if (signupMode) {
             const fee = entryFee.trim() === "" ? null : Number(entryFee);
             if (fee !== null && (!Number.isInteger(fee) || fee < 0)) return setError("Entry fee must be a whole number of lei.");
+            const advance = advanceFee.trim() === "" ? null : Number(advanceFee);
+            if (advance !== null && (!Number.isInteger(advance) || advance < 0)) return setError("Advance must be a whole number of lei.");
+            if (fee !== null && advance !== null && advance > fee) return setError("The advance can't be more than the total entry fee.");
             createOpen.mutate({
-                name: name.trim(), date, division, type, pointsPerGame, totalRounds, maxPlayers: capacity, entryFee: fee, playerIds: selectedIds,
+                name: name.trim(), date, division, type, pointsPerGame, totalRounds, maxPlayers: capacity, entryFee: fee, advanceFee: advance, playerIds: selectedIds,
                 ...(type === "MASTERS" ? mastersFormat : {}),
+                ...(type === "CHALLENGER" ? { challengerFormat } : {}),
             });
             return;
         }
@@ -379,7 +397,7 @@ function CreateTournamentForm({ onCreated, onImport }: { onCreated: () => void; 
                 if (!p1 || !p2) return setError(`Team ${i + 1} is incomplete — select both players.`);
                 if (p1 === p2) return setError(`Team ${i + 1} has the same player in both slots.`);
             }
-            createChallenger.mutate({ name: name.trim(), date, division, pointsPerGame: 32, teams: teamSlots.map(([p1, p2]) => ({ player1Id: p1, player2Id: p2 })) });
+            createChallenger.mutate({ name: name.trim(), date, division, pointsPerGame: 32, format: challengerFormat, teams: teamSlots.map(([p1, p2]) => ({ player1Id: p1, player2Id: p2 })) });
         } else if (type === "MASTERS") {
             const teamsNeeded = mastersTeamCount(mastersFormat);
             if (teamSlots.length !== teamsNeeded) return setError(`${mastersFormat.groupCount} groups of ${mastersFormat.teamsPerGroup} needs ${teamsNeeded} teams.`);
@@ -538,6 +556,12 @@ function CreateTournamentForm({ onCreated, onImport }: { onCreated: () => void; 
                 </Field>
             )}
 
+            {type === "CHALLENGER" && (
+                <Field label="After the groups">
+                    <ChallengerFormatPicker value={challengerFormat} onChange={changeChallengerFormat} />
+                </Field>
+            )}
+
             {type === "MASTERS" && (
                 <Field label="Group stage">
                     <MastersFormatPicker value={mastersFormat} onChange={changeMastersFormat} />
@@ -571,16 +595,8 @@ function CreateTournamentForm({ onCreated, onImport }: { onCreated: () => void; 
             )}
 
             {signupMode && (
-                <Field label="Entry fee (lei / person)">
-                    <input
-                        type="number"
-                        min={0}
-                        inputMode="numeric"
-                        value={entryFee}
-                        onChange={e => setEntryFee(e.target.value)}
-                        placeholder="Optional"
-                        className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF4200] bg-white w-28"
-                    />
+                <Field label="Fees (lei / person)">
+                    <FeeInputs entryFee={entryFee} advanceFee={advanceFee} onEntryFee={setEntryFee} onAdvanceFee={setAdvanceFee} />
                 </Field>
             )}
 
@@ -589,7 +605,7 @@ function CreateTournamentForm({ onCreated, onImport }: { onCreated: () => void; 
                     {type !== "MASTERS" && (
                         <Field label="Number of teams">
                             <div className="flex gap-2">
-                                {(type === "CHALLENGER" ? [4, 8] : [4, 6, 8]).map(n => (
+                                {(type === "CHALLENGER" ? (challengerFormat === "PLACEMENT" ? [8] : [4, 8]) : [4, 6, 8]).map(n => (
                                     <button key={n} type="button" onClick={() => changeNumTeams(n)}
                                         className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${numTeams === n ? "bg-[#FF4200] text-white border-[#FF4200]" : "border-gray-300 text-gray-600 hover:border-[#FF4200]"}`}>
                                         {n}
@@ -607,7 +623,7 @@ function CreateTournamentForm({ onCreated, onImport }: { onCreated: () => void; 
                                     ? `${numTeams} teams · ${mastersFormat.groupCount} × ${mastersFormat.teamsPerGroup} · groups in team order · top 2 ${mastersFormat.groupCount === 1 ? "play the Final" : `to the ${STAGE_INFO[mastersKnockoutStages(mastersFormat.groupCount)[0]].title.toLowerCase()}`}`
                                     : type === "CHALLENGER"
                                     ? numTeams === 8
-                                        ? "8 teams · 2 groups of 4 · groups assigned randomly"
+                                        ? `8 teams · 2 groups of 4 · groups assigned randomly · ${challengerFormat === "PLACEMENT" ? "placement matches" : "golden/silver brackets"}`
                                         : "4 teams · 1 group · final + 3rd place match"
                                     : type === "KING_OF_THE_COURT"
                                     ? `${numTeams / 2} courts · ${totalRounds} rounds`

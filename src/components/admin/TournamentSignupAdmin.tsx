@@ -5,10 +5,12 @@ import { getQueryKey } from "@trpc/react-query";
 import { NavBar } from "../NavBar";
 import { trpc } from "../../trpc";
 import { divisionLabel } from "../../lib/divisions";
-import { capacityOptions, isTeamBasedType, playerCountError, tournamentTypeLabel } from "../../lib/tournaments";
+import { capacityOptions, challengerFormatOf, isTeamBasedType, playerCountError, tournamentTypeLabel } from "../../lib/tournaments";
 import { PlayerPicker } from "../PlayerPicker";
 import { mastersFormatOf } from "../../lib/masters";
 import { MastersFormatPicker } from "./MastersFormatPicker";
+import { ChallengerFormatPicker } from "./ChallengerFormatPicker";
+import { FeeInputs } from "./FeeInputs";
 import { GroupHeading, TeamNumber } from "./TeamNumber";
 
 type TournamentData = NonNullable<ReturnType<typeof trpc.tournament.getById.useQuery>["data"]>;
@@ -72,6 +74,25 @@ export function TournamentSignupAdmin({ tournament }: { tournament: TournamentDa
         qc.invalidateQueries({ queryKey: getQueryKey(trpc.tournament.withdrawals, { id: tournament.id }) });
     }
 
+    // Fees are edited as text and saved together.
+    const feeText = (fee: number | null) => fee === null ? "" : String(fee);
+    const [entryFee, setEntryFee] = useState(feeText(tournament.entryFee));
+    const [advanceFee, setAdvanceFee] = useState(feeText(tournament.advanceFee));
+    useEffect(() => {
+        setEntryFee(feeText(tournament.entryFee));
+        setAdvanceFee(feeText(tournament.advanceFee));
+    }, [tournament.entryFee, tournament.advanceFee]);
+    const feesChanged = entryFee !== feeText(tournament.entryFee) || advanceFee !== feeText(tournament.advanceFee);
+
+    function saveFees() {
+        const parse = (text: string) => text.trim() === "" ? null : Number(text);
+        const fee = parse(entryFee);
+        const advance = parse(advanceFee);
+        if ([fee, advance].some(n => n !== null && (!Number.isInteger(n) || n < 0))) return setError("Fees must be whole numbers of lei.");
+        if (fee !== null && advance !== null && advance > fee) return setError("The advance can't be more than the total entry fee.");
+        updateRegistration.mutate({ id: tournament.id, entryFee: fee, advanceFee: advance });
+    }
+
     const onError = (e: { message: string }) => setError(e.message);
     const addParticipant = trpc.tournament.addParticipant.useMutation({ onSuccess: refresh, onError });
     const removeParticipant = trpc.tournament.removeParticipant.useMutation({ onSuccess: refresh, onError });
@@ -91,7 +112,8 @@ export function TournamentSignupAdmin({ tournament }: { tournament: TournamentDa
     const mastersFormat = mastersFormatOf(tournament);
     // Challenger and Masters teams fill the groups in team order.
     const teamsPerGroup = isMasters ? mastersFormat.teamsPerGroup : tournament.type === "CHALLENGER" ? 4 : null;
-    const countError = playerCountError(tournament.type, registered.length, mastersFormat);
+    const challengerFormat = challengerFormatOf(tournament);
+    const countError = playerCountError(tournament.type, registered.length, mastersFormat, challengerFormat);
     const allocated = new Set(teamSlots.flat().filter(Boolean));
     const unallocated = registered.filter(p => !allocated.has(p.playerId));
     // Partners who signed up together but have been put in different teams.
@@ -218,6 +240,39 @@ export function TournamentSignupAdmin({ tournament }: { tournament: TournamentDa
                         </button>
                     </div>
 
+                    <div>
+                        <p className="text-sm font-medium text-gray-700 mb-2">Fees (lei / person)</p>
+                        <div className="flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-3">
+                            <FeeInputs
+                                entryFee={entryFee}
+                                advanceFee={advanceFee}
+                                onEntryFee={setEntryFee}
+                                onAdvanceFee={setAdvanceFee}
+                                disabled={updateRegistration.isPending}
+                            />
+                            {feesChanged && (
+                                <button
+                                    onClick={saveFees}
+                                    disabled={updateRegistration.isPending}
+                                    className="sm:mt-5 text-sm font-medium px-4 py-2 rounded-lg bg-[#FF4200] text-white hover:bg-[#CC3500] disabled:opacity-50 shrink-0"
+                                >
+                                    Save fees
+                                </button>
+                            )}
+                        </div>
+                    </div>
+
+                    {tournament.type === "CHALLENGER" && (
+                    <div>
+                        <p className="text-sm font-medium text-gray-700 mb-2">After the groups</p>
+                        <ChallengerFormatPicker
+                            value={challengerFormat}
+                            onChange={format => updateRegistration.mutate({ id: tournament.id, challengerFormat: format })}
+                            disabled={updateRegistration.isPending}
+                        />
+                    </div>
+                    )}
+
                     {isMasters ? (
                     <div>
                         <p className="text-sm font-medium text-gray-700 mb-2">Group stage</p>
@@ -231,7 +286,7 @@ export function TournamentSignupAdmin({ tournament }: { tournament: TournamentDa
                     <div>
                         <p className="text-sm font-medium text-gray-700 mb-2">Spots</p>
                         <div className="flex flex-wrap gap-2">
-                            {capacityOptions(tournament.type).map(n => (
+                            {capacityOptions(tournament.type, challengerFormat).map(n => (
                                 <button
                                     key={n}
                                     onClick={() => updateRegistration.mutate({ id: tournament.id, maxPlayers: n })}
@@ -256,7 +311,9 @@ export function TournamentSignupAdmin({ tournament }: { tournament: TournamentDa
                         <div className="px-4 sm:px-5 py-3 border-b border-gray-100 flex items-start justify-between gap-3">
                             <div className="min-w-0">
                                 <span className="text-sm font-semibold text-gray-700">Waiting list</span>
-                                <p className="text-xs text-gray-400">Confirm a player once they've paid — only confirmed players are in the draw.</p>
+                                <p className="text-xs text-gray-400">
+                                    Confirm a player once they've paid{tournament.advanceFee !== null ? ` the ${tournament.advanceFee} lei advance` : ""} — only confirmed players are in the draw.
+                                </p>
                             </div>
                             <span className="text-sm font-semibold text-amber-600 shrink-0">{waiting.length}</span>
                         </div>

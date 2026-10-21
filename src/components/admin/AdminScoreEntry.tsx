@@ -11,6 +11,7 @@ import { STAGE_INFO, mastersProgress } from "../../lib/masters";
 import { MastersScoreEntry } from "./MastersScoreEntry";
 import type { MatchSet } from "../../lib/challenger";
 import { isKotcMatchScored, kotcProgress } from "../../lib/kingOfTheCourt";
+import { challengerFormatOf } from "../../lib/tournaments";
 import { KingOfTheCourtScoreEntry } from "./KingOfTheCourtScoreEntry";
 import { PlayerPicker } from "../PlayerPicker";
 import { useAdminSession, LoginPage, SessionExpiredModal } from "./AdminAuth";
@@ -226,7 +227,9 @@ export function AdminScoreEntry() {
             matches: [...progress.groupRounds.A, ...progress.groupRounds.B].flatMap(r => r.matches),
             knockoutStarted: progress.knockoutStarted,
             mutation: startKnockout,
-            label: "Finish group stage & start knockout",
+            label: challengerFormatOf(tournament) === "PLACEMENT"
+                ? "Finish group stage & start placement matches"
+                : "Finish group stage & start knockout",
         }
         : isMasters && mastersProgressData
         ? {
@@ -352,13 +355,9 @@ export function AdminScoreEntry() {
                         />
                         {progress.knockoutStarted && (
                             <ProgressRow
-                                label="Bracket"
-                                scored={progress.bracket
-                                    .flatMap(section => [...section.semifinals, section.final, section.thirdPlace])
-                                    .filter((m): m is NonNullable<typeof m> => Boolean(m)).filter(m => scoredIds.has(m.id)).length}
-                                total={progress.bracket
-                                    .flatMap(section => [...section.semifinals, section.final, section.thirdPlace])
-                                    .filter((m): m is NonNullable<typeof m> => Boolean(m)).length}
+                                label={progress.placement.length > 0 ? "Placement matches" : "Bracket"}
+                                scored={progress.bracketMatches.filter(m => scoredIds.has(m.id)).length}
+                                total={progress.bracketMatches.length}
                             />
                         )}
                         {!isCompleted && allScored && (
