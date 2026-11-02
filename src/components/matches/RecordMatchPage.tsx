@@ -7,11 +7,13 @@ import { NavBar } from "../NavBar";
 import { PlayerPicker } from "../PlayerPicker";
 import { trpc } from "../../trpc";
 import { useAuth } from "../../contexts/AuthContext";
+import { useRankingSystem } from "../../lib/ranking";
 
 export function RecordMatchPage() {
     const navigate = useNavigate();
     const qc = useQueryClient();
     const { playerId } = useAuth();
+    const { isPoints } = useRankingSystem();
 
     const { data: me } = trpc.player.getById.useQuery({ id: playerId! }, { enabled: !!playerId });
     const { data: allPlayers } = trpc.player.list.useQuery();
@@ -41,7 +43,7 @@ export function RecordMatchPage() {
             qc.invalidateQueries({ queryKey: getQueryKey(trpc.player.list) });
             qc.invalidateQueries({ queryKey: getQueryKey(trpc.player.getById) });
             qc.invalidateQueries({ queryKey: getQueryKey(trpc.individualMatch.list) });
-            toast.success("Match recorded — Elo updated!");
+            toast.success(isPoints ? "Match recorded!" : "Match recorded — Elo updated!");
             navigate("/matches");
         },
         onError: (e) => {

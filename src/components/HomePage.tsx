@@ -7,6 +7,8 @@ import { useAuth } from "../contexts/AuthContext";
 import { DIVISION_NAMES, DIVISION_BADGES, DIVISION_COLORS, divisionLabel } from "../lib/divisions";
 import { TournamentType, TOURNAMENT_TYPE_LABELS } from "../lib/tournaments";
 import { BADGE_META, BadgeType } from "../lib/badges";
+import { RankingPointsInfo } from "./RankingPointsInfo";
+import { useRankingSystem } from "../lib/ranking";
 
 type Tab = "divisions" | "players" | "tournaments";
 
@@ -48,6 +50,7 @@ export function HomePage() {
 
 function RecordMatchBanner() {
     const { token } = useAuth();
+    const { isPoints } = useRankingSystem();
 
     return (
         <Link
@@ -58,7 +61,7 @@ function RecordMatchBanner() {
                 <span className="text-2xl shrink-0">🎾</span>
                 <div className="min-w-0">
                     <p className="font-black text-white text-sm sm:text-base truncate">Played a match with friends?</p>
-                    <p className="text-xs sm:text-sm text-white/60 font-medium truncate">Log it to update your ELO and climb the rankings.</p>
+                    <p className="text-xs sm:text-sm text-white/60 font-medium truncate">{isPoints ? "Keep a record of your friendly matches and your win streak." : "Log it to update your ELO and climb the rankings."}</p>
                 </div>
             </div>
             <span className="shrink-0 text-sm font-bold px-4 py-2 rounded-xl bg-[#FF4200] text-white group-hover:bg-[#CC3500] transition-colors whitespace-nowrap">
@@ -102,6 +105,7 @@ function initials(name: string) {
 
 function PlayersTab() {
     const { data, isPending } = trpc.player.list.useQuery();
+    const { isPoints, scoreOf, unit } = useRankingSystem();
     const [genderFilter, setGenderFilter] = useState<"ALL" | "MALE" | "FEMALE">("ALL");
     const [search, setSearch] = useState("");
 
@@ -112,19 +116,19 @@ function PlayersTab() {
         .filter(p => genderFilter === "ALL" || p.gender === genderFilter)
         .filter(p => p.name.toLowerCase().includes(search.toLowerCase()));
 
-    const sortedByElo = [...data].sort((a, b) => b.elo - a.elo);
+    const sortedByPoints = [...data].sort((a, b) => scoreOf(b) - scoreOf(a));
     const overallRanks = new Map<string, number>();
-    sortedByElo.forEach((p, i) => {
-        const prev = sortedByElo[i - 1];
-        const tied = prev && p.elo === prev.elo;
+    sortedByPoints.forEach((p, i) => {
+        const prev = sortedByPoints[i - 1];
+        const tied = prev && scoreOf(p) === scoreOf(prev);
         overallRanks.set(p.id, tied ? overallRanks.get(prev.id)! : i + 1);
     });
 
-    const groups = [1, 2, 3, 4, 5, 6, 7].map(d => ({
+    const groups = [1, 2, 3, 4, 5, 6].map(d => ({
         division: d,
         players: filtered
             .filter(p => p.highestDivisionPlayed === d)
-            .sort((a, b) => b.elo - a.elo),
+            .sort((a, b) => scoreOf(b) - scoreOf(a)),
     })).filter(g => g.players.length > 0);
 
     return (
@@ -149,6 +153,7 @@ function PlayersTab() {
                     </button>
                 )}
             </div>
+            {isPoints && <RankingPointsInfo />}
             <div className="flex gap-1 bg-white border border-[#E5E5EA] rounded-2xl p-1 w-fit shadow-sm">
                 {(["ALL", "MALE", "FEMALE"] as const).map(g => (
                     <button
@@ -184,8 +189,8 @@ function PlayersTab() {
                             {players.map((player, i) => {
                                 const overallRank = overallRanks.get(player.id)!;
                                 const prev = players[i - 1];
-                                const divRank = prev && prev.elo === player.elo
-                                    ? players.findIndex(p => p.elo === player.elo)
+                                const divRank = prev && scoreOf(prev) === scoreOf(player)
+                                    ? players.findIndex(p => scoreOf(p) === scoreOf(player))
                                     : i;
                                 return (
                                     <Link
@@ -212,7 +217,7 @@ function PlayersTab() {
                                                     <span key={badge} title={BADGE_META[badge].description} className="text-sm shrink-0">{BADGE_META[badge].emoji}</span>
                                                 ))}
                                             </div>
-                                            {division !== 7 && <span className="text-xs text-[#8E8E93]">Overall #{overallRank}</span>}
+                                            <span className="text-xs text-[#8E8E93]">Overall #{overallRank}</span>
                                         </div>
 
                                         <div className="flex items-center gap-3 shrink-0">
@@ -223,8 +228,8 @@ function PlayersTab() {
                                                 </div>
                                             )}
                                             <div className="text-right">
-                                                <span className="text-sm font-black text-[#FF4200]">{player.elo}</span>
-                                                <span className="text-xs text-[#8E8E93] ml-1">ELO</span>
+                                                <span className="text-sm font-black text-[#FF4200]">{scoreOf(player)}</span>
+                                                <span className="text-xs text-[#8E8E93] ml-1">{unit}</span>
                                             </div>
                                         </div>
                                     </Link>
@@ -299,7 +304,7 @@ function TournamentsTab() {
                 <div className="flex flex-col gap-2">
                     <span className="text-xs font-bold uppercase tracking-widest text-[#8E8E93]">Type</span>
                     <div className="flex flex-wrap gap-1.5">
-                        {(["ALL", "AMERICANO", "AMERICANO_CHAMPIONS", "AMERICANO_GIRLS", "CHALLENGER", "TEAM_AMERICANO", "MASTERS"] as const).map(type => (
+                        {(["ALL", "AMERICANO", "AMERICANO_CHAMPIONS", "CHALLENGER", "TEAM_AMERICANO", "MASTERS"] as const).map(type => (
                             <FilterChip key={type} active={typeFilter === type} onClick={() => setTypeFilter(type)}>
                                 {type === "ALL" ? "All" : TOURNAMENT_TYPE_LABELS[type]}
                             </FilterChip>

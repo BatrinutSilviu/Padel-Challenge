@@ -5,6 +5,7 @@ import { NavBar } from "./NavBar";
 import { DIVISION_NAMES, DIVISION_BADGES } from "../lib/divisions";
 import { BADGE_META, BadgeType } from "../lib/badges";
 import { StatusBadge } from "./HomePage";
+import { useRankingSystem } from "../lib/ranking";
 
 export function DivisionPage() {
     const { id } = useParams<{ id: string }>();
@@ -12,6 +13,7 @@ export function DivisionPage() {
 
     const standings = trpc.division.standings.useQuery({ division });
     const tournaments = trpc.tournament.list.useQuery({ division });
+    const { scoreOf, name: rankingName } = useRankingSystem();
 
     if (isNaN(division) || division < 1 || division > 7) {
         return <div className="p-8 text-red-600">Invalid division.</div>;
@@ -51,16 +53,16 @@ export function DivisionPage() {
                     {standings.data?.length === 0 && <p className="text-[#8E8E93]">No players in this division.</p>}
                     <div className="bg-white rounded-2xl border border-[#E5E5EA] overflow-hidden shadow-sm">
                         {(() => {
-                            const byElo = (a: typeof standings.data[number], b: typeof standings.data[number]) =>
-                                b.elo - a.elo || a.name.localeCompare(b.name);
-                            const sorted = (standings.data ?? []).slice().sort(byElo);
+                            const byPoints = (a: typeof standings.data[number], b: typeof standings.data[number]) =>
+                                scoreOf(b) - scoreOf(a) || a.name.localeCompare(b.name);
+                            const sorted = (standings.data ?? []).slice().sort(byPoints);
                             return sorted.map((player, i) => {
                                 const total = player.participations.reduce((s, p) => s + p.totalPoints, 0);
                                 const avg = player.participations.length > 0
                                     ? Math.round(total / player.participations.length)
                                     : 0;
                                 const prev = sorted[i - 1];
-                                const rank = prev && prev.elo === player.elo ? sorted.findIndex(p => p.elo === player.elo) + 1 : i + 1;
+                                const rank = prev && scoreOf(prev) === scoreOf(player) ? sorted.findIndex(p => scoreOf(p) === scoreOf(player)) + 1 : i + 1;
                                 return (
                                     <PlayerRow
                                         key={player.id}
@@ -74,8 +76,8 @@ export function DivisionPage() {
                         })()}
                     </div>
                     <div className="text-xs text-[#8E8E93] mt-2 space-y-0.5">
-                        <p>▲ Promotion eligible — top 15% by ELO in this division.</p>
-                        <p>▼ Relegation eligible — bottom 15% by ELO in this division.</p>
+                        <p>▲ Promotion eligible — top 15% by {rankingName} in this division.</p>
+                        <p>▼ Relegation eligible — bottom 15% by {rankingName} in this division.</p>
                         <p>Americano Champions results are not counted in standings.</p>
                     </div>
                 </section>
@@ -120,6 +122,7 @@ function PlayerRow({ player, rank, division, avg }: {
     avg: number;
 }) {
     const [expanded, setExpanded] = useState(false);
+    const { scoreOf, unit } = useRankingSystem();
 
     return (
         <div className="border-b border-[#F5F5F7] last:border-0">
@@ -166,8 +169,8 @@ function PlayerRow({ player, rank, division, avg }: {
                         <span className="text-xs text-[#8E8E93] ml-1">avg</span>
                     </div>
                     <div className="text-right">
-                        <span className="text-sm font-black text-[#FF4200]">{player.elo}</span>
-                        <span className="text-xs text-[#8E8E93] ml-1">ELO</span>
+                        <span className="text-sm font-black text-[#FF4200]">{scoreOf(player)}</span>
+                        <span className="text-xs text-[#8E8E93] ml-1">{unit}</span>
                     </div>
                     <span className="sm:hidden text-[#8E8E93] text-xs w-3 text-center shrink-0">
                         {expanded ? "▴" : "▾"}

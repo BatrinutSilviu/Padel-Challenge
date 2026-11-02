@@ -8,14 +8,18 @@ import { trpc, trpcClient } from './trpc';
 import { AuthProvider } from './contexts/AuthContext';
 import { Toaster } from './components/ui/sonner';
 
-const USER_SCOPED_ROUTERS = ['individualMatch'];
+const USER_SCOPED_ROUTERS = ['individualMatch', 'profile'];
+// The league router mixes admin procedures with ones the players of a match use.
+const USER_SCOPED_PROCEDURES = ['league.myOpenMatches', 'league.submitScore', 'league.confirmScore', 'league.setSchedule'];
 
-function handleUnauthorized(error: unknown, routerName: string | undefined, retry: () => void) {
+function handleUnauthorized(error: unknown, path: string[] | undefined, retry: () => void) {
     if ((error as any)?.data?.code !== 'UNAUTHORIZED') return;
+    const routerName = path?.[0];
     // A wrong password at login is not an expired session
     if (routerName === 'auth') return;
 
-    const userScoped = !!routerName && USER_SCOPED_ROUTERS.includes(routerName);
+    const userScoped = (!!routerName && USER_SCOPED_ROUTERS.includes(routerName))
+        || (!!path && USER_SCOPED_PROCEDURES.includes(path.join('.')));
     const storageKey = userScoped ? 'user_token' : 'admin_token';
     const sentToken = (error as any)[userScoped ? 'sentUserToken' : 'sentAdminToken'] ?? null;
     const currentToken = localStorage.getItem(storageKey);
@@ -39,18 +43,18 @@ const queryClient = new QueryClient({
     },
     queryCache: new QueryCache({
         onError(error, query) {
-            const routerName = Array.isArray(query.queryKey?.[0]) ? query.queryKey[0][0] : undefined;
+            const path = Array.isArray(query.queryKey?.[0]) ? query.queryKey[0] as string[] : undefined;
             const retry = () => queryClient.refetchQueries({ queryKey: query.queryKey, exact: true });
-            handleUnauthorized(error, routerName, retry);
+            handleUnauthorized(error, path, retry);
         },
     }),
     mutationCache: new MutationCache({
         onError(error, _variables, _context, mutation) {
-            const routerName = Array.isArray(mutation.options.mutationKey?.[0])
-                ? mutation.options.mutationKey[0][0]
+            const path = Array.isArray(mutation.options.mutationKey?.[0])
+                ? mutation.options.mutationKey[0] as string[]
                 : undefined;
             const retry = () => mutation.execute(mutation.state.variables);
-            handleUnauthorized(error, routerName, retry);
+            handleUnauthorized(error, path, retry);
         },
     }),
 });

@@ -308,7 +308,7 @@ export function AdminScoreEntry() {
                                                     if (!newId) return;
                                                     const newPlayerName = allPlayersQuery.data?.find(x => x.id === newId)?.name ?? "the new player";
                                                     const message = isCompleted
-                                                        ? `Replace ${p.player.name} with ${newPlayerName}? This tournament is completed — all its matches will be reassigned to ${newPlayerName}, and ELO will be recalculated for everyone.`
+                                                        ? `Replace ${p.player.name} with ${newPlayerName}? This tournament is completed — all its matches will be reassigned to ${newPlayerName} — the ranking points move with them.`
                                                         : `Replace ${p.player.name} with ${newPlayerName}? Any scores already recorded for ${p.player.name} will transfer to ${newPlayerName}.`;
                                                     if (!confirm(message)) return;
                                                     swapParticipant.mutate({ tournamentId: id!, oldPlayerId: p.playerId, newPlayerId: newId });

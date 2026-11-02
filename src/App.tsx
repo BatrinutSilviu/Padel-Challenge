@@ -12,6 +12,11 @@ import { RequireAuth } from "./components/auth/RequireAuth";
 import { RecordMatchPage } from "./components/matches/RecordMatchPage";
 import { MatchesPage } from "./components/matches/MatchesPage";
 import { LatestLiveBoard, MastersLiveBoard } from "./components/masters/MastersLiveBoard";
+import { LeaguesPage } from "./components/league/LeaguesPage";
+import { LeaguePage } from "./components/league/LeaguePage";
+import { LeagueMatchPage } from "./components/league/LeagueMatchPage";
+import { ProfilePage } from "./components/ProfilePage";
+import { AdminLeaguePage } from "./components/admin/league/AdminLeaguePage";
 
 export default function App() {
     return (
@@ -29,6 +34,11 @@ export default function App() {
             <Route path="/matches/new" element={<RequireAuth><RecordMatchPage /></RequireAuth>} />
             <Route path="/admin" element={<AdminPage />} />
             <Route path="/admin/tournament/:id" element={<AdminScoreEntry />} />
+            <Route path="/admin/league/:id" element={<AdminLeaguePage />} />
+            <Route path="/league" element={<LeaguesPage />} />
+            <Route path="/league/:id" element={<LeaguePage />} />
+            <Route path="/league/match/:id" element={<LeagueMatchPage />} />
+            <Route path="/profile" element={<RequireAuth><ProfilePage /></RequireAuth>} />
             <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
     );

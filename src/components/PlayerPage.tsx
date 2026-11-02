@@ -3,32 +3,31 @@ import { trpc } from "../trpc";
 import { NavBar } from "./NavBar";
 import { DIVISION_NAMES } from "../lib/divisions";
 import { BADGE_META, BadgeType } from "../lib/badges";
+import { RankingBreakdown } from "./RankingPointsInfo";
+import { useRankingSystem } from "../lib/ranking";
 
 export function PlayerPage() {
     const { id } = useParams<{ id: string }>();
     const { data: player, isPending, error } = trpc.player.getById.useQuery({ id: id! });
     const { data: allPlayers } = trpc.player.list.useQuery();
     const { data: individualMatches, isPending: matchesPending } = trpc.individualMatch.list.useQuery({ playerId: id! }, { enabled: !!id });
+    const { isPoints, scoreOf, unit } = useRankingSystem();
 
     if (isPending) return <LoadingPage />;
     if (error || !player) return <div className="p-8 text-red-600">Player not found.</div>;
 
     const completedResults = player.participations.filter(p => p.finalRank !== null);
 
-    const competitionRank = (sorted: typeof allPlayers, id: string) => {
-        if (!sorted) return null;
-        const idx = sorted.findIndex(p => p.id === id);
-        if (idx === -1) return null;
-        const t = sorted[idx];
-        const first = sorted.findIndex(p => p.avgPoints === t.avgPoints && p.avgWonRounds === t.avgWonRounds);
-        return first + 1;
-    };
-
-    const divisionRank = competitionRank(
-        allPlayers?.filter(p => p.division === player.division) ?? null,
-        player.id,
-    );
-    const overallRank = competitionRank(allPlayers ?? null, player.id);
+    // Position by the active ranking score among the players of their division (and overall);
+    // equal scores share it. Nobody is ranked on 0 ranking points.
+    const score = scoreOf(player);
+    const ranked = !isPoints || score > 0;
+    const divisionRank = ranked && allPlayers
+        ? allPlayers.filter(p => p.division === player.division && scoreOf(p) > score).length + 1
+        : null;
+    const overallRank = isPoints
+        ? player.rankingPosition
+        : allPlayers ? allPlayers.filter(p => scoreOf(p) > score).length + 1 : null;
 
     const initials = player.name.split(" ").map(w => w[0]).slice(0, 2).join("").toUpperCase();
 
@@ -69,7 +68,7 @@ export function PlayerPage() {
                     </div>
 
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-5 pt-5 border-t border-[#F5F5F7]">
-                        <Stat label="ELO" value={player.elo} highlight />
+                        <Stat label={isPoints ? "Ranking pts" : unit} value={score} highlight />
                         {divisionRank && <Stat label="Div Rank" value={`#${divisionRank}`} />}
                         {overallRank && <Stat label="Overall" value={`#${overallRank}`} />}
                         {completedResults.length > 0 && (
@@ -106,6 +105,8 @@ export function PlayerPage() {
                         </div>
                     </section>
                 )}
+
+                {isPoints && <RankingBreakdown awards={player.rankingAwards} total={player.rankingPoints} />}
 
                 <section>
                     <h2 className="text-xs font-bold uppercase tracking-widest text-[#8E8E93] mb-3">Tournament History</h2>

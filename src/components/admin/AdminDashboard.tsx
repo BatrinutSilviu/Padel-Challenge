@@ -13,12 +13,15 @@ import { GroupHeading, TeamNumber } from "./TeamNumber";
 import { FeeInputs } from "./FeeInputs";
 import { PlayerPicker } from "../PlayerPicker";
 import { AddPlayerInline } from "../AddPlayerInline";
+import { AdminLeaguesTab } from "./league/AdminLeaguesTab";
+import { RankingSystemSettings } from "./RankingSystemSettings";
 
-type Tab = "players" | "tournaments" | "new-tournament" | "export";
+type Tab = "players" | "tournaments" | "new-tournament" | "league" | "export";
 
 const TAB_LABELS: Record<Tab, string> = {
     tournaments: "Tournaments",
     "new-tournament": "New Tournament",
+    league: "League",
     players: "Players",
     export: "Export",
 };
@@ -36,7 +39,7 @@ export function AdminDashboard({ onLogout }: { onLogout: () => void }) {
                 {/* One row on every screen: on a phone each tab is as wide as its label, Logout beside them. */}
                 <div className="flex items-center gap-2 sm:gap-3 sm:justify-between mb-5 sm:mb-6">
                     <div className="flex-1 sm:flex-none flex gap-1 bg-white border border-gray-200 rounded-xl p-1">
-                        {(["tournaments", "new-tournament", "players", "export"] as Tab[]).map(t => (
+                        {(["tournaments", "new-tournament", "league", "players", "export"] as Tab[]).map(t => (
                             <button
                                 key={t}
                                 onClick={() => setTab(t)}
@@ -64,6 +67,7 @@ export function AdminDashboard({ onLogout }: { onLogout: () => void }) {
 
                 {tab === "tournaments" && <TournamentsTab />}
                 {tab === "new-tournament" && <NewTournamentTab onCreated={() => setTab("tournaments")} />}
+                {tab === "league" && <AdminLeaguesTab />}
                 {tab === "players" && <PlayersTab />}
                 {tab === "export" && <ExportTab />}
             </main>
@@ -124,7 +128,8 @@ function TournamentNameEditor({ id, name }: { id: string; name: string }) {
 
 function TournamentsTab() {
     const qc = useQueryClient();
-    const { data, isPending } = trpc.tournament.list.useQuery();
+    // Admins still see the retired Girls division's past tournaments.
+    const { data, isPending } = trpc.tournament.list.useQuery({ includeRetired: true });
     const signups = data?.filter(t => t.status === "UPCOMING") ?? [];
     const active = data?.filter(t => t.status === "IN_PROGRESS") ?? [];
     const others = data?.filter(t => t.status === "COMPLETED") ?? [];
@@ -469,7 +474,7 @@ function CreateTournamentForm({ onCreated, onImport }: { onCreated: () => void; 
 
             <Field label="Type">
                 <div className="flex flex-wrap gap-2">
-                    {(["AMERICANO", "AMERICANO_CHAMPIONS", "AMERICANO_GIRLS", "CHALLENGER", "TEAM_AMERICANO", "KING_OF_THE_COURT", "MASTERS"] as TournamentType[]).map(t => (
+                    {(["AMERICANO", "AMERICANO_CHAMPIONS", "CHALLENGER", "TEAM_AMERICANO", "KING_OF_THE_COURT", "MASTERS"] as TournamentType[]).map(t => (
                         <button
                             key={t}
                             type="button"
@@ -867,7 +872,7 @@ function ImportRankedinTab({ onImported, onBack }: { onImported: () => void; onB
                     </div>
                     <div>
                         <p className="text-base font-semibold text-gray-800">Tournament imported successfully</p>
-                        <p className="text-sm text-gray-400 mt-1">ELO ratings have been recalculated for all players.</p>
+                        <p className="text-sm text-gray-400 mt-1">Its results now count towards the rankings.</p>
                     </div>
                     <button
                         type="button"
@@ -966,7 +971,7 @@ function ImportRankedinTab({ onImported, onBack }: { onImported: () => void; onB
                         <div className="space-y-2">
                             <label className="block text-sm font-medium text-gray-700">Type</label>
                             <div className="flex flex-wrap gap-2">
-                                {(["AMERICANO", "AMERICANO_CHAMPIONS", "AMERICANO_GIRLS"] as TournamentType[]).map(t => (
+                                {(["AMERICANO", "AMERICANO_CHAMPIONS"] as TournamentType[]).map(t => (
                                     <button key={t} type="button" onClick={() => setType(t)}
                                         className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${type === t ? "bg-[#FF4200] text-white border-[#FF4200]" : "border-gray-300 text-gray-600 hover:border-[#FF4200]"}`}>
                                         {TOURNAMENT_TYPE_LABELS[t]}
@@ -1112,7 +1117,6 @@ function PlayersTab() {
     const [division, setDivision] = useState(6);
     const [gender, setGender] = useState<"MALE" | "FEMALE">("MALE");
     const [error, setError] = useState("");
-    const [eloMsg, setEloMsg] = useState("");
 
     const players = trpc.player.list.useQuery();
     const create = trpc.player.create.useMutation({
@@ -1126,14 +1130,6 @@ function PlayersTab() {
     });
     const remove = trpc.player.delete.useMutation({
         onSuccess: () => qc.invalidateQueries({ queryKey: getQueryKey(trpc.player.list) }),
-    });
-    const recalcElo = trpc.player.recalculateElo.useMutation({
-        onSuccess: () => {
-            qc.invalidateQueries({ queryKey: getQueryKey(trpc.player.list) });
-            setEloMsg("ELO recalculated successfully.");
-            setTimeout(() => setEloMsg(""), 4000);
-        },
-        onError: (e) => setEloMsg(`Error: ${e.message}`),
     });
 
     const q = name.trim().toLowerCase();
@@ -1235,26 +1231,7 @@ function PlayersTab() {
                     </tbody>
                 </table>
             </div>
-            <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-3">
-                <h2 className="text-base font-semibold text-gray-800">Admin Tools</h2>
-                <div className="flex flex-col sm:flex-row gap-3 items-start">
-                    <button
-                        onClick={() => {
-                            if (!confirm("Recalculate ELO for all players from scratch? This replays all completed tournaments in order.")) return;
-                            recalcElo.mutate();
-                        }}
-                        disabled={recalcElo.isPending}
-                        className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium border border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 hover:border-indigo-400 disabled:opacity-50 transition-colors"
-                    >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                        </svg>
-                        {recalcElo.isPending ? "Recalculating…" : "Recalculate ELO"}
-                    </button>
-                    {eloMsg && <p className={`text-sm self-center ${eloMsg.startsWith("Error") ? "text-red-500" : "text-green-600"}`}>{eloMsg}</p>}
-                </div>
-                <p className="text-xs text-gray-400">Resets all ELO ratings to 1000 and replays every completed tournament in chronological order.</p>
-            </div>
+            <RankingSystemSettings />
         </div>
     );
 }
