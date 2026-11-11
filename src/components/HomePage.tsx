@@ -110,16 +110,16 @@ function RecordMatchBanner() {
     return (
         <Link
             to="/matches/new"
-            className="group flex items-center justify-between gap-4 bg-[#333366] rounded-2xl px-5 py-4 mb-6 shadow-sm hover:shadow-md hover:bg-[#3D3D75] transition-all"
+            className="group flex items-center justify-between gap-3 sm:gap-4 bg-[#333366] rounded-2xl px-4 sm:px-5 py-4 mb-6 shadow-sm hover:shadow-md hover:bg-[#3D3D75] transition-all"
         >
             <div className="flex items-center gap-3 min-w-0">
-                <span className="text-2xl shrink-0">🎾</span>
+                <span className="hidden min-[400px]:inline text-2xl shrink-0">🎾</span>
                 <div className="min-w-0">
-                    <p className="font-black text-white text-sm sm:text-base truncate">Played a match with friends?</p>
-                    <p className="text-xs sm:text-sm text-white/60 font-medium truncate">{isPoints ? "Keep a record of your friendly matches and your win streak." : "Log it to update your ELO and climb the rankings."}</p>
+                    <p className="font-black text-white text-sm sm:text-base sm:truncate leading-snug">Played a match with friends?</p>
+                    <p className="text-xs sm:text-sm text-white/60 font-medium line-clamp-2 sm:truncate">{isPoints ? "Keep a record of your friendly matches and your win streak." : "Log it to update your ELO and climb the rankings."}</p>
                 </div>
             </div>
-            <span className="shrink-0 text-sm font-bold px-4 py-2 rounded-xl bg-[#FF4200] text-white group-hover:bg-[#CC3500] transition-colors whitespace-nowrap">
+            <span className="shrink-0 text-sm font-bold px-3 sm:px-4 py-2 rounded-xl bg-[#FF4200] text-white group-hover:bg-[#CC3500] transition-colors whitespace-nowrap">
                 {token ? "Record Match" : "Log in to record"}
             </span>
         </Link>

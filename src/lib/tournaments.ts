@@ -107,18 +107,22 @@ export function tournamentWhen(
     return times ? `${date} · ${times}` : date;
 }
 
-export type TournamentPrizes = { prize1?: string | null; prize2?: string | null; prize3?: string | null; prizeNotes?: string | null };
+// A tournament's prizes (backend lib/tournamentDetails): places 1–5, each offered by
+// Act!ve (partner null) or by a partner.
+export const MAX_PRIZE_PLACE = 5;
+export type Prize = { place: number; prize: string; partner: string | null };
+export type TournamentPrizes = { prizes?: unknown; prizeNotes?: string | null };
 
-export function prizePlaces(t: TournamentPrizes): { place: string; prize: string }[] {
-    return [
-        { place: "1st", prize: t.prize1 },
-        { place: "2nd", prize: t.prize2 },
-        { place: "3rd", prize: t.prize3 },
-    ].filter((p): p is { place: string; prize: string } => !!p.prize);
+export function placeLabel(place: number): string {
+    return ["1st", "2nd", "3rd"][place - 1] ?? `${place}th`;
+}
+
+export function prizeList(t: TournamentPrizes): Prize[] {
+    return Array.isArray(t.prizes) ? (t.prizes as Prize[]).filter(p => p && p.prize) : [];
 }
 
 export function hasPrizes(t: TournamentPrizes): boolean {
-    return prizePlaces(t).length > 0 || !!t.prizeNotes;
+    return prizeList(t).length > 0 || !!t.prizeNotes;
 }
 
 // Team-based formats need the players paired up before a schedule can be built,

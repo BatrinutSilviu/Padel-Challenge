@@ -1,40 +1,50 @@
 // Editing a tournament's times and prizes in the admin forms.
+import { MAX_PRIZE_PLACE, prizeList, type Prize } from "./tournaments";
+
+// One prize row while editing: blank prize = none for that place; who = "US" (Act!ve
+// offers it) or "PARTNER", with the partner's name.
+export type PrizeText = { prize: string; who: "US" | "PARTNER"; partner: string };
 
 // A tournament's start/end times ("HH:MM", local time) and prizes, edited as text.
 // Blank means "not advertised".
 export type DetailsText = {
     startTime: string;
     endTime: string;
-    prize1: string;
-    prize2: string;
-    prize3: string;
+    prizes: PrizeText[]; // one per place, 1st first
     prizeNotes: string;
 };
 
-export const EMPTY_DETAILS: DetailsText = { startTime: "", endTime: "", prize1: "", prize2: "", prize3: "", prizeNotes: "" };
+const emptyPrizes = (): PrizeText[] => Array.from({ length: MAX_PRIZE_PLACE }, () => ({ prize: "", who: "US", partner: "" }));
 
-export type StoredDetails = { [K in keyof DetailsText]: string | null };
+export const EMPTY_DETAILS: DetailsText = { startTime: "", endTime: "", prizes: emptyPrizes(), prizeNotes: "" };
+
+export type StoredDetails = { startTime: string | null; endTime: string | null; prizes?: unknown; prizeNotes: string | null };
 
 export function detailsText(t: StoredDetails): DetailsText {
-    return {
-        startTime: t.startTime ?? "",
-        endTime: t.endTime ?? "",
-        prize1: t.prize1 ?? "",
-        prize2: t.prize2 ?? "",
-        prize3: t.prize3 ?? "",
-        prizeNotes: t.prizeNotes ?? "",
-    };
+    const prizes = emptyPrizes();
+    for (const p of prizeList(t)) {
+        if (p.place >= 1 && p.place <= MAX_PRIZE_PLACE) {
+            prizes[p.place - 1] = { prize: p.prize, who: p.partner ? "PARTNER" : "US", partner: p.partner ?? "" };
+        }
+    }
+    return { startTime: t.startTime ?? "", endTime: t.endTime ?? "", prizes, prizeNotes: t.prizeNotes ?? "" };
 }
 
-// What the create/update mutations take: blanks become null.
-export function detailsInput(d: DetailsText): StoredDetails {
+// A partner prize needs the partner's name.
+export function detailsError(d: DetailsText): string | null {
+    const i = d.prizes.findIndex(p => p.prize.trim() && p.who === "PARTNER" && !p.partner.trim());
+    return i >= 0 ? `Name the partner offering the prize for place ${i + 1}.` : null;
+}
+
+// What the create/update mutations take: blanks become null, blank prizes are left out.
+export function detailsInput(d: DetailsText): { startTime: string | null; endTime: string | null; prizes: Prize[]; prizeNotes: string | null } {
     const orNull = (s: string) => (s.trim() === "" ? null : s.trim());
     return {
         startTime: orNull(d.startTime),
         endTime: orNull(d.endTime),
-        prize1: orNull(d.prize1),
-        prize2: orNull(d.prize2),
-        prize3: orNull(d.prize3),
+        prizes: d.prizes
+            .map((p, i) => ({ place: i + 1, prize: p.prize.trim(), partner: p.who === "PARTNER" ? orNull(p.partner) : null }))
+            .filter(p => p.prize !== ""),
         prizeNotes: orNull(d.prizeNotes),
     };
 }

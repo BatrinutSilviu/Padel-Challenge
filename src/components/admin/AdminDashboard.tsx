@@ -12,7 +12,7 @@ import { ChallengerFormatPicker } from "./ChallengerFormatPicker";
 import { GroupHeading, TeamNumber } from "./TeamNumber";
 import { FeeInputs } from "./FeeInputs";
 import { PrizeInputs, TimeInputs } from "./TournamentDetailsInputs";
-import { EMPTY_DETAILS, detailsInput } from "../../lib/tournamentDetails";
+import { EMPTY_DETAILS, detailsError, detailsInput } from "../../lib/tournamentDetails";
 import { PlayerPicker } from "../PlayerPicker";
 import { AddPlayerInline } from "../AddPlayerInline";
 import { AdminLeaguesTab } from "./league/AdminLeaguesTab";
@@ -40,14 +40,15 @@ export function AdminDashboard({ onLogout }: { onLogout: () => void }) {
         <div className="min-h-screen bg-gray-50">
             <NavBar />
             <main className="max-w-5xl mx-auto px-3 sm:px-4 pt-6 pb-24 sm:py-8">
-                {/* One row on every screen: on a phone each tab is as wide as its label, Logout beside them. */}
+                {/* One row on every screen: on a phone each tab is as wide as its label, Logout beside them.
+                    If the tabs don't fit (a pending-claims count makes them wider) they scroll sideways. */}
                 <div className="flex items-center gap-2 sm:gap-3 sm:justify-between mb-5 sm:mb-6">
-                    <div className="flex-1 sm:flex-none flex gap-1 bg-white border border-gray-200 rounded-xl p-1">
+                    <div className="flex-1 sm:flex-none min-w-0 flex gap-0.5 sm:gap-1 bg-white border border-gray-200 rounded-xl p-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                         {(["tournaments", "new-tournament", "league", "players", "export"] as Tab[]).map(t => (
                             <button
                                 key={t}
                                 onClick={() => setTab(t)}
-                                className={`flex-auto sm:flex-none px-2 py-2 sm:px-4 sm:py-1.5 md:px-6 md:py-2.5 rounded-lg text-xs sm:text-sm md:text-base font-medium whitespace-nowrap transition-colors ${
+                                className={`flex-auto shrink-0 sm:flex-none px-1.5 py-2 sm:px-4 sm:py-1.5 md:px-6 md:py-2.5 rounded-lg text-xs sm:text-sm md:text-base font-medium whitespace-nowrap transition-colors ${
                                     tab === t ? "bg-[#FF4200] text-white" : "text-gray-600 hover:text-gray-900"
                                 }`}
                             >
@@ -236,7 +237,7 @@ function TournamentsTab() {
                                 <StatusBadge status={t.status} />
                                 <Link
                                     to={`/admin/tournament/${t.id}`}
-                                    className="inline-flex items-center gap-1.5 text-sm font-medium border border-[#FF4200] text-[#FF4200] px-3 py-2 rounded-lg hover:bg-[#FF4200]/5 transition-colors"
+                                    className="inline-flex items-center gap-1.5 text-sm font-medium border border-[#FF4200] text-[#FF4200] px-3 py-2 rounded-lg hover:bg-[#FF4200]/5 transition-colors whitespace-nowrap"
                                 >
                                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487a2.25 2.25 0 1 1 3.182 3.182L7.5 20.213l-4 1 1-4 12.362-12.726z"/></svg>
                                     {t.status === "COMPLETED" ? "Edit scores" : "Enter scores"}
@@ -389,6 +390,8 @@ function CreateTournamentForm({ onCreated, onImport }: { onCreated: () => void; 
         e.preventDefault();
         setError("");
         if (!name.trim()) return setError("Tournament name is required.");
+        const detailsProblem = detailsError(details);
+        if (detailsProblem) return setError(detailsProblem);
         if (signupMode) {
             const fee = entryFee.trim() === "" ? null : Number(entryFee);
             if (fee !== null && (!Number.isInteger(fee) || fee < 0)) return setError("Entry fee must be a whole number of lei.");

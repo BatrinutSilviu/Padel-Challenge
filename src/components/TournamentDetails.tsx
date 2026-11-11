@@ -1,29 +1,35 @@
 import { useState } from "react";
-import { prizePlaces, tournamentFormatNotes, tournamentTypeDescription, tournamentTypeLabel, type TournamentPrizes } from "../lib/tournaments";
+import { placeLabel, prizeList, tournamentFormatNotes, tournamentTypeDescription, tournamentTypeLabel, type TournamentPrizes } from "../lib/tournaments";
 
 type FormatTournament = Parameters<typeof tournamentFormatNotes>[0];
 
-// The prizes a tournament advertises — 1st to 3rd place, plus anything else on offer.
-// Renders nothing when none are set.
+const MEDALS = ["🥇", "🥈", "🥉"];
+
+// The prizes a tournament advertises — up to 5th place, each with who offers it, plus
+// anything else on offer. Renders nothing when none are set.
 export function PrizeList({ tournament }: { tournament: TournamentPrizes }) {
-    const places = prizePlaces(tournament);
-    if (places.length === 0 && !tournament.prizeNotes) return null;
-    const medal: Record<string, string> = { "1st": "🥇", "2nd": "🥈", "3rd": "🥉" };
+    const prizes = prizeList(tournament);
+    if (prizes.length === 0 && !tournament.prizeNotes) return null;
     return (
         <div>
             <p className="text-xs font-bold uppercase tracking-widest text-[#8E8E93] mb-2">Prizes</p>
-            {places.length > 0 && (
-                <ul className="space-y-1">
-                    {places.map(({ place, prize }) => (
-                        <li key={place} className="flex items-start gap-2 text-sm text-[#1A1A2E]">
-                            <span className="shrink-0" aria-hidden>{medal[place]}</span>
-                            <span><span className="font-bold">{place}:</span> {prize}</span>
+            {prizes.length > 0 && (
+                <ul className="space-y-1.5">
+                    {prizes.map(p => (
+                        <li key={p.place} className="flex items-start gap-2 text-sm text-[#1A1A2E]">
+                            <span className="shrink-0 w-5 text-center" aria-hidden>
+                                {MEDALS[p.place - 1] ?? <span className="text-xs font-bold text-[#8E8E93]">{p.place}</span>}
+                            </span>
+                            <span className="min-w-0">
+                                <span className="font-bold">{placeLabel(p.place)}:</span> {p.prize}
+                                {p.partner && <span className="block text-xs text-[#8E8E93]">offered by {p.partner}</span>}
+                            </span>
                         </li>
                     ))}
                 </ul>
             )}
             {tournament.prizeNotes && (
-                <p className={`text-sm text-[#1A1A2E] whitespace-pre-line ${places.length > 0 ? "mt-2" : ""}`}>{tournament.prizeNotes}</p>
+                <p className={`text-sm text-[#1A1A2E] whitespace-pre-line ${prizes.length > 0 ? "mt-2" : ""}`}>{tournament.prizeNotes}</p>
             )}
         </div>
     );
@@ -41,7 +47,7 @@ export function HowItWorks({ tournament, defaultOpen = false }: { tournament: Fo
                 type="button"
                 onClick={() => setOpen(v => !v)}
                 aria-expanded={open}
-                className="w-full flex items-center justify-between gap-3 text-left"
+                className="w-full flex items-center justify-between gap-3 text-left py-2 -my-2"
             >
                 <span className="text-xs font-bold uppercase tracking-widest text-[#8E8E93]">
                     How {tournamentTypeLabel(tournament.type)} works
