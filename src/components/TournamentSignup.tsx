@@ -8,6 +8,7 @@ import { isTeamBasedType } from "../lib/tournaments";
 import { HowItWorks, PrizeList } from "./TournamentDetails";
 import { AccountStatusNotice } from "./auth/AccountStatus";
 import { PayTo } from "./PaymentAccounts";
+import { PrivacyConsent } from "./PrivacyPage";
 import { PlayerPicker } from "./PlayerPicker";
 import { cleanPlayerName, playerNameError } from "../lib/playerName";
 
@@ -19,6 +20,9 @@ type TournamentData = NonNullable<ReturnType<typeof trpc.tournament.getById.useQ
 // In team formats a player can sign up together with a partner.
 export function TournamentSignup({ tournament }: { tournament: TournamentData }) {
     const { token, playerId, account } = useAuth();
+    // Accounts made before sign-up asked for it agree to the privacy policy once, here.
+    const needsConsent = !!account && !account.privacyConsentAt;
+    const [consent, setConsent] = useState(false);
     const qc = useQueryClient();
     const [error, setError] = useState("");
     const [partnerId, setPartnerId] = useState("");
@@ -31,6 +35,9 @@ export function TournamentSignup({ tournament }: { tournament: TournamentData })
         qc.invalidateQueries({ queryKey: getQueryKey(trpc.tournament.list) });
     }
 
+    const acceptPrivacy = trpc.auth.acceptPrivacy.useMutation({
+        onSuccess: () => qc.invalidateQueries({ queryKey: getQueryKey(trpc.auth.me) }),
+    });
     const join = trpc.tournament.join.useMutation({
         onSuccess: () => { setPartnerId(""); setPartnerName(""); refresh(); },
         onError: e => setError(e.message),
@@ -174,12 +181,20 @@ export function TournamentSignup({ tournament }: { tournament: TournamentData })
                                     </p>
                                 </div>
                             )}
+                            {needsConsent && tournament.registrationOpen && (
+                                <PrivacyConsent checked={consent} onChange={setConsent} />
+                            )}
                             <button
-                                onClick={() => join.mutate({
-                                    id: tournament.id,
-                                    ...(partnerId ? { partnerId } : partnerName ? { partnerName: cleanPlayerName(partnerName) } : {}),
-                                })}
-                                disabled={busy || !tournament.registrationOpen || !!partnerNameError}
+                                onClick={async () => {
+                                    if (needsConsent) {
+                                        try { await acceptPrivacy.mutateAsync(); } catch (e) { return setError((e as Error).message); }
+                                    }
+                                    join.mutate({
+                                        id: tournament.id,
+                                        ...(partnerId ? { partnerId } : partnerName ? { partnerName: cleanPlayerName(partnerName) } : {}),
+                                    });
+                                }}
+                                disabled={busy || acceptPrivacy.isPending || !tournament.registrationOpen || !!partnerNameError || (needsConsent && !consent)}
                                 className="w-full sm:w-auto bg-[#FF4200] text-white rounded-xl px-5 py-3 text-sm font-bold hover:bg-[#CC3500] disabled:opacity-40 disabled:hover:bg-[#FF4200] transition-colors"
                             >
                                 {join.isPending

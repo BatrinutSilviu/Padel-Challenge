@@ -48,8 +48,11 @@ export function HomePage() {
                 {tab === "players" && <PlayersTab />}
                 {tab === "tournaments" && <TournamentsTab />}
 
-                <div className="mt-6">
+                <div className="mt-6 space-y-3">
                     <SupportContact />
+                    <p className="text-center text-xs text-[#8E8E93]">
+                        <Link to="/privacy" className="hover:text-[#FF4200]">Politica de confidențialitate (GDPR)</Link>
+                    </p>
                 </div>
             </main>
         </div>

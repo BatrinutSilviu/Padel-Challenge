@@ -5,6 +5,7 @@ import { NavBar } from "../NavBar";
 import { trpc } from "../../trpc";
 import { useAuth } from "../../contexts/AuthContext";
 import { ProfileStep, identityInput, type Identity } from "./ProfileStep";
+import { PrivacyConsent } from "../PrivacyPage";
 import { GoogleSignInButton, type GoogleSignup } from "./GoogleSignInButton";
 
 // Creating an account: pick (or create) your player profile, then either an email and
@@ -24,6 +25,7 @@ export function SignupPage() {
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const [error, setError] = useState("");
+    const [acceptPrivacy, setAcceptPrivacy] = useState(false);
 
     function onCreated(data: { token: string; pendingApproval: boolean }) {
         login(data.token);
@@ -38,16 +40,16 @@ export function SignupPage() {
     const emailValid = /^\S+@\S+\.\S+$/.test(email);
     const passwordValid = password.length >= 8;
     const passwordsMatch = password === confirmPassword;
-    const canSubmit = !!identity && (google ? true : emailValid && passwordValid && passwordsMatch);
+    const canSubmit = !!identity && acceptPrivacy && (google ? true : emailValid && passwordValid && passwordsMatch);
 
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
         setError("");
         if (!canSubmit || !identity) return;
         if (google) {
-            googleSignup.mutate({ signupToken: google.signupToken, player: identityInput(identity) });
+            googleSignup.mutate({ signupToken: google.signupToken, player: identityInput(identity), acceptPrivacy: true });
         } else {
-            signup.mutate({ email, password, player: identityInput(identity) });
+            signup.mutate({ email, password, player: identityInput(identity), acceptPrivacy: true });
         }
     }
 
@@ -137,6 +139,8 @@ export function SignupPage() {
                                     </div>
                                 </div>
                             )}
+
+                            <PrivacyConsent checked={acceptPrivacy} onChange={setAcceptPrivacy} />
 
                             {error && <p className="text-sm text-red-500">{error}</p>}
 

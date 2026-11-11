@@ -1,3 +1,4 @@
+import { PrivacyPage } from "./components/PrivacyPage";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { HomePage } from "./components/HomePage";
 import { DivisionPage } from "./components/DivisionPage";
@@ -29,6 +30,7 @@ export default function App() {
             <Route path="/live" element={<LatestLiveBoard />} />
             <Route path="/player/:id" element={<PlayerPage />} />
             <Route path="/badges" element={<BadgesPage />} />
+            <Route path="/privacy" element={<PrivacyPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/signup" element={<SignupPage />} />
             <Route path="/matches" element={<MatchesPage />} />
