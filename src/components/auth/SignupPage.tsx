@@ -89,7 +89,7 @@ export function SignupPage() {
                                     <button
                                         type="button"
                                         onClick={resetIdentity}
-                                        className="shrink-0 text-xs font-semibold text-[#FF4200] hover:underline"
+                                        className="shrink-0 text-xs font-semibold text-[#FF4200] hover:underline px-2 py-2 -my-2 -mr-2"
                                     >
                                         Change
                                     </button>

@@ -779,7 +779,7 @@ function CreateTournamentForm({ onCreated, onImport }: { onCreated: () => void; 
                             <button
                                 type="button"
                                 onClick={() => setAddingPlayer(true)}
-                                className="text-sm font-medium text-[#FF4200] hover:underline mb-2"
+                                className="text-sm font-medium text-[#FF4200] hover:underline mb-1 py-2"
                             >
                                 + Add new player
                             </button>

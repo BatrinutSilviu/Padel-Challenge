@@ -55,7 +55,7 @@ export function TournamentPage() {
                                     <span aria-hidden className="w-4 text-center">📅</span>
                                     <span>
                                         <span className="font-semibold">{tournamentWhen({ date: tournament.date }, "long")}</span>
-                                        {timeRangeLabel(tournament) && <span className="text-[#8E8E93]"> · {timeRangeLabel(tournament)}</span>}
+                                        {timeRangeLabel(tournament) && <span className="text-[#8E8E93] whitespace-nowrap"> · {timeRangeLabel(tournament)}</span>}
                                     </span>
                                 </p>
                                 {tournament.location && (

@@ -111,19 +111,19 @@ export function PaymentAccountsAdmin() {
                         {a.notes && <p className="text-xs text-gray-400 mt-0.5">{a.notes}</p>}
                     </div>
                     <div className="flex flex-col gap-1.5 shrink-0">
-                        <button onClick={() => startEdit(a)} className="px-3 py-1.5 rounded-lg bg-gray-100 text-gray-600 text-xs font-medium">Edit</button>
+                        <button onClick={() => startEdit(a)} className="px-3 py-2 rounded-lg bg-gray-100 text-gray-600 text-xs font-medium">Edit</button>
                         <button
                             onClick={() => update.mutate({
                                 id: a.id, type: a.type as "bank" | "revolut" | "btpay", bankName: a.bankName, accountHolder: a.accountHolder,
                                 iban: a.iban, paymentHandle: a.paymentHandle, notes: a.notes, isActive: !a.isActive,
                             })}
-                            className="px-3 py-1.5 rounded-lg bg-gray-100 text-gray-600 text-xs font-medium"
+                            className="px-3 py-2 rounded-lg bg-gray-100 text-gray-600 text-xs font-medium"
                         >
                             {a.isActive ? "Hide" : "Show"}
                         </button>
                         <button
                             onClick={() => { if (confirm(`Delete ${accountTitle(a)} (${a.accountHolder})?`)) remove.mutate({ id: a.id }); }}
-                            className="px-3 py-1.5 rounded-lg bg-red-50 text-red-600 text-xs font-medium"
+                            className="px-3 py-2 rounded-lg bg-red-50 text-red-600 text-xs font-medium"
                         >
                             Delete
                         </button>
