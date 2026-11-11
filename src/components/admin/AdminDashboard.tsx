@@ -5,12 +5,14 @@ import { trpc } from "../../trpc";
 import { useQueryClient } from "@tanstack/react-query";
 import { getQueryKey } from "@trpc/react-query";
 import { DIVISION_NAMES, divisionLabel } from "../../lib/divisions";
-import { TournamentType, TOURNAMENT_TYPE_LABELS, capacityOptions, isTeamBasedType, type ChallengerFormat } from "../../lib/tournaments";
+import { TournamentType, TOURNAMENT_TYPE_LABELS, capacityOptions, isTeamBasedType, type ChallengerFormat, tournamentWhen, tournamentTypeDescription } from "../../lib/tournaments";
 import { RECOMMENDED_MASTERS_FORMAT, STAGE_INFO, mastersKnockoutStages, mastersTeamCount, type MastersFormat } from "../../lib/masters";
 import { MastersFormatPicker } from "./MastersFormatPicker";
 import { ChallengerFormatPicker } from "./ChallengerFormatPicker";
 import { GroupHeading, TeamNumber } from "./TeamNumber";
 import { FeeInputs } from "./FeeInputs";
+import { PrizeInputs, TimeInputs } from "./TournamentDetailsInputs";
+import { EMPTY_DETAILS, detailsInput } from "../../lib/tournamentDetails";
 import { PlayerPicker } from "../PlayerPicker";
 import { AddPlayerInline } from "../AddPlayerInline";
 import { AdminLeaguesTab } from "./league/AdminLeaguesTab";
@@ -154,7 +156,7 @@ function TournamentsTab() {
                                 <div className="min-w-0">
                                     <TournamentNameEditor id={t.id} name={t.name} />
                                     <span className="text-xs text-gray-400 block">
-                                        {divisionLabel(t.division)} · {new Date(t.date).toLocaleDateString()} · {TOURNAMENT_TYPE_LABELS[t.type as TournamentType] ?? t.type}
+                                        {divisionLabel(t.division)} · {tournamentWhen(t)} · {TOURNAMENT_TYPE_LABELS[t.type as TournamentType] ?? t.type}
                                         {" · "}{t._count.participants}{t.maxPlayers !== null ? `/${t.maxPlayers}` : ""} confirmed
                                         {!t.registrationOpen && " · closed"}
                                     </span>
@@ -188,7 +190,7 @@ function TournamentsTab() {
                         <div key={t.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white rounded-lg border border-yellow-200 px-4 py-3">
                             <div className="min-w-0">
                                 <TournamentNameEditor id={t.id} name={t.name} />
-                                <span className="text-xs text-gray-400 block">{divisionLabel(t.division)} · {new Date(t.date).toLocaleDateString()} · {TOURNAMENT_TYPE_LABELS[t.type as TournamentType] ?? t.type}</span>
+                                <span className="text-xs text-gray-400 block">{divisionLabel(t.division)} · {tournamentWhen(t)} · {TOURNAMENT_TYPE_LABELS[t.type as TournamentType] ?? t.type}</span>
                             </div>
                             <div className="flex items-center gap-2 self-start sm:self-auto shrink-0">
                                 <Link
@@ -218,7 +220,7 @@ function TournamentsTab() {
                         <div key={t.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-white rounded-lg border border-gray-200 px-4 py-3">
                             <div className="min-w-0">
                                 <TournamentNameEditor id={t.id} name={t.name} />
-                                <span className="text-xs text-gray-400 block">{divisionLabel(t.division)} · {new Date(t.date).toLocaleDateString()} · {TOURNAMENT_TYPE_LABELS[t.type as TournamentType] ?? t.type}</span>
+                                <span className="text-xs text-gray-400 block">{divisionLabel(t.division)} · {tournamentWhen(t)} · {TOURNAMENT_TYPE_LABELS[t.type as TournamentType] ?? t.type}</span>
                             </div>
                             <div className="flex items-center gap-2 self-start sm:self-auto shrink-0">
                                 <StatusBadge status={t.status} />
@@ -256,6 +258,8 @@ function CreateTournamentForm({ onCreated, onImport }: { onCreated: () => void; 
     const [name, setName] = useState("");
     const [date, setDate] = useState(() => new Date().toISOString().split("T")[0]);
     const [type, setType] = useState<TournamentType>("AMERICANO");
+    // Start/end time and prizes, advertised on the tournament page.
+    const [details, setDetails] = useState(EMPTY_DETAILS);
     const [pointsPerGame, setPointsPerGame] = useState(32);
     const [maxPlayers, setMaxPlayers] = useState(8);
     // Sign-up mode: create the tournament empty and let players claim the spots
@@ -382,7 +386,7 @@ function CreateTournamentForm({ onCreated, onImport }: { onCreated: () => void; 
             if (advance !== null && (!Number.isInteger(advance) || advance < 0)) return setError("Advance must be a whole number of lei.");
             if (fee !== null && advance !== null && advance > fee) return setError("The advance can't be more than the total entry fee.");
             createOpen.mutate({
-                name: name.trim(), date, division, type, pointsPerGame, totalRounds, maxPlayers: capacity, entryFee: fee, advanceFee: advance, playerIds: selectedIds,
+                name: name.trim(), date, ...detailsInput(details), division, type, pointsPerGame, totalRounds, maxPlayers: capacity, entryFee: fee, advanceFee: advance, playerIds: selectedIds,
                 ...(type === "MASTERS" ? mastersFormat : {}),
                 ...(type === "CHALLENGER" ? { challengerFormat } : {}),
             });
@@ -394,7 +398,7 @@ function CreateTournamentForm({ onCreated, onImport }: { onCreated: () => void; 
                 if (!p1 || !p2) return setError(`Team ${i + 1} is incomplete — select both players.`);
                 if (p1 === p2) return setError(`Team ${i + 1} has the same player in both slots.`);
             }
-            createTeamAmericano.mutate({ name: name.trim(), date, division, pointsPerGame, teams: teamSlots.map(([p1, p2]) => ({ player1Id: p1, player2Id: p2 })) });
+            createTeamAmericano.mutate({ name: name.trim(), date, ...detailsInput(details), division, pointsPerGame, teams: teamSlots.map(([p1, p2]) => ({ player1Id: p1, player2Id: p2 })) });
         } else if (type === "CHALLENGER") {
             if (teamSlots.length !== 4 && teamSlots.length !== 8) return setError("Challenger requires 4 or 8 teams.");
             for (let i = 0; i < teamSlots.length; i++) {
@@ -402,7 +406,7 @@ function CreateTournamentForm({ onCreated, onImport }: { onCreated: () => void; 
                 if (!p1 || !p2) return setError(`Team ${i + 1} is incomplete — select both players.`);
                 if (p1 === p2) return setError(`Team ${i + 1} has the same player in both slots.`);
             }
-            createChallenger.mutate({ name: name.trim(), date, division, pointsPerGame: 32, format: challengerFormat, teams: teamSlots.map(([p1, p2]) => ({ player1Id: p1, player2Id: p2 })) });
+            createChallenger.mutate({ name: name.trim(), date, ...detailsInput(details), division, pointsPerGame: 32, format: challengerFormat, teams: teamSlots.map(([p1, p2]) => ({ player1Id: p1, player2Id: p2 })) });
         } else if (type === "MASTERS") {
             const teamsNeeded = mastersTeamCount(mastersFormat);
             if (teamSlots.length !== teamsNeeded) return setError(`${mastersFormat.groupCount} groups of ${mastersFormat.teamsPerGroup} needs ${teamsNeeded} teams.`);
@@ -411,17 +415,17 @@ function CreateTournamentForm({ onCreated, onImport }: { onCreated: () => void; 
                 if (!p1 || !p2) return setError(`Team ${i + 1} is incomplete — select both players.`);
                 if (p1 === p2) return setError(`Team ${i + 1} has the same player in both slots.`);
             }
-            createMasters.mutate({ name: name.trim(), date, division, ...mastersFormat, teams: teamSlots.map(([p1, p2]) => ({ player1Id: p1, player2Id: p2 })) });
+            createMasters.mutate({ name: name.trim(), date, ...detailsInput(details), division, ...mastersFormat, teams: teamSlots.map(([p1, p2]) => ({ player1Id: p1, player2Id: p2 })) });
         } else if (type === "KING_OF_THE_COURT") {
             for (let i = 0; i < teamSlots.length; i++) {
                 const [p1, p2] = teamSlots[i];
                 if (!p1 || !p2) return setError(`Team ${i + 1} is incomplete — select both players.`);
                 if (p1 === p2) return setError(`Team ${i + 1} has the same player in both slots.`);
             }
-            createKingOfTheCourt.mutate({ name: name.trim(), date, division, totalRounds, teams: teamSlots.map(([p1, p2]) => ({ player1Id: p1, player2Id: p2 })) });
+            createKingOfTheCourt.mutate({ name: name.trim(), date, ...detailsInput(details), division, totalRounds, teams: teamSlots.map(([p1, p2]) => ({ player1Id: p1, player2Id: p2 })) });
         } else {
             if (selectedIds.length !== maxPlayers) return setError(`Select exactly ${maxPlayers} players.`);
-            create.mutate({ name: name.trim(), date, division, type, pointsPerGame, playerIds: selectedIds });
+            create.mutate({ name: name.trim(), date, ...detailsInput(details), division, type, pointsPerGame, playerIds: selectedIds });
         }
     }
 
@@ -452,6 +456,10 @@ function CreateTournamentForm({ onCreated, onImport }: { onCreated: () => void; 
                     <input type="date" value={date} onChange={e => setDate(e.target.value)} className={input} />
                 </Field>
             </div>
+
+            <Field label="Time (local, optional)">
+                <TimeInputs value={details} onChange={setDetails} />
+            </Field>
 
             <Field label="Division">
                 <div className="flex flex-wrap gap-2">
@@ -489,6 +497,7 @@ function CreateTournamentForm({ onCreated, onImport }: { onCreated: () => void; 
                         </button>
                     ))}
                 </div>
+                <p className="text-xs text-gray-400 mt-2">{tournamentTypeDescription(type)}</p>
             </Field>
 
             <Field label="Players">
@@ -598,6 +607,10 @@ function CreateTournamentForm({ onCreated, onImport }: { onCreated: () => void; 
                     </p>
                 </Field>
             )}
+
+            <Field label="Prizes (optional)">
+                <PrizeInputs value={details} onChange={setDetails} />
+            </Field>
 
             {signupMode && (
                 <Field label="Fees (lei / person)">

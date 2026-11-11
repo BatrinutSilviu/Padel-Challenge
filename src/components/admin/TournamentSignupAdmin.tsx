@@ -5,12 +5,13 @@ import { getQueryKey } from "@trpc/react-query";
 import { NavBar } from "../NavBar";
 import { trpc } from "../../trpc";
 import { divisionLabel } from "../../lib/divisions";
-import { capacityOptions, challengerFormatOf, isTeamBasedType, playerCountError, tournamentTypeLabel } from "../../lib/tournaments";
+import { capacityOptions, challengerFormatOf, isTeamBasedType, playerCountError, tournamentTypeLabel, tournamentWhen } from "../../lib/tournaments";
 import { PlayerPicker } from "../PlayerPicker";
 import { mastersFormatOf } from "../../lib/masters";
 import { MastersFormatPicker } from "./MastersFormatPicker";
 import { ChallengerFormatPicker } from "./ChallengerFormatPicker";
 import { FeeInputs } from "./FeeInputs";
+import { TournamentDetailsEditor } from "./TournamentDetailsInputs";
 import { GroupHeading, TeamNumber } from "./TeamNumber";
 
 type TournamentData = NonNullable<ReturnType<typeof trpc.tournament.getById.useQuery>["data"]>;
@@ -211,10 +212,12 @@ export function TournamentSignupAdmin({ tournament }: { tournament: TournamentDa
                     <div className="flex flex-wrap items-center gap-2 mt-1">
                         <h1 className="text-lg sm:text-xl font-bold text-gray-800">{tournament.name}</h1>
                         <span className="text-sm text-gray-400">
-                            {divisionLabel(tournament.division)} · {tournamentTypeLabel(tournament.type)} · {new Date(tournament.date).toLocaleDateString()}
+                            {divisionLabel(tournament.division)} · {tournamentTypeLabel(tournament.type)} · {tournamentWhen(tournament)}
                         </span>
                     </div>
                 </div>
+
+                <TournamentDetailsEditor tournament={tournament} />
 
                 {/* Sign-up settings */}
                 <div className="bg-white rounded-xl border border-gray-200 px-4 sm:px-5 py-4 space-y-4">

@@ -5,7 +5,7 @@ import { useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 
 import { DIVISION_NAMES, DIVISION_BADGES, DIVISION_COLORS, divisionLabel } from "../lib/divisions";
-import { TournamentType, TOURNAMENT_TYPE_LABELS } from "../lib/tournaments";
+import { TournamentType, TOURNAMENT_TYPE_LABELS, tournamentWhen } from "../lib/tournaments";
 import { BADGE_META, BadgeType } from "../lib/badges";
 import { RankingPointsInfo } from "./RankingPointsInfo";
 import { useRankingSystem } from "../lib/ranking";
@@ -271,7 +271,7 @@ function TournamentsTab() {
                                 <div className="min-w-0">
                                     <span className="font-bold text-[#1A1A2E] block truncate">{t.name}</span>
                                     <span className="text-xs text-[#8E8E93] font-medium">
-                                        {divisionLabel(t.division)} · {new Date(t.date).toLocaleDateString()}
+                                        {divisionLabel(t.division)} · {tournamentWhen(t)}
                                         {spotsLeft !== null && ` · ${spotsLeft} spot${spotsLeft !== 1 ? "s" : ""} left`}
                                     </span>
                                 </div>
@@ -331,7 +331,7 @@ function TournamentsTab() {
                             <span className="text-xs text-[#8E8E93] font-medium">{divisionLabel(t.division)} · {TOURNAMENT_TYPE_LABELS[t.type as TournamentType] ?? t.type}</span>
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
-                            <span className="text-xs text-[#8E8E93] hidden sm:inline">{new Date(t.date).toLocaleDateString()}</span>
+                            <span className="text-xs text-[#8E8E93] hidden sm:inline">{tournamentWhen(t)}</span>
                             <StatusBadge status={t.status} />
                         </div>
                     </Link>

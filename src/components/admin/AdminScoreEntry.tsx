@@ -16,6 +16,7 @@ import { KingOfTheCourtScoreEntry } from "./KingOfTheCourtScoreEntry";
 import { PlayerPicker } from "../PlayerPicker";
 import { useAdminSession, LoginPage, SessionExpiredModal } from "./AdminAuth";
 import { TournamentSignupAdmin } from "./TournamentSignupAdmin";
+import { TournamentDetailsEditor } from "./TournamentDetailsInputs";
 
 export function AdminScoreEntry() {
     const { id } = useParams<{ id: string }>();
@@ -279,6 +280,8 @@ export function AdminScoreEntry() {
                         )}
                     </div>
                 </div>
+
+                <TournamentDetailsEditor tournament={tournament} />
 
                 {/* Participants */}
                 <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">

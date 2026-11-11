@@ -1,4 +1,5 @@
-import { RECOMMENDED_MASTERS_FORMAT, mastersTeamCount, type MastersFormat } from "./masters";
+import { RECOMMENDED_MASTERS_FORMAT, mastersFormatNotes, mastersFormatOf, mastersTeamCount, type MastersFormat } from "./masters";
+import { challengerFormatNotes } from "./challenger";
 
 export type TournamentType = "AMERICANO" | "AMERICANO_CHAMPIONS" | "AMERICANO_GIRLS" | "CHALLENGER" | "TEAM_AMERICANO" | "KING_OF_THE_COURT" | "MASTERS";
 
@@ -14,6 +15,110 @@ export const TOURNAMENT_TYPE_LABELS: Record<TournamentType, string> = {
 
 export function tournamentTypeLabel(type: string): string {
     return TOURNAMENT_TYPE_LABELS[type as TournamentType] ?? type;
+}
+
+// One line per format, for players picking a tournament and admins picking a type.
+export const TOURNAMENT_TYPE_DESCRIPTIONS: Record<TournamentType, string> = {
+    AMERICANO: "Sign up on your own — you play with a different partner every round and collect the points you win.",
+    AMERICANO_CHAMPIONS: "An Americano with higher stakes: same rules, more ranking points, and the winner earns the Americano Champion badge.",
+    AMERICANO_GIRLS: "An Americano for the girls' division: a different partner every round, points add up.",
+    CHALLENGER: "Fixed teams of 2: a group stage, then knockout matches for every place.",
+    TEAM_AMERICANO: "Fixed teams of 2 play every other team once; the points you win add up.",
+    KING_OF_THE_COURT: "Fixed teams of 2 on a ladder of courts: win to move up a court, lose and you move down.",
+    MASTERS: "The big one: fixed teams of 2, a group stage played in full sets, then a knockout bracket.",
+};
+
+export function tournamentTypeDescription(type: string): string {
+    return TOURNAMENT_TYPE_DESCRIPTIONS[type as TournamentType] ?? "";
+}
+
+type FormatInfo = {
+    type: string;
+    pointsPerGame: number;
+    totalRounds: number | null;
+    maxPlayers: number | null;
+    challengerFormat?: string | null;
+    groupCount?: number | null;
+    teamsPerGroup?: number | null;
+};
+
+// How a tournament is played, for players: a few short points per format, following
+// the schedule generators and ranking rules in the backend's tournament router.
+export function tournamentFormatNotes(t: FormatInfo): string[] {
+    const americanoScoring = `Every match is played to ${t.pointsPerGame} points in total (e.g. ${Math.ceil(t.pointsPerGame / 2) + 2}–${Math.floor(t.pointsPerGame / 2) - 2}), and every point your side wins counts towards your score`;
+    switch (t.type) {
+        case "AMERICANO":
+        case "AMERICANO_GIRLS":
+        case "AMERICANO_CHAMPIONS":
+            return [
+                "Sign up on your own — no partner needed",
+                "Every round you play with a different partner, so you partner every other player once and face everyone along the way",
+                americanoScoring,
+                "Most points wins; on equal points, the player with more match wins ranks higher",
+                ...(t.type === "AMERICANO_CHAMPIONS"
+                    ? ["The winner earns the Americano Champion badge; the results don't count towards division standings"]
+                    : []),
+            ];
+        case "TEAM_AMERICANO":
+            return [
+                "You play as a fixed team of 2 — sign up with a partner, or alone and you'll be paired up",
+                "Every team plays every other team once (with an odd number of teams, one sits out each round)",
+                americanoScoring,
+                "The team with the most points wins; on equal points, more match wins ranks higher",
+            ];
+        case "KING_OF_THE_COURT":
+            return [
+                "You play as a fixed team of 2 — sign up with a partner, or alone and you'll be paired up",
+                "Two teams per court, drawn at random for the first round",
+                "After each round the winners move up one court and the losers move down one — the top court is where the kings play",
+                "A tied match is decided by a golden point",
+                `About ${t.totalRounds ?? 7} rounds; your court in the last round sets your final place (court 1's winners are 1st, its losers 2nd, court 2's winners 3rd, …)`,
+            ];
+        case "CHALLENGER":
+            return challengerFormatNotes(challengerFormatOf(t), t.maxPlayers);
+        case "MASTERS":
+            return mastersFormatNotes(mastersFormatOf(t));
+        default:
+            return [];
+    }
+}
+
+// ─── Times and prizes ──────────────────────────────────────────────────────────
+// Times are local wall-clock "HH:MM" strings, shown exactly as stored.
+
+export function timeRangeLabel(t: { startTime?: string | null; endTime?: string | null }): string {
+    if (t.startTime && t.endTime) return `${t.startTime}–${t.endTime}`;
+    if (t.startTime) return `from ${t.startTime}`;
+    if (t.endTime) return `until ${t.endTime}`;
+    return "";
+}
+
+// The tournament's date (it's stored as midnight UTC, so it's read back in UTC) with
+// its times, e.g. "14 November 2026 · 10:00–14:00".
+export function tournamentWhen(
+    t: { date: string | Date; startTime?: string | null; endTime?: string | null },
+    dateStyle: "long" | "short" = "short",
+): string {
+    const date = new Date(t.date).toLocaleDateString(
+        dateStyle === "long" ? "en-GB" : undefined,
+        dateStyle === "long" ? { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" } : { timeZone: "UTC" },
+    );
+    const times = timeRangeLabel(t);
+    return times ? `${date} · ${times}` : date;
+}
+
+export type TournamentPrizes = { prize1?: string | null; prize2?: string | null; prize3?: string | null; prizeNotes?: string | null };
+
+export function prizePlaces(t: TournamentPrizes): { place: string; prize: string }[] {
+    return [
+        { place: "1st", prize: t.prize1 },
+        { place: "2nd", prize: t.prize2 },
+        { place: "3rd", prize: t.prize3 },
+    ].filter((p): p is { place: string; prize: string } => !!p.prize);
+}
+
+export function hasPrizes(t: TournamentPrizes): boolean {
+    return prizePlaces(t).length > 0 || !!t.prizeNotes;
 }
 
 // Team-based formats need the players paired up before a schedule can be built,

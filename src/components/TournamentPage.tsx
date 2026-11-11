@@ -2,7 +2,8 @@ import { useParams, Link } from "react-router-dom";
 import { trpc } from "../trpc";
 import { NavBar } from "./NavBar";
 import { divisionLabel } from "../lib/divisions";
-import { tournamentTypeLabel } from "../lib/tournaments";
+import { hasPrizes, tournamentTypeLabel, tournamentWhen } from "../lib/tournaments";
+import { HowItWorks, PrizeList } from "./TournamentDetails";
 import { useState } from "react";
 import { StatusBadge } from "./HomePage";
 import { ChallengerView } from "./challenger/ChallengerView";
@@ -42,7 +43,7 @@ export function TournamentPage() {
                         <div className="min-w-0">
                             <h1 className="text-2xl font-black text-[#1A1A2E] tracking-tight">{tournament.name}</h1>
                             <p className="text-sm text-[#8E8E93] font-medium mt-1">
-                                {new Date(tournament.date).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}
+                                {tournamentWhen(tournament, "long")}
                                 {" · "}{divisionLabel(tournament.division)}
                                 {" · "}{tournamentTypeLabel(tournament.type)}
                                 {" · "}{tournament.status === "UPCOMING"
@@ -53,6 +54,14 @@ export function TournamentPage() {
                         <StatusBadge status={tournament.status} />
                     </div>
                 </div>
+
+                {/* The sign-up sheet shows these itself, next to the fees. */}
+                {tournament.status !== "UPCOMING" && (
+                    <div className="bg-white rounded-2xl border border-[#E5E5EA] px-5 sm:px-6 py-4 shadow-sm space-y-4">
+                        {hasPrizes(tournament) && <PrizeList tournament={tournament} />}
+                        <HowItWorks tournament={tournament} />
+                    </div>
+                )}
 
                 {tournament.status === "UPCOMING" ? (
                     <TournamentSignup tournament={tournament} />
