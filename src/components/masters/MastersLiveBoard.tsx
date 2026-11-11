@@ -9,7 +9,7 @@
 // which most TV remotes send) shows another screen until the next result comes in.
 // F (or a double click) toggles full screen.
 import { Fragment, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { trpc } from "../../trpc";
 import {
     computeGroupStandings,
@@ -43,14 +43,58 @@ const FLASH_MS = 15_000;
 // /tournament/:id/live — one tournament.
 export function MastersLiveBoard() {
     const { id } = useParams<{ id: string }>();
+    return <PhoneGate tournamentId={id}><MastersTvBoard id={id!} /></PhoneGate>;
+}
+
+function MastersTvBoard({ id }: { id: string }) {
     useTvScale();
     useWakeLock();
-    return <TournamentBoard id={id!} />;
+    return <TournamentBoard id={id} />;
 }
 
 // /live — whichever live Masters tournament was scored last; switches when the other
 // one gets a result.
 export function LatestLiveBoard() {
+    return <PhoneGate><LatestTvBoard /></PhoneGate>;
+}
+
+// The board is laid out for a TV. On a phone held upright it can't be read, so it
+// points to the tournament page instead — unless asked to show the board anyway (or the
+// phone is turned sideways).
+function PhoneGate({ tournamentId, children }: { tournamentId?: string; children: ReactNode }) {
+    const narrow = () => typeof window !== "undefined" && window.innerWidth < 768 && window.innerHeight > window.innerWidth;
+    const [isNarrow, setIsNarrow] = useState(narrow);
+    const [anyway, setAnyway] = useState(false);
+    useEffect(() => {
+        const update = () => setIsNarrow(narrow());
+        window.addEventListener("resize", update);
+        return () => window.removeEventListener("resize", update);
+    }, []);
+    if (!isNarrow || anyway) return <>{children}</>;
+    return (
+        <div
+            className="min-h-screen flex flex-col items-center justify-center gap-5 px-6 text-center text-white"
+            style={{ background: "radial-gradient(ellipse at top, #333366 0%, #1A1A3E 45%, #0B0B1E 100%)" }}
+        >
+            <p className="text-4xl" aria-hidden>📺</p>
+            <div>
+                <p className="text-xl font-black">This is the TV board</p>
+                <p className="text-sm text-white/70 mt-1">It's made for the big screen at the club. On your phone, the tournament page shows the same scores and standings.</p>
+            </div>
+            <Link
+                to={tournamentId ? `/tournament/${tournamentId}` : "/"}
+                className="w-full max-w-xs rounded-xl bg-[#FF4200] px-5 py-3 text-base font-bold"
+            >
+                {tournamentId ? "Open the tournament page" : "Go to the home page"}
+            </Link>
+            <button type="button" onClick={() => setAnyway(true)} className="text-sm font-semibold text-white/70 underline py-2">
+                Show the TV board anyway
+            </button>
+        </div>
+    );
+}
+
+function LatestTvBoard() {
     const { data } = trpc.tournament.liveBoard.useQuery(undefined, {
         refetchInterval: POLL_MS,
         refetchIntervalInBackground: true,

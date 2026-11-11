@@ -93,13 +93,13 @@ export function GroupSection({ title, rounds, courtOf }: { title: string; rounds
                         </div>
                         <div className="divide-y divide-[#F5F5F7]">
                             {round.matches.map(match => (
-                                <div key={match.id} className="px-4 py-3 grid grid-cols-[1fr_auto_1fr] items-center gap-3">
+                                <div key={match.id} className="px-4 py-3 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3">
                                     <div className="text-right">
                                         <Link to={`/player/${match.team1Player1.id}`} className="font-semibold text-[#1A1A2E] hover:text-[#FF4200] text-sm block truncate transition-colors">{match.team1Player1.name}</Link>
                                         <Link to={`/player/${match.team1Player2.id}`} className="font-semibold text-[#1A1A2E] hover:text-[#FF4200] text-sm block truncate transition-colors">{match.team1Player2.name}</Link>
                                     </div>
                                     <div className="text-center shrink-0">
-                                        <span className={`text-base font-black tabular-nums ${isChallengerMatchScored(match) ? "text-[#FF4200]" : "text-[#E5E5EA]"}`}>
+                                        <span className={`text-base font-black tabular-nums whitespace-nowrap ${isChallengerMatchScored(match) ? "text-[#FF4200]" : "text-[#E5E5EA]"}`}>
                                             {formatChallengerScore(match)}
                                         </span>
                                         {courtOf?.has(match.id) && (

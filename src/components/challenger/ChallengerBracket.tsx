@@ -155,7 +155,7 @@ export function BracketMatchCard({
 }) {
     if (!match) {
         return (
-            <div className="border border-dashed border-[#E5E5EA] rounded-xl px-3 py-4 grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+            <div className="border border-dashed border-[#E5E5EA] rounded-xl px-3 py-4 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2">
                 <div className="text-right text-xs text-[#B0B0B8] truncate">{placeholderLeft ?? placeholder ?? "TBD"}</div>
                 <div className="text-[#E5E5EA] font-black text-sm">vs</div>
                 <div className="text-left text-xs text-[#B0B0B8] truncate">{placeholderRight ?? placeholder ?? "TBD"}</div>
@@ -167,12 +167,12 @@ export function BracketMatchCard({
     const team2Wins = match.team2Score > match.team1Score;
 
     return (
-        <div className="border border-[#E5E5EA] rounded-xl px-3 py-4 grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+        <div className="border border-[#E5E5EA] rounded-xl px-3 py-4 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2">
             <div className="text-right">
                 <Link to={`/player/${match.team1Player1.id}`} className={`text-sm font-semibold block truncate transition-colors ${team1Wins ? "text-[#FF4200]" : "text-[#1A1A2E] hover:text-[#FF4200]"}`}>{match.team1Player1.name}</Link>
                 <Link to={`/player/${match.team1Player2.id}`} className={`text-sm font-semibold block truncate transition-colors ${team1Wins ? "text-[#FF4200]" : "text-[#1A1A2E] hover:text-[#FF4200]"}`}>{match.team1Player2.name}</Link>
             </div>
-            <div className="text-center shrink-0 text-sm font-black tabular-nums text-[#1A1A2E]">
+            <div className="text-center shrink-0 text-sm font-black tabular-nums text-[#1A1A2E] whitespace-nowrap">
                 {formatChallengerScore(match)}
             </div>
             <div className="text-left">

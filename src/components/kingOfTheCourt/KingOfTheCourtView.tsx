@@ -36,7 +36,7 @@ function RoundCard({ round }: { round: RoundData }) {
                 {matches.map(match => (
                     <div key={match.id} className="px-4 py-4">
                         <p className="text-xs font-bold uppercase tracking-widest text-[#8E8E93] mb-3">Court {match.court}</p>
-                        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
+                        <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3">
                             <div className="text-right">
                                 <Link to={`/player/${match.team1Player1.id}`} className="font-semibold text-[#1A1A2E] hover:text-[#FF4200] text-sm block truncate transition-colors">{match.team1Player1.name}</Link>
                                 <Link to={`/player/${match.team1Player2.id}`} className="font-semibold text-[#1A1A2E] hover:text-[#FF4200] text-sm block truncate transition-colors">{match.team1Player2.name}</Link>

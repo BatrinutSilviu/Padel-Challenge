@@ -1,8 +1,8 @@
 import { useParams, Link } from "react-router-dom";
 import { trpc } from "../trpc";
 import { NavBar } from "./NavBar";
-import { divisionLabel } from "../lib/divisions";
-import { hasPrizes, tournamentTypeLabel, tournamentWhen } from "../lib/tournaments";
+import { DIVISION_BADGES, divisionLabel } from "../lib/divisions";
+import { hasPrizes, timeRangeLabel, tournamentTypeLabel, tournamentWhen } from "../lib/tournaments";
 import { HowItWorks, PrizeList } from "./TournamentDetails";
 import { useState } from "react";
 import { StatusBadge } from "./HomePage";
@@ -42,15 +42,31 @@ export function TournamentPage() {
                 <div className="bg-white rounded-2xl border border-[#E5E5EA] p-5 sm:p-6 shadow-sm">
                     <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
-                            <h1 className="text-2xl font-black text-[#1A1A2E] tracking-tight">{tournament.name}</h1>
-                            <p className="text-sm text-[#8E8E93] font-medium mt-1">
-                                {tournamentWhen(tournament, "long")}
-                                {" · "}{divisionLabel(tournament.division)}
-                                {" · "}{tournamentTypeLabel(tournament.type)}
-                                {" · "}{tournament.status === "UPCOMING"
-                                    ? `${tournament.participants.filter(p => p.confirmed).length}${tournament.maxPlayers !== null ? `/${tournament.maxPlayers}` : ""} confirmed`
-                                    : `${tournament.participants.length} players`}
-                            </p>
+                            <h1 className="text-2xl font-black text-[#1A1A2E] tracking-tight leading-tight">{tournament.name}</h1>
+                            <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+                                <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${DIVISION_BADGES[tournament.division]?.className ?? "bg-[#F5F5F7] text-[#8E8E93]"}`}>
+                                    {divisionLabel(tournament.division)}
+                                </span>
+                                <span className="text-sm text-[#8E8E93] font-medium">{tournamentTypeLabel(tournament.type)}</span>
+                            </div>
+                            <div className="mt-2 grid gap-1 text-sm text-[#3A3A4E]">
+                                <p className="flex items-start gap-2">
+                                    <span aria-hidden className="w-4 text-center">📅</span>
+                                    <span>
+                                        <span className="font-semibold">{tournamentWhen({ date: tournament.date }, "long")}</span>
+                                        {timeRangeLabel(tournament) && <span className="text-[#8E8E93]"> · {timeRangeLabel(tournament)}</span>}
+                                    </span>
+                                </p>
+                                {tournament.location && (
+                                    <p className="flex items-center gap-2"><span aria-hidden className="w-4 text-center">📍</span>{tournament.location}</p>
+                                )}
+                                <p className="flex items-center gap-2">
+                                    <span aria-hidden className="w-4 text-center">👥</span>
+                                    {tournament.status === "UPCOMING"
+                                        ? `${tournament.participants.filter(p => p.confirmed).length}${tournament.maxPlayers !== null ? ` / ${tournament.maxPlayers}` : ""} confirmed`
+                                        : `${tournament.participants.length} players`}
+                                </p>
+                            </div>
                         </div>
                         <StatusBadge status={tournament.status} />
                     </div>
@@ -130,7 +146,7 @@ export function TournamentPage() {
                                                 {round.matches.map((match, i) => (
                                                     <div key={match.id} className="px-4 py-4">
                                                         <p className="text-xs font-bold uppercase tracking-widest text-[#8E8E93] mb-3">Court {i + 1}</p>
-                                                        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
+                                                        <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3">
                                                             <div className="text-right">
                                                                 <Link to={`/player/${match.team1Player1.id}`} className="font-semibold text-[#1A1A2E] hover:text-[#FF4200] text-sm block truncate transition-colors">{match.team1Player1.name}</Link>
                                                                 <Link to={`/player/${match.team1Player2.id}`} className="font-semibold text-[#1A1A2E] hover:text-[#FF4200] text-sm block truncate transition-colors">{match.team1Player2.name}</Link>

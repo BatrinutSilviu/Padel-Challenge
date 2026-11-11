@@ -124,9 +124,13 @@ function PlayerRow({ player, rank, division, avg }: {
                     >
                         {player.name}
                     </Link>
-                    {(player.badges as BadgeType[]).map(badge => (
-                        <span key={badge} title={BADGE_META[badge].description} className="text-base shrink-0">{BADGE_META[badge].emoji}</span>
+                    {/* On a phone only the first badge fits beside the name; the rest are counted. */}
+                    {(player.badges as BadgeType[]).map((badge, i) => (
+                        <span key={badge} title={BADGE_META[badge].description} className={`text-base shrink-0 ${i > 0 ? "hidden sm:inline" : ""}`}>{BADGE_META[badge].emoji}</span>
                     ))}
+                    {player.badges.length > 1 && (
+                        <span className="sm:hidden text-[11px] font-bold text-[#8E8E93] shrink-0">+{player.badges.length - 1}</span>
+                    )}
                     {player.promotionEligible && (
                         <>
                             <span title="Eligible for promotion" className="text-sm shrink-0 text-emerald-500 font-bold">▲</span>
