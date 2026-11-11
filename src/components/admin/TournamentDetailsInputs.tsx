@@ -72,6 +72,14 @@ export function PrizeInputs({ value, onChange, disabled }: {
     };
     // Golden & silver brackets: relabel the rows (keeping what's typed) and add any missing.
     const useBracketLabels = () => setPrizes(BRACKET_LABELS.map((label, i) => ({ ...(value.prizes[i] ?? newPrize(i + 1)), label })));
+    // Back to the default: "1st place", "2nd place", … by position, keeping what's typed;
+    // empty rows past the first three go.
+    const usePlaceLabels = () => setPrizes(
+        value.prizes
+            .filter((p, i) => i < 3 || p.prize.trim() !== "")
+            .map((p, i) => ({ ...p, label: newPrize(i + 1).label })),
+    );
+    const isBracket = value.prizes.some(p => BRACKET_LABELS.includes(p.label));
     const small = "text-xs font-medium px-2.5 py-2 rounded-lg border border-gray-300 text-gray-600 disabled:opacity-40";
 
     return (
@@ -142,7 +150,20 @@ export function PrizeInputs({ value, onChange, disabled }: {
                 >
                     + Add prize
                 </button>
-                <button type="button" onClick={useBracketLabels} disabled={disabled} className="text-sm font-medium px-3 py-2 rounded-lg border border-gray-300 text-gray-600">
+                <button
+                    type="button"
+                    onClick={usePlaceLabels}
+                    disabled={disabled}
+                    className={`text-sm font-medium px-3 py-2 rounded-lg border ${!isBracket ? "border-gray-800 text-gray-800" : "border-gray-300 text-gray-600"}`}
+                >
+                    1st, 2nd, 3rd…
+                </button>
+                <button
+                    type="button"
+                    onClick={useBracketLabels}
+                    disabled={disabled}
+                    className={`text-sm font-medium px-3 py-2 rounded-lg border ${isBracket ? "border-gray-800 text-gray-800" : "border-gray-300 text-gray-600"}`}
+                >
                     Golden & Silver brackets
                 </button>
             </div>
