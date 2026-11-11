@@ -50,8 +50,8 @@ function CopyButton({ text }: { text: string }) {
     );
 }
 
-// The sign-up sheet's "how to pay" box: the amount to send now (the advance, or else the
-// full price) and every account it can go to.
+// The "how to pay" box, on every tournament page: the amount to send now (the advance, or
+// else the full price) when there is one, and every account it can go to.
 export function PayTo({ accounts, entryFee, advanceFee, tournamentName }: {
     accounts: PaymentAccount[];
     entryFee: number | null;
@@ -59,13 +59,15 @@ export function PayTo({ accounts, entryFee, advanceFee, tournamentName }: {
     tournamentName: string;
 }) {
     const amount = advanceFee ?? entryFee;
-    if (accounts.length === 0 || amount === null || amount === 0) return null;
+    if (accounts.length === 0 || amount === 0) return null; // 0 = free
     return (
         <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 space-y-3">
             <div>
                 <p className="text-sm font-black text-amber-900">💳 How to pay</p>
                 <p className="text-sm text-amber-800 mt-0.5">
-                    Send <b>{amount} lei</b>{advanceFee !== null ? " (the advance)" : ""} to one of these to confirm your spot.
+                    {amount !== null
+                        ? <>Send <b>{amount} lei</b>{advanceFee !== null ? " (the advance)" : ""} to one of these to confirm your spot. </>
+                        : <>Pay the entry fee to one of these. </>}
                     Write your name and <i>{tournamentName}</i> in the payment details.
                     {advanceFee !== null && entryFee !== null && entryFee > advanceFee && ` The other ${entryFee - advanceFee} lei are paid on the day.`}
                 </p>

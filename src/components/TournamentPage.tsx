@@ -11,6 +11,7 @@ import { KingOfTheCourtView } from "./kingOfTheCourt/KingOfTheCourtView";
 import { MastersView } from "./masters/MastersView";
 import { TournamentSignup } from "./TournamentSignup";
 import { SupportContact } from "./SupportContact";
+import { PayTo } from "./PaymentAccounts";
 
 export function TournamentPage() {
     const { id } = useParams<{ id: string }>();
@@ -172,6 +173,9 @@ export function TournamentPage() {
                     </>
                 )}
 
+                {tournament.status !== "UPCOMING" && (
+                    <PayTo accounts={tournament.payTo} entryFee={tournament.entryFee} advanceFee={tournament.advanceFee} tournamentName={tournament.name} />
+                )}
                 <SupportContact context={tournament.name} />
             </main>
         </div>
