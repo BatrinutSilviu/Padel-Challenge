@@ -17,6 +17,7 @@ import { PlayerPicker } from "../PlayerPicker";
 import { useAdminSession, LoginPage, SessionExpiredModal } from "./AdminAuth";
 import { TournamentSignupAdmin } from "./TournamentSignupAdmin";
 import { TournamentDetailsEditor } from "./TournamentDetailsInputs";
+import { TournamentSettingsEditor } from "./TournamentSettingsEditor";
 
 export function AdminScoreEntry() {
     const { id } = useParams<{ id: string }>();
@@ -281,6 +282,7 @@ export function AdminScoreEntry() {
                     </div>
                 </div>
 
+                <TournamentSettingsEditor tournament={tournament} />
                 <TournamentDetailsEditor tournament={tournament} />
 
                 {/* Participants */}

@@ -12,6 +12,7 @@ import { MastersFormatPicker } from "./MastersFormatPicker";
 import { ChallengerFormatPicker } from "./ChallengerFormatPicker";
 import { FeeInputs } from "./FeeInputs";
 import { TournamentDetailsEditor } from "./TournamentDetailsInputs";
+import { TournamentSettingsEditor } from "./TournamentSettingsEditor";
 import { GroupHeading, TeamNumber } from "./TeamNumber";
 
 type TournamentData = NonNullable<ReturnType<typeof trpc.tournament.getById.useQuery>["data"]>;
@@ -217,6 +218,7 @@ export function TournamentSignupAdmin({ tournament }: { tournament: TournamentDa
                     </div>
                 </div>
 
+                <TournamentSettingsEditor tournament={tournament} />
                 <TournamentDetailsEditor tournament={tournament} />
 
                 {/* Sign-up settings */}

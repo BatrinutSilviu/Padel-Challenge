@@ -1158,6 +1158,12 @@ function PlayersTab() {
         onSuccess: () => qc.invalidateQueries({ queryKey: getQueryKey(trpc.player.list) }),
     });
 
+    // Searching the list below — accents and case don't matter ("stefan" finds "Ștefan").
+    const [search, setSearch] = useState("");
+    const fold = (v: string) => v.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+    const searchKey = fold(search.trim());
+    const listed = (players.data ?? []).filter(p => !searchKey || fold(p.name).includes(searchKey));
+
     const q = name.trim().toLowerCase();
     const matches = q.length >= 2
         ? (players.data ?? []).filter(p => p.name.toLowerCase().includes(q))
@@ -1238,6 +1244,17 @@ function PlayersTab() {
             </form>
 
             <div className="bg-white rounded-xl border border-gray-200 overflow-hidden overflow-x-auto">
+                <div className="p-3 border-b border-gray-100">
+                    <input
+                        type="search"
+                        value={search}
+                        onChange={e => setSearch(e.target.value)}
+                        placeholder={`Search ${players.data?.length ?? ""} players…`}
+                        className={`${input} w-full`}
+                        autoComplete="off"
+                    />
+                    {searchKey && <p className="text-xs text-gray-400 mt-1.5">{listed.length} found</p>}
+                </div>
                 {players.isPending && <p className="text-gray-500 p-4">Loading…</p>}
                 <table className="w-full text-sm min-w-[300px]">
                     <thead className="bg-gray-50 border-b border-gray-200">
@@ -1248,7 +1265,7 @@ function PlayersTab() {
                         </tr>
                     </thead>
                     <tbody>
-                        {players.data?.map(p => (
+                        {listed.map(p => (
                             <PlayerRow
                                 key={p.id}
                                 player={p}
@@ -1263,15 +1280,19 @@ function PlayersTab() {
     );
 }
 
-// A player in the admin list; the name can be edited in place.
-function PlayerRow({ player: p, onDelete }: { player: { id: string; name: string; division: number }; onDelete: () => void }) {
+// A player in the admin list. Edit changes their name, division and gender (players who
+// signed up themselves sometimes pick the wrong ones).
+function PlayerRow({ player: p, onDelete }: {
+    player: { id: string; name: string; division: number; gender: string };
+    onDelete: () => void;
+}) {
     const qc = useQueryClient();
     const [editing, setEditing] = useState(false);
-    const [draft, setDraft] = useState(p.name);
+    const [draft, setDraft] = useState({ name: p.name, division: p.division, gender: p.gender });
     const [error, setError] = useState("");
-    const rename = trpc.player.update.useMutation({
+    const update = trpc.player.update.useMutation({
         onSuccess: () => {
-            // Names show up across rankings, tournaments and pickers, so refresh everything.
+            // Names and divisions show up across rankings, tournaments and pickers, so refresh everything.
             qc.invalidateQueries();
             setEditing(false);
             setError("");
@@ -1279,77 +1300,107 @@ function PlayerRow({ player: p, onDelete }: { player: { id: string; name: string
         onError: (e) => setError(e.message),
     });
     const divisionText = p.division === 6 ? "Beginner" : `Div ${p.division} — ${DIVISION_NAMES[p.division]}`;
+    const genderText = p.gender === "FEMALE" ? "♀ Female" : "♂ Male";
 
     function startEditing() {
-        setDraft(p.name);
+        setDraft({ name: p.name, division: p.division, gender: p.gender });
         setError("");
         setEditing(true);
     }
 
     function save(e: React.FormEvent) {
         e.preventDefault();
-        const name = draft.trim();
+        const name = draft.name.trim();
         if (!name) return setError("Name is required.");
-        if (name === p.name) return setEditing(false);
-        rename.mutate({ id: p.id, name });
+        const changes = {
+            ...(name !== p.name ? { name } : {}),
+            ...(draft.division !== p.division ? { division: draft.division } : {}),
+            ...(draft.gender !== p.gender ? { gender: draft.gender as "MALE" | "FEMALE" } : {}),
+        };
+        if (Object.keys(changes).length === 0) return setEditing(false);
+        update.mutate({ id: p.id, ...changes });
+    }
+
+    if (editing) {
+        return (
+            <tr className="border-b border-gray-100 last:border-0 bg-orange-50/40">
+                <td colSpan={3} className="px-4 py-3">
+                    <form onSubmit={save} className="space-y-2">
+                        <input
+                            value={draft.name}
+                            onChange={e => setDraft({ ...draft, name: e.target.value })}
+                            onKeyDown={e => { if (e.key === "Escape") setEditing(false); }}
+                            className={`${input} w-full`}
+                            autoFocus
+                            autoComplete="off"
+                            aria-label="Name"
+                        />
+                        <div className="flex flex-wrap gap-2">
+                            <select
+                                value={draft.division}
+                                onChange={e => setDraft({ ...draft, division: Number(e.target.value) })}
+                                className={`${input} flex-1 min-w-[10rem]`}
+                                aria-label="Division"
+                            >
+                                {[1, 2, 3, 4, 5, 6].map(d => (
+                                    <option key={d} value={d}>{d === 6 ? "Beginner" : `Div ${d} — ${DIVISION_NAMES[d]}`}</option>
+                                ))}
+                            </select>
+                            <select
+                                value={draft.gender}
+                                onChange={e => setDraft({ ...draft, gender: e.target.value })}
+                                className={`${input} flex-1 min-w-[7rem]`}
+                                aria-label="Gender"
+                            >
+                                <option value="MALE">Male</option>
+                                <option value="FEMALE">Female</option>
+                            </select>
+                        </div>
+                        {error && <p className="text-xs text-red-500">{error}</p>}
+                        <div className="flex gap-2">
+                            <button
+                                type="submit"
+                                disabled={update.isPending}
+                                className="bg-[#FF4200] text-white rounded-lg px-4 py-2 text-sm font-medium hover:bg-[#CC3500] disabled:opacity-50 transition-colors"
+                            >
+                                {update.isPending ? "Saving…" : "Save"}
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setEditing(false)}
+                                className="px-4 py-2 rounded-lg border border-gray-300 text-gray-600 text-sm font-medium hover:border-gray-400 transition-colors"
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </form>
+                </td>
+            </tr>
+        );
     }
 
     return (
         <tr className="border-b border-gray-100 last:border-0">
             <td className="px-4 py-2 font-medium text-gray-800">
-                {editing ? (
-                    <form onSubmit={save} className="space-y-1">
-                        <div className="flex gap-2">
-                            <input
-                                value={draft}
-                                onChange={e => setDraft(e.target.value)}
-                                onKeyDown={e => { if (e.key === "Escape") setEditing(false); }}
-                                className={`${input} flex-1 min-w-0`}
-                                autoFocus
-                                autoComplete="off"
-                            />
-                            <button
-                                type="submit"
-                                disabled={rename.isPending}
-                                className="bg-[#FF4200] text-white rounded-lg px-3 py-1 text-xs font-medium hover:bg-[#CC3500] disabled:opacity-50 transition-colors"
-                            >
-                                Save
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => setEditing(false)}
-                                className="px-3 py-1 rounded-lg border border-gray-300 text-gray-600 text-xs font-medium hover:border-gray-400 transition-colors"
-                            >
-                                Cancel
-                            </button>
-                        </div>
-                        {error && <p className="text-xs text-red-500">{error}</p>}
-                    </form>
-                ) : (
-                    <>
-                        <div>{p.name}</div>
-                        <div className="text-xs text-gray-400 sm:hidden">{divisionText}</div>
-                    </>
-                )}
+                <div>{p.name}</div>
+                <div className="text-xs text-gray-400 sm:hidden">{divisionText} · {genderText}</div>
             </td>
-            <td className="px-4 py-2 text-gray-500 hidden sm:table-cell">{divisionText}</td>
+            <td className="px-4 py-2 text-gray-500 hidden sm:table-cell">{divisionText} · {genderText}</td>
             <td className="px-4 py-2 text-right">
                 <div className="inline-flex gap-2">
-                    {!editing && (
-                        <button
-                            onClick={startEditing}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 text-xs font-medium transition-colors"
-                            title="Rename player"
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
-                                <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-                            </svg>
-                            Rename
-                        </button>
-                    )}
+                    <button
+                        onClick={startEditing}
+                        className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 text-xs font-medium transition-colors"
+                        title="Edit name, division and gender"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                        </svg>
+                        Edit
+                    </button>
                     <button
                         onClick={onDelete}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-600 hover:text-white text-xs font-medium transition-colors"
+                        className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-600 hover:text-white text-xs font-medium transition-colors"
                         title="Delete player"
                     >
                         <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
