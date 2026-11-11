@@ -16,79 +16,105 @@ export function whatsappNumber(phone: string): string {
 }
 
 export function SupportContact({ context }: { context?: string }) {
-    const { data } = trpc.site.contact.useQuery(undefined, { staleTime: 10 * 60 * 1000 });
-    if (!data?.phone) return null;
+    const { data: contacts } = trpc.site.contacts.useQuery(undefined, { staleTime: 10 * 60 * 1000 });
+    if (!contacts?.length) return null;
     const text = context ? `?text=${encodeURIComponent(`Salut! Am o întrebare despre ${context}.`)}` : "";
     return (
-        <div className="bg-white rounded-2xl border border-[#E5E5EA] p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div className="min-w-0">
-                <p className="text-sm font-bold text-[#1A1A2E]">Questions? We're here to help</p>
-                <p className="text-sm text-[#8E8E93]">
-                    {data.name ? `${data.name} · ` : ""}<a href={`tel:${data.phone.replace(/\s+/g, "")}`} className="font-semibold text-[#1A1A2E]">{data.phone}</a>
-                </p>
-            </div>
-            <div className="flex gap-2 shrink-0">
-                {data.whatsapp && (
-                    <a
-                        href={`https://wa.me/${whatsappNumber(data.phone)}${text}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex-1 sm:flex-none text-center text-sm font-bold px-4 py-2.5 rounded-xl bg-[#25D366] text-white hover:opacity-90"
-                    >
-                        WhatsApp
-                    </a>
-                )}
-                <a
-                    href={`tel:${data.phone.replace(/\s+/g, "")}`}
-                    className="flex-1 sm:flex-none text-center text-sm font-bold px-4 py-2.5 rounded-xl border border-[#E5E5EA] text-[#1A1A2E] hover:border-[#FF4200]"
-                >
-                    Call
-                </a>
-            </div>
+        <div className="bg-white rounded-2xl border border-[#E5E5EA] p-4 space-y-3">
+            <p className="text-sm font-bold text-[#1A1A2E]">Questions? We're here to help</p>
+            {contacts.map((c, i) => (
+                <div key={i} className={`flex flex-col sm:flex-row sm:items-center justify-between gap-2 ${i > 0 ? "pt-3 border-t border-[#F5F5F7]" : ""}`}>
+                    <p className="text-sm text-[#8E8E93] min-w-0">
+                        {c.name ? <span className="font-semibold text-[#1A1A2E]">{c.name}</span> : null}
+                        {c.name ? " · " : ""}
+                        <a href={`tel:${c.phone!.replace(/\s+/g, "")}`} className="font-semibold text-[#1A1A2E] whitespace-nowrap">{c.phone}</a>
+                    </p>
+                    <div className="flex gap-2 shrink-0">
+                        {c.whatsapp && (
+                            <a
+                                href={`https://wa.me/${whatsappNumber(c.phone!)}${text}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex-1 sm:flex-none text-center text-sm font-bold px-4 py-2.5 rounded-xl bg-[#25D366] text-white hover:opacity-90"
+                            >
+                                WhatsApp
+                            </a>
+                        )}
+                        <a
+                            href={`tel:${c.phone!.replace(/\s+/g, "")}`}
+                            className="flex-1 sm:flex-none text-center text-sm font-bold px-4 py-2.5 rounded-xl border border-[#E5E5EA] text-[#1A1A2E] hover:border-[#FF4200]"
+                        >
+                            Call
+                        </a>
+                    </div>
+                </div>
+            ))}
         </div>
     );
 }
 
-// Admin: setting the contact.
+// Admin: the people players can contact — as many as needed, in the order shown.
+type ContactDraft = { name: string; phone: string; whatsapp: boolean };
+const MAX_CONTACTS = 6;
+
 export function SupportContactAdmin() {
     const qc = useQueryClient();
-    const { data } = trpc.site.contact.useQuery();
-    const [name, setName] = useState("");
-    const [phone, setPhone] = useState("");
-    const [whatsapp, setWhatsapp] = useState(true);
+    const { data } = trpc.site.contacts.useQuery();
+    const [rows, setRows] = useState<ContactDraft[]>([]);
     const [msg, setMsg] = useState("");
     useEffect(() => {
         if (!data) return;
-        setName(data.name ?? "");
-        setPhone(data.phone ?? "");
-        setWhatsapp(data.phone ? data.whatsapp : true);
+        const saved = data.map(c => ({ name: c.name ?? "", phone: c.phone ?? "", whatsapp: c.whatsapp }));
+        setRows(saved.length > 0 ? saved : [{ name: "", phone: "", whatsapp: true }]);
     }, [data]);
-    const save = trpc.site.setContact.useMutation({
+    const save = trpc.site.setContacts.useMutation({
         onSuccess: () => {
-            qc.invalidateQueries({ queryKey: getQueryKey(trpc.site.contact) });
+            qc.invalidateQueries({ queryKey: getQueryKey(trpc.site.contacts) });
             setMsg("Saved.");
             setTimeout(() => setMsg(""), 3000);
         },
         onError: e => setMsg(`Error: ${e.message}`),
     });
+    const setRow = (i: number, change: Partial<ContactDraft>) => setRows(rows.map((r, j) => (j === i ? { ...r, ...change } : r)));
     const field = "border border-gray-300 rounded-lg px-3 py-2 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-[#FF4200] bg-white w-full";
     return (
         <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-5 space-y-3">
             <div>
-                <h2 className="text-base font-semibold text-gray-800">Support contact</h2>
-                <p className="text-xs text-gray-500">Shown on tournament pages so players can ask for help. Leave the number empty to hide it.</p>
+                <h2 className="text-base font-semibold text-gray-800">Support contacts</h2>
+                <p className="text-xs text-gray-500">Shown on tournament pages so players can ask for help, in this order. A person without a phone number isn't shown.</p>
             </div>
-            <div className="grid sm:grid-cols-2 gap-2">
-                <input value={name} onChange={e => setName(e.target.value)} placeholder="Name (optional), e.g. Dani" maxLength={60} className={field} />
-                <input value={phone} onChange={e => setPhone(e.target.value)} placeholder="Phone, e.g. 0722 123 456" maxLength={30} inputMode="tel" className={field} />
-            </div>
-            <label className="flex items-center gap-2 text-sm text-gray-700">
-                <input type="checkbox" checked={whatsapp} onChange={e => setWhatsapp(e.target.checked)} className="w-4 h-4 accent-[#FF4200]" />
-                Also on WhatsApp
-            </label>
-            <div className="flex items-center gap-3">
+            {rows.map((r, i) => (
+                <div key={i} className="rounded-lg border border-gray-200 p-2.5 space-y-2">
+                    <div className="grid sm:grid-cols-2 gap-2">
+                        <input value={r.name} onChange={e => setRow(i, { name: e.target.value })} placeholder="Name, e.g. Dani" maxLength={60} className={field} aria-label="Contact name" />
+                        <input value={r.phone} onChange={e => setRow(i, { phone: e.target.value })} placeholder="Phone, e.g. 0722 123 456" maxLength={30} inputMode="tel" className={field} aria-label="Contact phone" />
+                    </div>
+                    <div className="flex items-center justify-between gap-2">
+                        <label className="flex items-center gap-2 text-sm text-gray-700">
+                            <input type="checkbox" checked={r.whatsapp} onChange={e => setRow(i, { whatsapp: e.target.checked })} className="w-4 h-4 accent-[#FF4200]" />
+                            Also on WhatsApp
+                        </label>
+                        <button
+                            type="button"
+                            onClick={() => setRows(rows.filter((_, j) => j !== i))}
+                            className="text-xs font-medium px-3 py-2 rounded-lg border border-red-200 text-red-600"
+                        >
+                            Remove
+                        </button>
+                    </div>
+                </div>
+            ))}
+            <div className="flex flex-wrap items-center gap-3">
                 <button
-                    onClick={() => save.mutate({ name: name.trim() || null, phone: phone.trim() || null, whatsapp })}
+                    type="button"
+                    onClick={() => setRows([...rows, { name: "", phone: "", whatsapp: true }])}
+                    disabled={rows.length >= MAX_CONTACTS}
+                    className="text-sm font-medium px-3 py-2 rounded-lg border border-[#FF4200] text-[#FF4200] disabled:opacity-40"
+                >
+                    + Add person
+                </button>
+                <button
+                    onClick={() => save.mutate(rows.map(r => ({ name: r.name.trim() || null, phone: r.phone.trim() || null, whatsapp: r.whatsapp })))}
                     disabled={save.isPending}
                     className="px-4 py-2 rounded-lg bg-[#FF4200] text-white text-sm font-medium disabled:opacity-50"
                 >

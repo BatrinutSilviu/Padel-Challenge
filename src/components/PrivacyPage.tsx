@@ -8,7 +8,8 @@ import { trpc } from "../trpc";
 
 export function PrivacyPage() {
     const { data: privacy } = trpc.site.privacy.useQuery();
-    const { data: contact } = trpc.site.contact.useQuery();
+    const { data: contacts } = trpc.site.contacts.useQuery();
+    const contact = contacts?.[0];
     const controller = privacy?.controller || "organizatorii comunității Act!ve Padel";
     const reach = privacy?.email
         ? <a href={`mailto:${privacy.email}`} className="text-[#FF4200] font-semibold">{privacy.email}</a>
