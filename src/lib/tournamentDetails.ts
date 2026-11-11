@@ -13,17 +13,19 @@ export type DetailsText = {
     location: string;
     entryFee: string; // lei per person
     advanceFee: string; // lei per person, paid to confirm a spot
+    payTo: string; // the payment account players pay (from Settings); "" = show all of them
     prizes: PrizeText[]; // one per place, 1st first
     prizeNotes: string;
 };
 
 const emptyPrizes = (): PrizeText[] => Array.from({ length: MAX_PRIZE_PLACE }, () => ({ prize: "", who: "US", partner: "" }));
 
-export const EMPTY_DETAILS: DetailsText = { startTime: "", endTime: "", location: "", entryFee: "", advanceFee: "", prizes: emptyPrizes(), prizeNotes: "" };
+export const EMPTY_DETAILS: DetailsText = { startTime: "", endTime: "", location: "", entryFee: "", advanceFee: "", payTo: "", prizes: emptyPrizes(), prizeNotes: "" };
 
 export type StoredDetails = {
     startTime: string | null; endTime: string | null; location: string | null;
     entryFee: number | null; advanceFee: number | null; prizes?: unknown; prizeNotes: string | null;
+    paymentAccountIds?: string[];
 };
 
 export function detailsText(t: StoredDetails): DetailsText {
@@ -36,7 +38,8 @@ export function detailsText(t: StoredDetails): DetailsText {
     const fee = (n: number | null) => (n === null ? "" : String(n));
     return {
         startTime: t.startTime ?? "", endTime: t.endTime ?? "", location: t.location ?? "",
-        entryFee: fee(t.entryFee), advanceFee: fee(t.advanceFee), prizes, prizeNotes: t.prizeNotes ?? "",
+        entryFee: fee(t.entryFee), advanceFee: fee(t.advanceFee), payTo: t.paymentAccountIds?.[0] ?? "",
+        prizes, prizeNotes: t.prizeNotes ?? "",
     };
 }
 
@@ -54,7 +57,7 @@ export function detailsError(d: DetailsText): string | null {
 // What the create/update mutations take: blanks become null, blank prizes are left out.
 export function detailsInput(d: DetailsText): {
     startTime: string | null; endTime: string | null; location: string | null;
-    entryFee: number | null; advanceFee: number | null; prizes: Prize[]; prizeNotes: string | null;
+    entryFee: number | null; advanceFee: number | null; paymentAccountIds: string[]; prizes: Prize[]; prizeNotes: string | null;
 } {
     const orNull = (s: string) => (s.trim() === "" ? null : s.trim());
     return {
@@ -63,6 +66,7 @@ export function detailsInput(d: DetailsText): {
         location: orNull(d.location),
         entryFee: parseFee(d.entryFee),
         advanceFee: parseFee(d.advanceFee),
+        paymentAccountIds: d.payTo ? [d.payTo] : [],
         prizes: d.prizes
             .map((p, i) => ({ place: i + 1, prize: p.prize.trim(), partner: p.who === "PARTNER" ? orNull(p.partner) : null }))
             .filter(p => p.prize !== ""),

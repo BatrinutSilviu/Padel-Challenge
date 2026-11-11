@@ -122,16 +122,45 @@ export function PrizeInputs({ value, onChange, disabled }: {
     );
 }
 
+// Who players pay: one of the payment accounts from Settings, as in the hikes app.
+// Hidden while there are none. "" shows every active account on the tournament page.
+export function PayToSelect({ value, onChange, disabled }: {
+    value: DetailsText;
+    onChange: (value: DetailsText) => void;
+    disabled?: boolean;
+}) {
+    const { data: accounts } = trpc.paymentAccount.list.useQuery();
+    const options = (accounts ?? []).filter(a => a.isActive || a.id === value.payTo);
+    if (options.length === 0) {
+        return <p className="text-xs text-gray-400">Add who players pay in Admin → Settings → Payment accounts.</p>;
+    }
+    return (
+        <label className="block">
+            <span className="block text-xs font-medium text-gray-500 mb-1">Players pay to</span>
+            <select
+                value={value.payTo}
+                onChange={e => onChange({ ...value, payTo: e.target.value })}
+                disabled={disabled}
+                className={`${field} sm:max-w-sm`}
+            >
+                <option value="">{options.length > 1 ? "Any of them (show all)" : "— choose —"}</option>
+                {options.map(a => (
+                    <option key={a.id} value={a.id}>{accountTitle(a)} · {a.accountHolder}{a.paymentHandle ? ` (${a.paymentHandle})` : ""}</option>
+                ))}
+            </select>
+        </label>
+    );
+}
+
 // The admin's card for changing a tournament's times and prizes after it's been
 // created, whatever its status.
 export function TournamentDetailsEditor({ tournament }: {
-    tournament: StoredDetails & { id: string; paymentAccountIds?: string[] };
+    tournament: StoredDetails & { id: string };
 }) {
     const qc = useQueryClient();
     // The texts plus the accounts players pay into (none picked = every active one).
-    const stored = { ...detailsText(tournament), paymentAccountIds: [...(tournament.paymentAccountIds ?? [])].sort() };
+    const stored = detailsText(tournament);
     const storedKey = JSON.stringify(stored);
-    const { data: accounts } = trpc.paymentAccount.list.useQuery();
     const [value, setValue] = useState(stored);
     const [open, setOpen] = useState(false);
     const [error, setError] = useState("");
@@ -186,32 +215,9 @@ export function TournamentDetailsEditor({ tournament }: {
                             onAdvanceFee={advanceFee => setValue({ ...value, advanceFee })}
                             disabled={update.isPending}
                         />
-                        {(accounts ?? []).some(a => a.isActive) && (
-                            <div className="mt-3">
-                                <p className="text-xs font-medium text-gray-500 mb-1.5">
-                                    Players pay to <span className="font-normal text-gray-400">— none ticked shows all of them</span>
-                                </p>
-                                <div className="space-y-1.5">
-                                    {(accounts ?? []).filter(a => a.isActive || value.paymentAccountIds.includes(a.id)).map(a => (
-                                        <label key={a.id} className="flex items-center gap-2 text-sm text-gray-700">
-                                            <input
-                                                type="checkbox"
-                                                checked={value.paymentAccountIds.includes(a.id)}
-                                                onChange={e => setValue({
-                                                    ...value,
-                                                    paymentAccountIds: (e.target.checked
-                                                        ? [...value.paymentAccountIds, a.id]
-                                                        : value.paymentAccountIds.filter(id => id !== a.id)).sort(),
-                                                })}
-                                                disabled={update.isPending}
-                                                className="w-4 h-4 accent-[#FF4200]"
-                                            />
-                                            <span className="min-w-0 truncate">{accountTitle(a)} · {a.accountHolder}</span>
-                                        </label>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
+                        <div className="mt-3">
+                            <PayToSelect value={value} onChange={setValue} disabled={update.isPending} />
+                        </div>
                     </div>
                     <div>
                         <p className="text-sm font-medium text-gray-700 mb-2">Prizes</p>
@@ -225,7 +231,7 @@ export function TournamentDetailsEditor({ tournament }: {
                                 onClick={() => {
                                     const problem = detailsError(value);
                                     if (problem) return setError(problem);
-                                    update.mutate({ id: tournament.id, ...detailsInput(value), paymentAccountIds: value.paymentAccountIds });
+                                    update.mutate({ id: tournament.id, ...detailsInput(value) });
                                 }}
                                 disabled={update.isPending}
                                 className="text-sm font-medium px-4 py-2 rounded-lg bg-[#FF4200] text-white hover:bg-[#CC3500] disabled:opacity-50"

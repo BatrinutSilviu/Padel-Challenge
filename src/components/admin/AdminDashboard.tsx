@@ -13,7 +13,7 @@ import { GroupHeading, TeamNumber } from "./TeamNumber";
 import { FeeInputs } from "./FeeInputs";
 import { PaymentAccountsAdmin } from "./PaymentAccountsAdmin";
 import { PrivacyAdmin, SupportContactAdmin } from "../SupportContact";
-import { PrizeInputs, TimeInputs } from "./TournamentDetailsInputs";
+import { PayToSelect, PrizeInputs, TimeInputs } from "./TournamentDetailsInputs";
 import { EMPTY_DETAILS, detailsError, detailsInput } from "../../lib/tournamentDetails";
 import { PlayerPicker } from "../PlayerPicker";
 import { AddPlayerInline } from "../AddPlayerInline";
@@ -643,19 +643,15 @@ function CreateTournamentForm({ onCreated, onImport }: { onCreated: () => void; 
             </Field>
 
             <Field label="Price per person (lei) — optional">
-
-                <FeeInputs
-
-                    entryFee={details.entryFee}
-
-                    advanceFee={details.advanceFee}
-
-                    onEntryFee={entryFee => setDetails({ ...details, entryFee })}
-
-                    onAdvanceFee={advanceFee => setDetails({ ...details, advanceFee })}
-
-                />
-
+                <div className="space-y-3">
+                    <FeeInputs
+                        entryFee={details.entryFee}
+                        advanceFee={details.advanceFee}
+                        onEntryFee={entryFee => setDetails({ ...details, entryFee })}
+                        onAdvanceFee={advanceFee => setDetails({ ...details, advanceFee })}
+                    />
+                    <PayToSelect value={details} onChange={setDetails} />
+                </div>
             </Field>
 
             {(!signupMode && isTeamBasedType(type)) ? (
