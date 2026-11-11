@@ -94,18 +94,20 @@ export function timeRangeLabel(t: { startTime?: string | null; endTime?: string 
 }
 
 // The tournament's date (it's stored as midnight UTC, so it's read back in UTC) with
-// its times, e.g. "14 November 2026 · 10:00–14:00".
+// its times and location, e.g. "14 November 2026 · 10:00–14:00 · X3 Padel".
 export function tournamentWhen(
-    t: { date: string | Date; startTime?: string | null; endTime?: string | null },
+    t: { date: string | Date; startTime?: string | null; endTime?: string | null; location?: string | null },
     dateStyle: "long" | "short" = "short",
 ): string {
     const date = new Date(t.date).toLocaleDateString(
         dateStyle === "long" ? "en-GB" : undefined,
         dateStyle === "long" ? { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" } : { timeZone: "UTC" },
     );
-    const times = timeRangeLabel(t);
-    return times ? `${date} · ${times}` : date;
+    return [date, timeRangeLabel(t), t.location].filter(Boolean).join(" · ");
 }
+
+// Clubs we usually play at, offered as suggestions when typing a location.
+export const USUAL_LOCATIONS = ["X3 Padel", "Active Arena"];
 
 // A tournament's prizes (backend lib/tournamentDetails): places 1–5, each offered by
 // Act!ve (partner null) or by a partner.

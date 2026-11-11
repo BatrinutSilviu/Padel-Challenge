@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { getQueryKey } from "@trpc/react-query";
 import { trpc } from "../../trpc";
-import { placeLabel, prizeList, timeRangeLabel } from "../../lib/tournaments";
+import { USUAL_LOCATIONS, placeLabel, prizeList, timeRangeLabel } from "../../lib/tournaments";
 import { detailsError, detailsInput, detailsText, type DetailsText, type PrizeText, type StoredDetails } from "../../lib/tournamentDetails";
 
 // 16px on phones: iOS zooms the page into any smaller input on focus.
@@ -26,9 +26,26 @@ export function TimeInputs({ value, onChange, disabled }: {
         </label>
     );
     return (
-        <div className="flex gap-3">
-            {time("startTime", "Starts")}
-            {time("endTime", "Ends")}
+        <div className="space-y-3">
+            <div className="flex gap-3">
+                {time("startTime", "Starts")}
+                {time("endTime", "Ends")}
+            </div>
+            <label className="block">
+                <span className="block text-xs font-medium text-gray-500 mb-1">Location</span>
+                <input
+                    value={value.location}
+                    onChange={e => onChange({ ...value, location: e.target.value })}
+                    disabled={disabled}
+                    maxLength={200}
+                    list="usual-locations"
+                    placeholder="e.g. X3 Padel"
+                    className={`${field} sm:max-w-xs`}
+                />
+                <datalist id="usual-locations">
+                    {USUAL_LOCATIONS.map(l => <option key={l} value={l} />)}
+                </datalist>
+            </label>
         </div>
     );
 }
@@ -138,9 +155,9 @@ export function TournamentDetailsEditor({ tournament }: {
                 className="w-full flex items-center justify-between gap-3 px-4 sm:px-5 py-3 text-sm font-medium text-gray-700"
             >
                 <span className="text-left">
-                    Times & prizes
+                    Time, place & prizes
                     <span className="block text-xs font-normal text-gray-400">
-                        {times || "No times set"} · {prizeCount > 0 ? "prizes set" : "no prizes"}
+                        {times || "No times set"} · {tournament.location || "no location"} · {prizeCount > 0 ? "prizes set" : "no prizes"}
                     </span>
                 </span>
                 <svg
@@ -153,7 +170,7 @@ export function TournamentDetailsEditor({ tournament }: {
             {open && (
                 <div className="border-t border-gray-100 px-4 sm:px-5 py-4 space-y-4">
                     <div>
-                        <p className="text-sm font-medium text-gray-700 mb-2">Time (local)</p>
+                        <p className="text-sm font-medium text-gray-700 mb-2">Time (local) and place</p>
                         <TimeInputs value={value} onChange={setValue} disabled={update.isPending} />
                     </div>
                     <div>

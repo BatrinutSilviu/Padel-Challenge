@@ -470,7 +470,7 @@ function CreateTournamentForm({ onCreated, onImport }: { onCreated: () => void; 
                 </Field>
             </div>
 
-            <Field label="Time (local, optional)">
+            <Field label="Time (local) and place — optional">
                 <TimeInputs value={details} onChange={setDetails} />
             </Field>
 
