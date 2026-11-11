@@ -4,8 +4,8 @@ import { getQueryKey } from "@trpc/react-query";
 import { trpc } from "../../trpc";
 import { FeeInputs } from "./FeeInputs";
 import { accountTitle } from "../PaymentAccounts";
-import { USUAL_LOCATIONS, placeLabel, prizeList, timeRangeLabel } from "../../lib/tournaments";
-import { detailsError, detailsInput, detailsText, type DetailsText, type PrizeText, type StoredDetails } from "../../lib/tournamentDetails";
+import { MAX_PRIZES, USUAL_LOCATIONS, prizeList, timeRangeLabel } from "../../lib/tournaments";
+import { detailsError, detailsInput, detailsText, newPrize, type DetailsText, type PrizeText, type StoredDetails } from "../../lib/tournamentDetails";
 
 // 16px on phones: iOS zooms the page into any smaller input on focus.
 const field = "border border-gray-300 rounded-lg px-3 py-2 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-[#FF4200] bg-white w-full disabled:opacity-50";
@@ -52,32 +52,53 @@ export function TimeInputs({ value, onChange, disabled }: {
     );
 }
 
-// Prizes for places 1–5. Each is offered by Act!ve or by a partner (named), which the
-// management app needs to know: partners' prizes aren't our cost.
+// The prizes: as many rows as needed, each with its own label ("1st place", "1st place
+// Golden", "Best newcomer"…), what's won and who offers it — Act!ve or a partner (named),
+// which the management app needs to know: partners' prizes aren't our cost.
+const BRACKET_LABELS = ["1st place Golden", "2nd place Golden", "3rd place Golden", "1st place Silver", "2nd place Silver", "3rd place Silver"];
+
 export function PrizeInputs({ value, onChange, disabled }: {
     value: DetailsText;
     onChange: (value: DetailsText) => void;
     disabled?: boolean;
 }) {
-    const setPrize = (i: number, change: Partial<PrizeText>) =>
-        onChange({ ...value, prizes: value.prizes.map((p, j) => (j === i ? { ...p, ...change } : p)) });
+    const setPrizes = (prizes: PrizeText[]) => onChange({ ...value, prizes });
+    const setPrize = (i: number, change: Partial<PrizeText>) => setPrizes(value.prizes.map((p, j) => (j === i ? { ...p, ...change } : p)));
+    const remove = (i: number) => setPrizes(value.prizes.filter((_, j) => j !== i));
+    const move = (i: number, by: -1 | 1) => {
+        const list = [...value.prizes];
+        [list[i], list[i + by]] = [list[i + by], list[i]];
+        setPrizes(list);
+    };
+    // Golden & silver brackets: relabel the rows (keeping what's typed) and add any missing.
+    const useBracketLabels = () => setPrizes(BRACKET_LABELS.map((label, i) => ({ ...(value.prizes[i] ?? newPrize(i + 1)), label })));
+    const small = "text-xs font-medium px-2.5 py-2 rounded-lg border border-gray-300 text-gray-600 disabled:opacity-40";
+
     return (
         <div className="space-y-3">
             {value.prizes.map((p, i) => (
-                <div key={i} className="space-y-1.5">
-                    <label className="flex items-center gap-2">
-                        <span className="text-xs font-medium text-gray-500 w-8 shrink-0">{placeLabel(i + 1)}</span>
-                        <input
-                            value={p.prize}
-                            onChange={e => setPrize(i, { prize: e.target.value })}
-                            disabled={disabled}
-                            maxLength={200}
-                            placeholder="Optional"
-                            className={field}
-                        />
-                    </label>
-                    {p.prize.trim() !== "" && (
-                        <div className="flex flex-wrap items-center gap-2 pl-10">
+                <div key={i} className="rounded-lg border border-gray-200 p-2.5 space-y-2">
+                    <input
+                        value={p.label}
+                        onChange={e => setPrize(i, { label: e.target.value })}
+                        disabled={disabled}
+                        maxLength={80}
+                        placeholder="e.g. 1st place Golden"
+                        aria-label="Prize label"
+                        className={`${field} font-semibold`}
+                    />
+                    <input
+                        value={p.prize}
+                        onChange={e => setPrize(i, { prize: e.target.value })}
+                        disabled={disabled}
+                        maxLength={200}
+                        placeholder="What's won, e.g. 300 lei + trophy"
+                        aria-label="Prize"
+                        className={field}
+                    />
+                    <div className="flex flex-wrap items-center gap-2">
+                        {p.prize.trim() !== "" && (
+                            <>
                             <span className="text-xs text-gray-500">Offered by</span>
                             <div className="flex rounded-lg border border-gray-300 overflow-hidden text-xs font-medium">
                                 {(["US", "PARTNER"] as const).map(who => (
@@ -86,26 +107,45 @@ export function PrizeInputs({ value, onChange, disabled }: {
                                         type="button"
                                         onClick={() => setPrize(i, { who })}
                                         disabled={disabled}
-                                        className={`px-3 py-1.5 ${p.who === who ? "bg-[#FF4200] text-white" : "bg-white text-gray-600"}`}
+                                        className={`px-3 py-2 ${p.who === who ? "bg-[#FF4200] text-white" : "bg-white text-gray-600"}`}
                                     >
                                         {who === "US" ? "Act!ve" : "A partner"}
                                     </button>
                                 ))}
                             </div>
-                            {p.who === "PARTNER" && (
-                                <input
-                                    value={p.partner}
-                                    onChange={e => setPrize(i, { partner: e.target.value })}
-                                    disabled={disabled}
-                                    maxLength={100}
-                                    placeholder="Partner's name"
-                                    className={`${field} flex-1 min-w-[10rem]`}
-                                />
-                            )}
+                            </>
+                        )}
+                        <div className="flex gap-1.5 ml-auto">
+                            <button type="button" onClick={() => move(i, -1)} disabled={disabled || i === 0} className={small} aria-label="Move up">↑</button>
+                            <button type="button" onClick={() => move(i, 1)} disabled={disabled || i === value.prizes.length - 1} className={small} aria-label="Move down">↓</button>
+                            <button type="button" onClick={() => remove(i)} disabled={disabled} className={`${small} text-red-600 border-red-200`} aria-label="Remove prize">✕</button>
                         </div>
-                    )}
+                        {p.prize.trim() !== "" && p.who === "PARTNER" && (
+                            <input
+                                value={p.partner}
+                                onChange={e => setPrize(i, { partner: e.target.value })}
+                                disabled={disabled}
+                                maxLength={100}
+                                placeholder="Partner's name"
+                                className={`${field} basis-full`}
+                            />
+                        )}
+                    </div>
                 </div>
             ))}
+            <div className="flex flex-wrap gap-2">
+                <button
+                    type="button"
+                    onClick={() => setPrizes([...value.prizes, newPrize(value.prizes.length + 1)])}
+                    disabled={disabled || value.prizes.length >= MAX_PRIZES}
+                    className="text-sm font-medium px-3 py-2 rounded-lg border border-[#FF4200] text-[#FF4200] disabled:opacity-40"
+                >
+                    + Add prize
+                </button>
+                <button type="button" onClick={useBracketLabels} disabled={disabled} className="text-sm font-medium px-3 py-2 rounded-lg border border-gray-300 text-gray-600">
+                    Golden & Silver brackets
+                </button>
+            </div>
             <label className="block">
                 <span className="block text-xs font-medium text-gray-500 mb-1">Anything else</span>
                 <textarea

@@ -1,12 +1,19 @@
 import { useState } from "react";
-import { placeLabel, prizeList, tournamentFormatNotes, tournamentTypeDescription, tournamentTypeLabel, type TournamentPrizes } from "../lib/tournaments";
+import { prizeList, tournamentFormatNotes, tournamentTypeDescription, tournamentTypeLabel, type TournamentPrizes } from "../lib/tournaments";
 
 type FormatTournament = Parameters<typeof tournamentFormatNotes>[0];
 
-const MEDALS = ["🥇", "🥈", "🥉"];
+// A medal for the first three places of any bracket ("1st place Golden"), a ribbon otherwise.
+function prizeIcon(label: string): string {
+    const l = label.toLowerCase();
+    if (/\b(1st|first|locul 1)\b/.test(l)) return "🥇";
+    if (/\b(2nd|second|locul 2)\b/.test(l)) return "🥈";
+    if (/\b(3rd|third|locul 3)\b/.test(l)) return "🥉";
+    return "🏅";
+}
 
-// The prizes a tournament advertises — up to 5th place, each with who offers it, plus
-// anything else on offer. Renders nothing when none are set.
+// The prizes a tournament advertises, in the admin's order with their labels, who offers
+// each, and anything else on offer. Renders nothing when none are set.
 export function PrizeList({ tournament }: { tournament: TournamentPrizes }) {
     const prizes = prizeList(tournament);
     if (prizes.length === 0 && !tournament.prizeNotes) return null;
@@ -15,13 +22,11 @@ export function PrizeList({ tournament }: { tournament: TournamentPrizes }) {
             <p className="text-xs font-bold uppercase tracking-widest text-[#8E8E93] mb-2">Prizes</p>
             {prizes.length > 0 && (
                 <ul className="space-y-1.5">
-                    {prizes.map(p => (
-                        <li key={p.place} className="flex items-start gap-2 text-sm text-[#1A1A2E]">
-                            <span className="shrink-0 w-5 text-center" aria-hidden>
-                                {MEDALS[p.place - 1] ?? <span className="text-xs font-bold text-[#8E8E93]">{p.place}</span>}
-                            </span>
+                    {prizes.map((p, i) => (
+                        <li key={i} className="flex items-start gap-2 text-sm text-[#1A1A2E]">
+                            <span className="shrink-0 w-5 text-center" aria-hidden>{prizeIcon(p.label)}</span>
                             <span className="min-w-0">
-                                <span className="font-bold">{placeLabel(p.place)}:</span> {p.prize}
+                                <span className="font-bold">{p.label}:</span> {p.prize}
                                 {p.partner && <span className="block text-xs text-[#8E8E93]">offered by {p.partner}</span>}
                             </span>
                         </li>

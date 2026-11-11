@@ -109,10 +109,11 @@ export function tournamentWhen(
 // Clubs we usually play at, offered as suggestions when typing a location.
 export const USUAL_LOCATIONS = ["X3 Padel", "Active Arena"];
 
-// A tournament's prizes (backend lib/tournamentDetails): places 1–5, each offered by
-// Act!ve (partner null) or by a partner.
-export const MAX_PRIZE_PLACE = 5;
-export type Prize = { place: number; prize: string; partner: string | null };
+// A tournament's prizes (backend lib/tournamentDetails): a list in the order shown, each
+// with a label ("1st place", "1st place Golden", "Best newcomer"…), what's won, and who
+// offers it — Act!ve (partner null) or a partner.
+export const MAX_PRIZES = 20;
+export type Prize = { label: string; prize: string; partner: string | null };
 export type TournamentPrizes = { prizes?: unknown; prizeNotes?: string | null };
 
 export function placeLabel(place: number): string {
@@ -120,7 +121,11 @@ export function placeLabel(place: number): string {
 }
 
 export function prizeList(t: TournamentPrizes): Prize[] {
-    return Array.isArray(t.prizes) ? (t.prizes as Prize[]).filter(p => p && p.prize) : [];
+    if (!Array.isArray(t.prizes)) return [];
+    return (t.prizes as (Prize & { place?: number })[])
+        .filter(p => p && p.prize)
+        // Saved before prizes had labels: { place } instead of { label }.
+        .map(p => ({ label: p.label ?? (p.place ? `${placeLabel(p.place)} place` : "Prize"), prize: p.prize, partner: p.partner ?? null }));
 }
 
 export function hasPrizes(t: TournamentPrizes): boolean {
