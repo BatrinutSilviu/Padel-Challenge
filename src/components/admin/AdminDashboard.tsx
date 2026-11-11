@@ -11,6 +11,7 @@ import { MastersFormatPicker } from "./MastersFormatPicker";
 import { ChallengerFormatPicker } from "./ChallengerFormatPicker";
 import { GroupHeading, TeamNumber } from "./TeamNumber";
 import { FeeInputs } from "./FeeInputs";
+import { PaymentAccountsAdmin } from "./PaymentAccountsAdmin";
 import { PrizeInputs, TimeInputs } from "./TournamentDetailsInputs";
 import { EMPTY_DETAILS, detailsError, detailsInput } from "../../lib/tournamentDetails";
 import { PlayerPicker } from "../PlayerPicker";
@@ -254,6 +255,7 @@ function TournamentsTab() {
                     ))}
                 </div>
             </section>
+            <PaymentAccountsAdmin />
         </div>
     );
 }

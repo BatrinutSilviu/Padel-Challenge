@@ -7,6 +7,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { isTeamBasedType } from "../lib/tournaments";
 import { HowItWorks, PrizeList } from "./TournamentDetails";
 import { AccountStatusNotice } from "./auth/AccountStatus";
+import { PayTo } from "./PaymentAccounts";
 import { PlayerPicker } from "./PlayerPicker";
 import { cleanPlayerName, playerNameError } from "../lib/playerName";
 
@@ -216,6 +217,12 @@ export function TournamentSignup({ tournament }: { tournament: TournamentData })
                         )}
                     </div>
                 )}
+                <PayTo
+                    accounts={tournament.payTo}
+                    entryFee={tournament.entryFee}
+                    advanceFee={tournament.advanceFee}
+                    tournamentName={tournament.name}
+                />
                 <PrizeList tournament={tournament} />
                 {/* Open on the sign-up sheet: it's what players read to decide whether to join. */}
                 <HowItWorks tournament={tournament} defaultOpen />

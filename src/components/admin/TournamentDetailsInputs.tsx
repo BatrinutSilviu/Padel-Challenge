@@ -3,6 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { getQueryKey } from "@trpc/react-query";
 import { trpc } from "../../trpc";
 import { FeeInputs } from "./FeeInputs";
+import { accountTitle } from "../PaymentAccounts";
 import { USUAL_LOCATIONS, placeLabel, prizeList, timeRangeLabel } from "../../lib/tournaments";
 import { detailsError, detailsInput, detailsText, type DetailsText, type PrizeText, type StoredDetails } from "../../lib/tournamentDetails";
 
@@ -124,11 +125,13 @@ export function PrizeInputs({ value, onChange, disabled }: {
 // The admin's card for changing a tournament's times and prizes after it's been
 // created, whatever its status.
 export function TournamentDetailsEditor({ tournament }: {
-    tournament: StoredDetails & { id: string };
+    tournament: StoredDetails & { id: string; paymentAccountIds?: string[] };
 }) {
     const qc = useQueryClient();
-    const stored = detailsText(tournament);
+    // The texts plus the accounts players pay into (none picked = every active one).
+    const stored = { ...detailsText(tournament), paymentAccountIds: [...(tournament.paymentAccountIds ?? [])].sort() };
     const storedKey = JSON.stringify(stored);
+    const { data: accounts } = trpc.paymentAccount.list.useQuery();
     const [value, setValue] = useState(stored);
     const [open, setOpen] = useState(false);
     const [error, setError] = useState("");
@@ -183,6 +186,32 @@ export function TournamentDetailsEditor({ tournament }: {
                             onAdvanceFee={advanceFee => setValue({ ...value, advanceFee })}
                             disabled={update.isPending}
                         />
+                        {(accounts ?? []).some(a => a.isActive) && (
+                            <div className="mt-3">
+                                <p className="text-xs font-medium text-gray-500 mb-1.5">
+                                    Players pay to <span className="font-normal text-gray-400">— none ticked shows all of them</span>
+                                </p>
+                                <div className="space-y-1.5">
+                                    {(accounts ?? []).filter(a => a.isActive || value.paymentAccountIds.includes(a.id)).map(a => (
+                                        <label key={a.id} className="flex items-center gap-2 text-sm text-gray-700">
+                                            <input
+                                                type="checkbox"
+                                                checked={value.paymentAccountIds.includes(a.id)}
+                                                onChange={e => setValue({
+                                                    ...value,
+                                                    paymentAccountIds: (e.target.checked
+                                                        ? [...value.paymentAccountIds, a.id]
+                                                        : value.paymentAccountIds.filter(id => id !== a.id)).sort(),
+                                                })}
+                                                disabled={update.isPending}
+                                                className="w-4 h-4 accent-[#FF4200]"
+                                            />
+                                            <span className="min-w-0 truncate">{accountTitle(a)} · {a.accountHolder}</span>
+                                        </label>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                     </div>
                     <div>
                         <p className="text-sm font-medium text-gray-700 mb-2">Prizes</p>
@@ -196,7 +225,7 @@ export function TournamentDetailsEditor({ tournament }: {
                                 onClick={() => {
                                     const problem = detailsError(value);
                                     if (problem) return setError(problem);
-                                    update.mutate({ id: tournament.id, ...detailsInput(value) });
+                                    update.mutate({ id: tournament.id, ...detailsInput(value), paymentAccountIds: value.paymentAccountIds });
                                 }}
                                 disabled={update.isPending}
                                 className="text-sm font-medium px-4 py-2 rounded-lg bg-[#FF4200] text-white hover:bg-[#CC3500] disabled:opacity-50"
