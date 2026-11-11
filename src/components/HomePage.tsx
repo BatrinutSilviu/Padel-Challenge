@@ -6,9 +6,10 @@ import { useAuth } from "../contexts/AuthContext";
 import { AccountStatusNotice } from "./auth/AccountStatus";
 
 import { DIVISION_NAMES, DIVISION_BADGES, DIVISION_COLORS, divisionLabel } from "../lib/divisions";
-import { TournamentType, TOURNAMENT_TYPE_LABELS, tournamentWhen } from "../lib/tournaments";
+import { TournamentType, TOURNAMENT_TYPE_LABELS } from "../lib/tournaments";
 import { BADGE_META, BadgeType } from "../lib/badges";
 import { RankingPointsInfo } from "./RankingPointsInfo";
+import { TournamentCard, spotsLeft } from "./TournamentCard";
 import { useRankingSystem } from "../lib/ranking";
 
 type Tab = "divisions" | "players" | "tournaments";
@@ -66,35 +67,27 @@ function OpenSignups() {
             <section className="space-y-2 mb-6">
                 <h2 className="text-xs font-bold uppercase tracking-widest text-[#8E8E93]">Open for sign-up</h2>
                 {openForSignup.map(t => {
-                    const spotsLeft = t.maxPlayers === null ? null : Math.max(0, t.maxPlayers - t._count.participants);
+                    const left = spotsLeft(t);
                     const mine = mySignups.get(t.id);
                     return (
-                        <Link
+                        <TournamentCard
                             key={t.id}
-                            to={`/tournament/${t.id}`}
-                            className="flex items-center justify-between gap-3 bg-white rounded-2xl border border-[#FF4200]/30 px-4 py-3.5 hover:border-[#FF4200] hover:shadow-sm transition-all"
-                        >
-                            <div className="min-w-0">
-                                <span className="font-bold text-[#1A1A2E] block truncate">{t.name}</span>
-                                <span className="text-xs text-[#8E8E93] font-medium">
-                                    {divisionLabel(t.division)} · {tournamentWhen(t)}
-                                    {spotsLeft !== null && ` · ${spotsLeft} spot${spotsLeft !== 1 ? "s" : ""} left`}
-                                </span>
-                            </div>
-                            {mine ? (
-                                <span className={`text-xs font-bold px-3 py-1.5 rounded-xl shrink-0 whitespace-nowrap ${
+                            tournament={t}
+                            highlight
+                            aside={mine ? (
+                                <span className={`text-xs font-bold px-3 py-1.5 rounded-xl whitespace-nowrap ${
                                     mine.confirmed ? "bg-emerald-50 text-emerald-600" : "bg-amber-50 text-amber-600"
                                 }`}>
                                     {mine.confirmed ? "You're in" : "On waiting list"}
                                 </span>
                             ) : (
-                                <span className={`text-xs font-bold px-3 py-1.5 rounded-xl shrink-0 whitespace-nowrap ${
-                                    spotsLeft === 0 ? "bg-[#F5F5F7] text-[#8E8E93]" : "bg-[#FF4200] text-white"
+                                <span className={`text-xs font-bold px-3 py-1.5 rounded-xl whitespace-nowrap ${
+                                    left === 0 ? "bg-[#F5F5F7] text-[#8E8E93]" : "bg-[#FF4200] text-white"
                                 }`}>
-                                    {spotsLeft === 0 ? "Waiting list" : "Join"}
+                                    {left === 0 ? "Waiting list" : "Join"}
                                 </span>
                             )}
-                        </Link>
+                        />
                     );
                 })}
             </section>
@@ -342,24 +335,7 @@ function TournamentsTab() {
                 {isPending && <p className="text-[#8E8E93]">Loading…</p>}
                 {!isPending && filtered.length === 0 && <p className="text-[#8E8E93]">No tournaments found.</p>}
                 {filtered.map(t => (
-                    <Link
-                        key={t.id}
-                        to={`/tournament/${t.id}`}
-                        className={`flex items-center justify-between bg-white rounded-2xl border px-4 py-3.5 hover:border-[#FF4200]/40 hover:shadow-sm transition-all gap-3 ${
-                            t.status === "IN_PROGRESS"
-                                ? "border-l-[3px] border-l-[#FF4200] border-[#E5E5EA]"
-                                : "border-[#E5E5EA]"
-                        }`}
-                    >
-                        <div className="min-w-0">
-                            <span className="font-bold text-[#1A1A2E] block truncate">{t.name}</span>
-                            <span className="text-xs text-[#8E8E93] font-medium">{divisionLabel(t.division)} · {TOURNAMENT_TYPE_LABELS[t.type as TournamentType] ?? t.type}</span>
-                        </div>
-                        <div className="flex items-center gap-2 shrink-0">
-                            <span className="text-xs text-[#8E8E93] hidden sm:inline">{tournamentWhen(t)}</span>
-                            <StatusBadge status={t.status} />
-                        </div>
-                    </Link>
+                    <TournamentCard key={t.id} tournament={t} aside={<StatusBadge status={t.status} />} />
                 ))}
             </div>
         </div>

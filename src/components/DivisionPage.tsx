@@ -5,6 +5,7 @@ import { NavBar } from "./NavBar";
 import { DIVISION_NAMES, DIVISION_BADGES } from "../lib/divisions";
 import { BADGE_META, BadgeType } from "../lib/badges";
 import { StatusBadge } from "./HomePage";
+import { TournamentCard } from "./TournamentCard";
 import { useRankingSystem } from "../lib/ranking";
 
 export function DivisionPage() {
@@ -88,23 +89,7 @@ export function DivisionPage() {
                     {tournaments.data?.length === 0 && <p className="text-[#8E8E93]">No tournaments in this division yet.</p>}
                     <div className="space-y-2">
                         {tournaments.data?.map(t => (
-                            <Link
-                                key={t.id}
-                                to={`/tournament/${t.id}`}
-                                className={`flex items-center justify-between bg-white rounded-2xl border px-4 py-3.5 hover:border-[#FF4200]/40 hover:shadow-sm transition-all gap-3 ${
-                                    t.status === "IN_PROGRESS"
-                                        ? "border-l-[3px] border-l-[#FF4200] border-[#E5E5EA]"
-                                        : "border-[#E5E5EA]"
-                                }`}
-                            >
-                                <span className="font-bold text-[#1A1A2E] truncate">{t.name}</span>
-                                <div className="flex items-center gap-2 shrink-0">
-                                    <span className="text-xs text-[#8E8E93] hidden sm:inline">
-                                        {new Date(t.date).toLocaleDateString()}
-                                    </span>
-                                    <StatusBadge status={t.status} />
-                                </div>
-                            </Link>
+                            <TournamentCard key={t.id} tournament={t} aside={<StatusBadge status={t.status} />} />
                         ))}
                     </div>
                 </section>
