@@ -10,6 +10,7 @@ import { challengerFormatOf } from "../lib/tournaments";
 import { isTeamBasedType } from "../lib/tournaments";
 import { PlayerPicker } from "./PlayerPicker";
 import { cleanPlayerName, playerNameError } from "../lib/playerName";
+import { useLevelRules } from "../lib/levels";
 
 type TournamentData = NonNullable<ReturnType<typeof trpc.tournament.getById.useQuery>["data"]>;
 
@@ -46,6 +47,9 @@ export function TournamentSignup({ tournament }: { tournament: TournamentData })
     const isFull = spotsLeft === 0;
     const busy = join.isPending || leave.isPending;
 
+    const { data: rules } = useLevelRules();
+    const level = rules?.levels.levels.find(l => l.division === tournament.division);
+
     const teamBased = isTeamBasedType(tournament.type);
     const allPlayersQuery = trpc.division.allPlayers.useQuery(undefined, { enabled: teamBased && !!token && !me });
     const signedUpIds = new Set(tournament.participants.map(p => p.playerId));
@@ -80,6 +84,13 @@ export function TournamentSignup({ tournament }: { tournament: TournamentData })
                         {taken}{capacity !== null && ` / ${capacity}`}
                     </span>
                 </div>
+
+                {(level || tournament.womenOnly) && (
+                    <p className="text-xs text-[#8E8E93] mt-2">
+                        {tournament.womenOnly && <span className="font-bold text-pink-600">Women only · </span>}
+                        {level && <>Open to players with a level coefficient of <b className="text-[#1A1A2E]">{level.allowedMin}–{level.allowedMax}</b>. New players without a coefficient yet can join any level.</>}
+                    </p>
+                )}
 
                 {capacity !== null && (
                     <div className="w-full bg-[#F5F5F7] rounded-full h-2 mt-4">

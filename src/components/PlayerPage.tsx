@@ -5,6 +5,8 @@ import { DIVISION_NAMES } from "../lib/divisions";
 import { BADGE_META, BadgeType } from "../lib/badges";
 import { RankingBreakdown } from "./RankingPointsInfo";
 import { useRankingSystem } from "../lib/ranking";
+import { formatCoefficient } from "../lib/levels";
+import { divisionLabel } from "../lib/divisions";
 
 export function PlayerPage() {
     const { id } = useParams<{ id: string }>();
@@ -69,6 +71,7 @@ export function PlayerPage() {
 
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-5 pt-5 border-t border-[#F5F5F7]">
                         <Stat label={isPoints ? "Ranking pts" : unit} value={score} highlight />
+                        <Stat label={player.level.provisional ? "Level coef.*" : "Level coef."} value={formatCoefficient(player.level.coefficient)} />
                         {divisionRank && <Stat label="Div Rank" value={`#${divisionRank}`} />}
                         {overallRank && <Stat label="Overall" value={`#${overallRank}`} />}
                         {completedResults.length > 0 && (
@@ -84,6 +87,15 @@ export function PlayerPage() {
                             <Stat label="Best Finish" value={`#${Math.min(...completedResults.map(p => p.finalRank!))}`} />
                         )}
                     </div>
+
+                    <p className="text-xs text-[#8E8E93] mt-3">
+                        {player.level.coefficient === null
+                            ? "No level coefficient yet — it's set by the first rated match. Until then the player can sign up for any level."
+                            : <>
+                                Can sign up for: <b className="text-[#1A1A2E]">{player.level.eligibleDivisions.length > 0 ? player.level.eligibleDivisions.map(divisionLabel).join(", ") : "no level (an admin can add them)"}</b>
+                                {player.level.provisional && ` · * provisional: only ${player.level.ratedMatches} rated matches so far, so it still moves fast`}
+                            </>}
+                    </p>
                 </div>
 
                 {player.badges.length > 0 && (
@@ -106,7 +118,7 @@ export function PlayerPage() {
                     </section>
                 )}
 
-                {isPoints && <RankingBreakdown awards={player.rankingAwards} total={player.rankingPoints} />}
+                {isPoints && <RankingBreakdown awards={player.rankingAwards} byLevel={player.rankingByLevel} total={player.rankingPoints} currentDivision={player.division} />}
 
                 <section>
                     <h2 className="text-xs font-bold uppercase tracking-widest text-[#8E8E93] mb-3">Tournament History</h2>

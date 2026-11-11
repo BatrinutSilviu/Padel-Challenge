@@ -265,6 +265,8 @@ function CreateTournamentForm({ onCreated, onImport }: { onCreated: () => void; 
     // Lei per person, advertised on the sign-up sheet. Blank = not shown.
     const [entryFee, setEntryFee] = useState("");
     const [advanceFee, setAdvanceFee] = useState("");
+    // Feminin 1 / 2: only women may sign up.
+    const [womenOnly, setWomenOnly] = useState(false);
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
     const [playerFilter, setPlayerFilter] = useState("");
     // Team Americano state
@@ -382,7 +384,7 @@ function CreateTournamentForm({ onCreated, onImport }: { onCreated: () => void; 
             if (advance !== null && (!Number.isInteger(advance) || advance < 0)) return setError("Advance must be a whole number of lei.");
             if (fee !== null && advance !== null && advance > fee) return setError("The advance can't be more than the total entry fee.");
             createOpen.mutate({
-                name: name.trim(), date, division, type, pointsPerGame, totalRounds, maxPlayers: capacity, entryFee: fee, advanceFee: advance, playerIds: selectedIds,
+                name: name.trim(), date, division, type, pointsPerGame, totalRounds, maxPlayers: capacity, entryFee: fee, advanceFee: advance, playerIds: selectedIds, womenOnly,
                 ...(type === "MASTERS" ? mastersFormat : {}),
                 ...(type === "CHALLENGER" ? { challengerFormat } : {}),
             });
@@ -603,6 +605,16 @@ function CreateTournamentForm({ onCreated, onImport }: { onCreated: () => void; 
                 <Field label="Fees (lei / person)">
                     <FeeInputs entryFee={entryFee} advanceFee={advanceFee} onEntryFee={setEntryFee} onAdvanceFee={setAdvanceFee} />
                 </Field>
+            )}
+
+            {signupMode && (
+                <label className="flex items-start gap-2 text-sm text-gray-700">
+                    <input type="checkbox" checked={womenOnly} onChange={e => setWomenOnly(e.target.checked)} className="mt-0.5 accent-[#FF4200]" />
+                    <span>
+                        Women only (Feminin)
+                        <span className="block text-xs text-gray-400">Only women can sign up. The level, its coefficient range and its points stay the division's.</span>
+                    </span>
+                </label>
             )}
 
             {(!signupMode && isTeamBasedType(type)) ? (

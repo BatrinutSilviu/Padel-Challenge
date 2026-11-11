@@ -240,6 +240,17 @@ export function TournamentSignupAdmin({ tournament }: { tournament: TournamentDa
                         </button>
                     </div>
 
+                    <label className="flex items-center gap-2 text-sm text-gray-700">
+                        <input
+                            type="checkbox"
+                            checked={tournament.womenOnly}
+                            disabled={updateRegistration.isPending}
+                            onChange={e => updateRegistration.mutate({ id: tournament.id, womenOnly: e.target.checked })}
+                            className="accent-[#FF4200]"
+                        />
+                        Women only (Feminin) — only women can sign up
+                    </label>
+
                     <div>
                         <p className="text-sm font-medium text-gray-700 mb-2">Fees (lei / person)</p>
                         <div className="flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-3">
