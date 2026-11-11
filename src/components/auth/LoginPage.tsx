@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { NavBar } from "../NavBar";
 import { trpc } from "../../trpc";
 import { useAuth } from "../../contexts/AuthContext";
+import { GoogleSignInButton } from "./GoogleSignInButton";
 
 export function LoginPage() {
     const navigate = useNavigate();
@@ -20,7 +21,7 @@ export function LoginPage() {
             toast.success("Welcome back!");
             navigate(searchParams.get("redirect") ?? "/");
         },
-        onError: () => setError("Invalid email or password"),
+        onError: (e) => setError(e.message || "Invalid email or password"),
     });
 
     function handleSubmit(e: React.FormEvent) {
@@ -38,6 +39,7 @@ export function LoginPage() {
                     className="bg-white rounded-2xl border border-[#E5E5EA] p-8 w-full max-w-sm space-y-4 shadow-sm"
                 >
                     <h1 className="text-xl font-black text-[#1A1A2E]">Log in</h1>
+                    <GoogleSignInButton redirect={searchParams.get("redirect")} />
                     <div className="space-y-1">
                         <label className="text-sm font-medium text-gray-700">Email</label>
                         <input

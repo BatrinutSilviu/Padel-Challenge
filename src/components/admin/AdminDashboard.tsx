@@ -17,6 +17,7 @@ import { PlayerPicker } from "../PlayerPicker";
 import { AddPlayerInline } from "../AddPlayerInline";
 import { AdminLeaguesTab } from "./league/AdminLeaguesTab";
 import { RankingSystemSettings } from "./RankingSystemSettings";
+import { ProfileClaimsQueue } from "./ProfileClaimsQueue";
 
 type Tab = "players" | "tournaments" | "new-tournament" | "league" | "export";
 
@@ -33,6 +34,7 @@ export function AdminDashboard({ onLogout }: { onLogout: () => void }) {
     const [searchParams, setSearchParams] = useSearchParams();
     const tab = (searchParams.get("tab") as Tab) ?? "tournaments";
     const setTab = (t: Tab) => setSearchParams({ tab: t });
+    const pendingClaims = trpc.profileClaim.pendingCount.useQuery();
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -52,6 +54,14 @@ export function AdminDashboard({ onLogout }: { onLogout: () => void }) {
                                 {t === "new-tournament" ? (
                                     <><span className="sm:hidden">+ New</span><span className="hidden sm:inline">{TAB_LABELS[t]}</span></>
                                 ) : TAB_LABELS[t]}
+                                {/* Profile claims wait at the top of the Players tab. */}
+                                {t === "players" && (pendingClaims.data ?? 0) > 0 && (
+                                    <span className={`ml-1 inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1 rounded-full text-[11px] font-bold ${
+                                        tab === t ? "bg-white text-[#FF4200]" : "bg-amber-500 text-white"
+                                    }`}>
+                                        {pendingClaims.data}
+                                    </span>
+                                )}
                             </button>
                         ))}
                     </div>
@@ -1158,6 +1168,7 @@ function PlayersTab() {
 
     return (
         <div className="space-y-6 max-w-2xl">
+            <ProfileClaimsQueue />
             <form onSubmit={handleAdd} className="bg-white rounded-xl border border-gray-200 p-5 space-y-4">
                 <h2 className="text-base font-semibold text-gray-800">Add Player</h2>
                 <div className="flex flex-col sm:flex-row gap-3">

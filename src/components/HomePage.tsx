@@ -3,6 +3,7 @@ import { trpc } from "../trpc";
 import { NavBar } from "./NavBar";
 import { useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
+import { AccountStatusNotice } from "./auth/AccountStatus";
 
 import { DIVISION_NAMES, DIVISION_BADGES, DIVISION_COLORS, divisionLabel } from "../lib/divisions";
 import { TournamentType, TOURNAMENT_TYPE_LABELS, tournamentWhen } from "../lib/tournaments";
@@ -21,7 +22,9 @@ export function HomePage() {
         <div className="min-h-screen bg-[#F5F5F7]">
             <NavBar />
             <main className="max-w-5xl mx-auto px-3 sm:px-4 py-6 sm:py-8 pb-24 sm:pb-8">
+                <AccountStatusNotice className="mb-6" />
                 <RecordMatchBanner />
+                <OpenSignups />
 
                 <div className="flex gap-1 bg-white border border-[#E5E5EA] rounded-2xl p-1 mb-6 w-full sm:w-fit shadow-sm">
                     {(["divisions", "players", "tournaments"] as Tab[]).map(t => (
@@ -47,6 +50,58 @@ export function HomePage() {
     );
 }
 
+
+// Tournaments taking sign-ups, at the top of every tab so players find them; for a
+// logged-in player, the ones they're already on say so.
+function OpenSignups() {
+    const { token } = useAuth();
+    const { data } = trpc.tournament.list.useQuery();
+    const { data: mine } = trpc.tournament.mySignups.useQuery(undefined, { enabled: !!token });
+    const mySignups = new Map((token ? mine ?? [] : []).map(s => [s.tournamentId, s]));
+    const openForSignup = (data ?? []).filter(t => t.status === "UPCOMING" && t.registrationOpen);
+
+    return (
+        <>
+        {openForSignup.length > 0 && (
+            <section className="space-y-2 mb-6">
+                <h2 className="text-xs font-bold uppercase tracking-widest text-[#8E8E93]">Open for sign-up</h2>
+                {openForSignup.map(t => {
+                    const spotsLeft = t.maxPlayers === null ? null : Math.max(0, t.maxPlayers - t._count.participants);
+                    const mine = mySignups.get(t.id);
+                    return (
+                        <Link
+                            key={t.id}
+                            to={`/tournament/${t.id}`}
+                            className="flex items-center justify-between gap-3 bg-white rounded-2xl border border-[#FF4200]/30 px-4 py-3.5 hover:border-[#FF4200] hover:shadow-sm transition-all"
+                        >
+                            <div className="min-w-0">
+                                <span className="font-bold text-[#1A1A2E] block truncate">{t.name}</span>
+                                <span className="text-xs text-[#8E8E93] font-medium">
+                                    {divisionLabel(t.division)} · {tournamentWhen(t)}
+                                    {spotsLeft !== null && ` · ${spotsLeft} spot${spotsLeft !== 1 ? "s" : ""} left`}
+                                </span>
+                            </div>
+                            {mine ? (
+                                <span className={`text-xs font-bold px-3 py-1.5 rounded-xl shrink-0 whitespace-nowrap ${
+                                    mine.confirmed ? "bg-emerald-50 text-emerald-600" : "bg-amber-50 text-amber-600"
+                                }`}>
+                                    {mine.confirmed ? "You're in" : "On waiting list"}
+                                </span>
+                            ) : (
+                                <span className={`text-xs font-bold px-3 py-1.5 rounded-xl shrink-0 whitespace-nowrap ${
+                                    spotsLeft === 0 ? "bg-[#F5F5F7] text-[#8E8E93]" : "bg-[#FF4200] text-white"
+                                }`}>
+                                    {spotsLeft === 0 ? "Waiting list" : "Join"}
+                                </span>
+                            )}
+                        </Link>
+                    );
+                })}
+            </section>
+        )}
+        </>
+    );
+}
 
 function RecordMatchBanner() {
     const { token } = useAuth();
@@ -253,39 +308,9 @@ function TournamentsTab() {
         .filter(t => typeFilter === "ALL" || t.type === typeFilter);
 
     const activeDivisions = [...new Set((data ?? []).map(t => t.division))].sort((a, b) => a - b);
-    const openForSignup = (data ?? []).filter(t => t.status === "UPCOMING" && t.registrationOpen);
 
     return (
         <div className="space-y-4">
-            {openForSignup.length > 0 && (
-                <section className="space-y-2">
-                    <h2 className="text-xs font-bold uppercase tracking-widest text-[#8E8E93]">Open for sign-up</h2>
-                    {openForSignup.map(t => {
-                        const spotsLeft = t.maxPlayers === null ? null : Math.max(0, t.maxPlayers - t._count.participants);
-                        return (
-                            <Link
-                                key={t.id}
-                                to={`/tournament/${t.id}`}
-                                className="flex items-center justify-between gap-3 bg-white rounded-2xl border border-[#FF4200]/30 px-4 py-3.5 hover:border-[#FF4200] hover:shadow-sm transition-all"
-                            >
-                                <div className="min-w-0">
-                                    <span className="font-bold text-[#1A1A2E] block truncate">{t.name}</span>
-                                    <span className="text-xs text-[#8E8E93] font-medium">
-                                        {divisionLabel(t.division)} · {tournamentWhen(t)}
-                                        {spotsLeft !== null && ` · ${spotsLeft} spot${spotsLeft !== 1 ? "s" : ""} left`}
-                                    </span>
-                                </div>
-                                <span className={`text-xs font-bold px-3 py-1.5 rounded-xl shrink-0 whitespace-nowrap ${
-                                    spotsLeft === 0 ? "bg-[#F5F5F7] text-[#8E8E93]" : "bg-[#FF4200] text-white"
-                                }`}>
-                                    {spotsLeft === 0 ? "Waiting list" : "Join"}
-                                </span>
-                            </Link>
-                        );
-                    })}
-                </section>
-            )}
-
             <div className="bg-white border border-[#E5E5EA] rounded-2xl p-4 space-y-3 shadow-sm">
                 <div className="flex flex-col gap-2">
                     <span className="text-xs font-bold uppercase tracking-widest text-[#8E8E93]">Division</span>

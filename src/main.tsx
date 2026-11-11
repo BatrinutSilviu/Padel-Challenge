@@ -9,8 +9,11 @@ import { AuthProvider } from './contexts/AuthContext';
 import { Toaster } from './components/ui/sonner';
 
 const USER_SCOPED_ROUTERS = ['individualMatch', 'profile'];
-// The league router mixes admin procedures with ones the players of a match use.
-const USER_SCOPED_PROCEDURES = ['league.myOpenMatches', 'league.submitScore', 'league.confirmScore', 'league.setSchedule'];
+// The league and tournament routers mix admin procedures with ones players use.
+const USER_SCOPED_PROCEDURES = [
+    'league.myOpenMatches', 'league.submitScore', 'league.confirmScore', 'league.setSchedule',
+    'tournament.join', 'tournament.leave', 'tournament.mySignups',
+];
 
 function handleUnauthorized(error: unknown, path: string[] | undefined, retry: () => void) {
     if ((error as any)?.data?.code !== 'UNAUTHORIZED') return;

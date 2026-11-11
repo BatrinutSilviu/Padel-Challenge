@@ -8,6 +8,7 @@ import { AdminScoreEntry } from "./components/admin/AdminScoreEntry";
 import { BadgesPage } from "./components/BadgesPage";
 import { LoginPage } from "./components/auth/LoginPage";
 import { SignupPage } from "./components/auth/SignupPage";
+import { ChooseProfilePage } from "./components/auth/AccountStatus";
 import { RequireAuth } from "./components/auth/RequireAuth";
 import { RecordMatchPage } from "./components/matches/RecordMatchPage";
 import { MatchesPage } from "./components/matches/MatchesPage";
@@ -39,6 +40,7 @@ export default function App() {
             <Route path="/league/:id" element={<LeaguePage />} />
             <Route path="/league/match/:id" element={<LeagueMatchPage />} />
             <Route path="/profile" element={<RequireAuth><ProfilePage /></RequireAuth>} />
+            <Route path="/account/profile" element={<RequireAuth requirePlayer={false}><ChooseProfilePage /></RequireAuth>} />
             <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
     );

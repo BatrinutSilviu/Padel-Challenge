@@ -6,6 +6,7 @@ import { trpc } from "../trpc";
 import { useAuth } from "../contexts/AuthContext";
 import { isTeamBasedType } from "../lib/tournaments";
 import { HowItWorks, PrizeList } from "./TournamentDetails";
+import { AccountStatusNotice } from "./auth/AccountStatus";
 import { PlayerPicker } from "./PlayerPicker";
 import { cleanPlayerName, playerNameError } from "../lib/playerName";
 
@@ -16,7 +17,7 @@ type TournamentData = NonNullable<ReturnType<typeof trpc.tournament.getById.useQ
 // admin confirms they've paid, and only confirmed players take one of the spots.
 // In team formats a player can sign up together with a partner.
 export function TournamentSignup({ tournament }: { tournament: TournamentData }) {
-    const { token, playerId } = useAuth();
+    const { token, playerId, account } = useAuth();
     const qc = useQueryClient();
     const [error, setError] = useState("");
     const [partnerId, setPartnerId] = useState("");
@@ -96,6 +97,9 @@ export function TournamentSignup({ tournament }: { tournament: TournamentData })
                         >
                             Log in to sign up
                         </Link>
+                    ) : account && !account.playerId ? (
+                        // Logged in, but the account doesn't play as a player yet.
+                        <AccountStatusNotice />
                     ) : me ? (
                         <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                             {me.confirmed ? (
