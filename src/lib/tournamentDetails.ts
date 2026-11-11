@@ -13,14 +13,14 @@ export type DetailsText = {
     location: string;
     entryFee: string; // lei per person
     advanceFee: string; // lei per person, paid to confirm a spot
-    payTo: string; // the payment account players pay (from Settings); "" = show all of them
+    payTo: string[]; // the payment accounts players pay (from Settings); none = all of them
     prizes: PrizeText[]; // one per place, 1st first
     prizeNotes: string;
 };
 
 const emptyPrizes = (): PrizeText[] => Array.from({ length: MAX_PRIZE_PLACE }, () => ({ prize: "", who: "US", partner: "" }));
 
-export const EMPTY_DETAILS: DetailsText = { startTime: "", endTime: "", location: "", entryFee: "", advanceFee: "", payTo: "", prizes: emptyPrizes(), prizeNotes: "" };
+export const EMPTY_DETAILS: DetailsText = { startTime: "", endTime: "", location: "", entryFee: "", advanceFee: "", payTo: [], prizes: emptyPrizes(), prizeNotes: "" };
 
 export type StoredDetails = {
     startTime: string | null; endTime: string | null; location: string | null;
@@ -38,7 +38,7 @@ export function detailsText(t: StoredDetails): DetailsText {
     const fee = (n: number | null) => (n === null ? "" : String(n));
     return {
         startTime: t.startTime ?? "", endTime: t.endTime ?? "", location: t.location ?? "",
-        entryFee: fee(t.entryFee), advanceFee: fee(t.advanceFee), payTo: t.paymentAccountIds?.[0] ?? "",
+        entryFee: fee(t.entryFee), advanceFee: fee(t.advanceFee), payTo: [...(t.paymentAccountIds ?? [])].sort(),
         prizes, prizeNotes: t.prizeNotes ?? "",
     };
 }
@@ -66,7 +66,7 @@ export function detailsInput(d: DetailsText): {
         location: orNull(d.location),
         entryFee: parseFee(d.entryFee),
         advanceFee: parseFee(d.advanceFee),
-        paymentAccountIds: d.payTo ? [d.payTo] : [],
+        paymentAccountIds: d.payTo,
         prizes: d.prizes
             .map((p, i) => ({ place: i + 1, prize: p.prize.trim(), partner: p.who === "PARTNER" ? orNull(p.partner) : null }))
             .filter(p => p.prize !== ""),

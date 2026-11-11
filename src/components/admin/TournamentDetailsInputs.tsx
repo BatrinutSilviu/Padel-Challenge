@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { getQueryKey } from "@trpc/react-query";
 import { trpc } from "../../trpc";
@@ -122,33 +122,72 @@ export function PrizeInputs({ value, onChange, disabled }: {
     );
 }
 
-// Who players pay: one of the payment accounts from Settings, as in the hikes app.
-// Hidden while there are none. "" shows every active account on the tournament page.
+// Who players pay: any of the payment accounts from Settings, picked in a dropdown with a
+// checkbox per account (as in the hikes app). None picked shows every active account.
 export function PayToSelect({ value, onChange, disabled }: {
     value: DetailsText;
     onChange: (value: DetailsText) => void;
     disabled?: boolean;
 }) {
     const { data: accounts } = trpc.paymentAccount.list.useQuery();
-    const options = (accounts ?? []).filter(a => a.isActive || a.id === value.payTo);
+    const [open, setOpen] = useState(false);
+    const ref = useRef<HTMLDivElement>(null);
+    // Close when tapping outside.
+    useEffect(() => {
+        if (!open) return;
+        const close = (e: PointerEvent) => { if (!ref.current?.contains(e.target as Node)) setOpen(false); };
+        document.addEventListener("pointerdown", close);
+        return () => document.removeEventListener("pointerdown", close);
+    }, [open]);
+
+    const options = (accounts ?? []).filter(a => a.isActive || value.payTo.includes(a.id));
     if (options.length === 0) {
         return <p className="text-xs text-gray-400">Add who players pay in Admin → Settings → Payment accounts.</p>;
     }
+    const label = (a: (typeof options)[number]) => `${accountTitle(a)} · ${a.accountHolder}`;
+    const chosen = options.filter(a => value.payTo.includes(a.id));
+    const summary = chosen.length === 0 ? "All accounts" : chosen.map(label).join(", ");
+    const toggle = (id: string) => onChange({
+        ...value,
+        payTo: (value.payTo.includes(id) ? value.payTo.filter(x => x !== id) : [...value.payTo, id]).sort(),
+    });
+
     return (
-        <label className="block">
+        <div ref={ref} className="relative sm:max-w-sm">
             <span className="block text-xs font-medium text-gray-500 mb-1">Players pay to</span>
-            <select
-                value={value.payTo}
-                onChange={e => onChange({ ...value, payTo: e.target.value })}
+            <button
+                type="button"
+                onClick={() => setOpen(o => !o)}
                 disabled={disabled}
-                className={`${field} sm:max-w-sm`}
+                aria-haspopup="listbox"
+                aria-expanded={open}
+                className={`${field} flex items-center justify-between gap-2 text-left`}
             >
-                <option value="">{options.length > 1 ? "Any of them (show all)" : "— choose —"}</option>
-                {options.map(a => (
-                    <option key={a.id} value={a.id}>{accountTitle(a)} · {a.accountHolder}{a.paymentHandle ? ` (${a.paymentHandle})` : ""}</option>
-                ))}
-            </select>
-        </label>
+                <span className={`truncate ${chosen.length === 0 ? "text-gray-500" : ""}`}>{summary}</span>
+                <svg className={`w-4 h-4 text-gray-400 shrink-0 transition-transform ${open ? "rotate-180" : ""}`} fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                </svg>
+            </button>
+            {open && (
+                <div role="listbox" aria-multiselectable className="mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-sm py-1">
+                    {options.map(a => (
+                        <label key={a.id} className="flex items-center gap-2.5 px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer">
+                            <input
+                                type="checkbox"
+                                checked={value.payTo.includes(a.id)}
+                                onChange={() => toggle(a.id)}
+                                className="w-4 h-4 accent-[#FF4200] shrink-0"
+                            />
+                            <span className="min-w-0">
+                                <span className="block truncate">{label(a)}</span>
+                                {(a.paymentHandle || a.iban) && <span className="block text-xs text-gray-400 font-mono truncate">{a.paymentHandle ?? a.iban}</span>}
+                            </span>
+                        </label>
+                    ))}
+                    <p className="px-3 pt-1 pb-2 text-xs text-gray-400 border-t border-gray-100 mt-1">None ticked shows all of them.</p>
+                </div>
+            )}
+        </div>
     );
 }
 
