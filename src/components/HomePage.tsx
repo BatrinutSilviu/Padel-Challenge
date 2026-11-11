@@ -10,6 +10,7 @@ import { TournamentType, TOURNAMENT_TYPE_LABELS } from "../lib/tournaments";
 import { BADGE_META, BadgeType } from "../lib/badges";
 import { RankingPointsInfo } from "./RankingPointsInfo";
 import { TournamentCard, spotsLeft } from "./TournamentCard";
+import { SupportContact } from "./SupportContact";
 import { useRankingSystem } from "../lib/ranking";
 
 type Tab = "divisions" | "players" | "tournaments";
@@ -46,6 +47,10 @@ export function HomePage() {
                 {tab === "divisions" && <DivisionsTab />}
                 {tab === "players" && <PlayersTab />}
                 {tab === "tournaments" && <TournamentsTab />}
+
+                <div className="mt-6">
+                    <SupportContact />
+                </div>
             </main>
         </div>
     );

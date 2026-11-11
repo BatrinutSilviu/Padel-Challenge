@@ -10,6 +10,7 @@ import { ChallengerView } from "./challenger/ChallengerView";
 import { KingOfTheCourtView } from "./kingOfTheCourt/KingOfTheCourtView";
 import { MastersView } from "./masters/MastersView";
 import { TournamentSignup } from "./TournamentSignup";
+import { SupportContact } from "./SupportContact";
 
 export function TournamentPage() {
     const { id } = useParams<{ id: string }>();
@@ -154,6 +155,8 @@ export function TournamentPage() {
                         </section>
                     </>
                 )}
+
+                <SupportContact context={tournament.name} />
             </main>
         </div>
     );
