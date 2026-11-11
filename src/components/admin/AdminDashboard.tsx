@@ -21,7 +21,7 @@ import { AdminLeaguesTab } from "./league/AdminLeaguesTab";
 import { RankingSystemSettings } from "./RankingSystemSettings";
 import { ProfileClaimsQueue } from "./ProfileClaimsQueue";
 
-type Tab = "players" | "tournaments" | "new-tournament" | "league" | "export";
+type Tab = "players" | "tournaments" | "new-tournament" | "league" | "export" | "settings";
 
 const TAB_LABELS: Record<Tab, string> = {
     tournaments: "Tournaments",
@@ -29,7 +29,11 @@ const TAB_LABELS: Record<Tab, string> = {
     league: "League",
     players: "Players",
     export: "Export",
+    settings: "Settings",
 };
+
+// What the tabs say on a phone, where all of them have to fit on one row.
+const SHORT_LABELS: Partial<Record<Tab, string>> = { "new-tournament": "+ New", settings: "⚙", export: "⤓" };
 
 
 export function AdminDashboard({ onLogout }: { onLogout: () => void }) {
@@ -46,16 +50,20 @@ export function AdminDashboard({ onLogout }: { onLogout: () => void }) {
                     If the tabs don't fit (a pending-claims count makes them wider) they scroll sideways. */}
                 <div className="flex items-center gap-2 sm:gap-3 sm:justify-between mb-5 sm:mb-6">
                     <div className="flex-1 sm:flex-none min-w-0 flex gap-0.5 sm:gap-1 bg-white border border-gray-200 rounded-xl p-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                        {(["tournaments", "new-tournament", "league", "players", "export"] as Tab[]).map(t => (
+                        {(["tournaments", "new-tournament", "league", "players", "settings", "export"] as Tab[]).map(t => (
                             <button
                                 key={t}
                                 onClick={() => setTab(t)}
-                                className={`flex-auto shrink-0 sm:flex-none px-1.5 py-2 sm:px-4 sm:py-1.5 md:px-6 md:py-2.5 rounded-lg text-xs sm:text-sm md:text-base font-medium whitespace-nowrap transition-colors ${
+                                title={TAB_LABELS[t]}
+                                aria-label={TAB_LABELS[t]}
+                                // The chosen tab scrolls into view when the row is wider than the phone.
+                                ref={el => { if (el && tab === t) el.scrollIntoView({ block: "nearest", inline: "nearest" }); }}
+                                className={`flex-auto shrink-0 sm:flex-none px-1 min-[400px]:px-1.5 py-2 sm:px-4 sm:py-1.5 md:px-6 md:py-2.5 rounded-lg text-xs sm:text-sm md:text-base font-medium whitespace-nowrap transition-colors ${
                                     tab === t ? "bg-[#FF4200] text-white" : "text-gray-600 hover:text-gray-900"
                                 }`}
                             >
-                                {t === "new-tournament" ? (
-                                    <><span className="sm:hidden">+ New</span><span className="hidden sm:inline">{TAB_LABELS[t]}</span></>
+                                {t in SHORT_LABELS ? (
+                                    <><span className="sm:hidden">{SHORT_LABELS[t]}</span><span className="hidden sm:inline">{TAB_LABELS[t]}</span></>
                                 ) : TAB_LABELS[t]}
                                 {/* Profile claims wait at the top of the Players tab. */}
                                 {t === "players" && (pendingClaims.data ?? 0) > 0 && (
@@ -84,6 +92,7 @@ export function AdminDashboard({ onLogout }: { onLogout: () => void }) {
                 {tab === "new-tournament" && <NewTournamentTab onCreated={() => setTab("tournaments")} />}
                 {tab === "league" && <AdminLeaguesTab />}
                 {tab === "players" && <PlayersTab />}
+                {tab === "settings" && <SettingsTab />}
                 {tab === "export" && <ExportTab />}
             </main>
         </div>
@@ -138,6 +147,19 @@ function TournamentNameEditor({ id, name }: { id: string; name: string }) {
         >
             {name}
         </button>
+    );
+}
+
+// Everything that configures the site rather than a tournament or a player: where players
+// pay, who they contact, the privacy policy's details and how players are ranked.
+function SettingsTab() {
+    return (
+        <div className="space-y-6 max-w-3xl">
+            <PaymentAccountsAdmin />
+            <SupportContactAdmin />
+            <PrivacyAdmin />
+            <RankingSystemSettings />
+        </div>
     );
 }
 
@@ -256,9 +278,6 @@ function TournamentsTab() {
                     ))}
                 </div>
             </section>
-            <PaymentAccountsAdmin />
-            <SupportContactAdmin />
-            <PrivacyAdmin />
         </div>
     );
 }
@@ -1283,7 +1302,6 @@ function PlayersTab() {
                     </tbody>
                 </table>
             </div>
-            <RankingSystemSettings />
         </div>
     );
 }

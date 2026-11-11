@@ -92,7 +92,7 @@ export function PaymentAccountsAdmin() {
             <div className="flex items-start justify-between gap-3">
                 <div>
                     <h2 className="text-base font-semibold text-gray-800">Payment accounts</h2>
-                    <p className="text-xs text-gray-500">Shown on sign-up sheets with a price, so players know where to send the advance. A tournament shows all active ones unless you pick some in its price card.</p>
+                    <p className="text-xs text-gray-500">Shown on every tournament page, so players know where to pay. A tournament shows all active ones unless you pick some in its price card.</p>
                 </div>
                 {editing === null && (
                     <button onClick={() => startEdit()} className="shrink-0 px-3 py-2 rounded-lg bg-[#FF4200] text-white text-sm font-medium">+ Add</button>
