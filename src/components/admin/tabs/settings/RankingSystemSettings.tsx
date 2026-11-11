@@ -1,7 +1,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { trpc } from "../../../../trpc";
 import { useRankingSystem, type RankingSystem } from "../../../../lib/ranking";
-import { RankingCoefficientsEditor } from "./RankingCoefficientsEditor";
+import { LevelsPointsEditor } from "./LevelsPointsEditor";
 import { SaveMessage } from "./SaveMessage";
 import { useFlashMessage } from "./useFlashMessage";
 
@@ -14,7 +14,7 @@ const OPTIONS: { system: RankingSystem; title: string; description: string }[] =
     {
         system: "POINTS",
         title: "Ranking points",
-        description: "Points for each finishing place in the last 12 months, times coefficients for the tournament type and division.",
+        description: "Points for each finishing place in the last 12 months, from a table per format times the level's multiplier. Lower-level points count less.",
     },
 ];
 
@@ -91,7 +91,8 @@ export function RankingSystemSettings() {
                 </div>
                 <p className="text-xs text-gray-400">Resets all ELO ratings to 1000 and replays every completed tournament in chronological order (plus the friendly matches recorded before that feature was removed).</p>
             </div>
-            {system === "POINTS" && <RankingCoefficientsEditor />}
+            {/* Levels apply whichever system ranks players — they decide who may sign up. */}
+            <LevelsPointsEditor />
         </>
     );
 }

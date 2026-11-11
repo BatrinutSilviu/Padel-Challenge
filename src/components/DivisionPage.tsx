@@ -7,6 +7,7 @@ import { DIVISION_NAMES, DIVISION_BADGES, useDivisionDescriptions } from "../lib
 import { BADGE_META, BadgeType } from "../lib/badges";
 import { StatusBadge } from "./HomePage";
 import { TournamentCard } from "./TournamentCard";
+import { formatCoefficient } from "../lib/levels";
 import { useRankingSystem } from "../lib/ranking";
 
 export function DivisionPage() {
@@ -155,6 +156,12 @@ function PlayerRow({ player, rank, division, avg }: {
                         <span className="text-sm font-bold text-[#8E8E93]">{avg}</span>
                         <span className="text-xs text-[#8E8E93] ml-1">avg</span>
                     </div>
+                    {player.level.coefficient !== null && (
+                        <div className="text-right" title={`Level coefficient${player.level.provisional ? " (provisional — still settling)" : ""}`}>
+                            <span className="text-sm font-bold text-[#333366] tabular-nums">{formatCoefficient(player.level.coefficient)}{player.level.provisional && "*"}</span>
+                            <span className="hidden sm:inline text-xs text-[#8E8E93] ml-1">lvl</span>
+                        </div>
+                    )}
                     <div className="text-right">
                         <span className="text-sm font-black text-[#FF4200]">{scoreOf(player)}</span>
                         <span className="text-xs text-[#8E8E93] ml-1">{unit}</span>
