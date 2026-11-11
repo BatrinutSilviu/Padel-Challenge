@@ -3,8 +3,8 @@ import { Link } from "react-router-dom";
 import { DIVISION_BADGES, divisionLabel } from "../lib/divisions";
 import { timeRangeLabel, tournamentTypeLabel } from "../lib/tournaments";
 
-// A tournament in a list: its name, level and type, then the date and time, the location
-// and the free spots, each on its own line so they read at a glance on a phone.
+// A tournament in a list: its name, level and type, then the date and time, the location,
+// the price and the free spots, each on its own line so they read at a glance on a phone.
 
 export type CardTournament = {
     id: string;
@@ -16,6 +16,8 @@ export type CardTournament = {
     startTime?: string | null;
     endTime?: string | null;
     location?: string | null;
+    entryFee?: number | null; // lei per person
+    advanceFee?: number | null;
     maxPlayers: number | null;
     _count: { participants: number }; // confirmed players
 };
@@ -74,6 +76,15 @@ export function TournamentCard({ tournament: t, aside, highlight }: {
                     <p className="flex items-center gap-2">
                         <span aria-hidden className="w-4 text-center">📍</span>
                         <span>{t.location}</span>
+                    </p>
+                )}
+                {upcoming && t.entryFee != null && (
+                    <p className="flex items-center gap-2">
+                        <span aria-hidden className="w-4 text-center">💳</span>
+                        <span>
+                            <span className="font-semibold">{t.entryFee} lei</span>
+                            <span className="text-[#8E8E93]"> / person{t.advanceFee != null ? ` · ${t.advanceFee} lei advance` : ""}</span>
+                        </span>
                     </p>
                 )}
                 {upcoming && (

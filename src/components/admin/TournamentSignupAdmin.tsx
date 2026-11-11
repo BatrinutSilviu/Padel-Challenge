@@ -10,7 +10,6 @@ import { PlayerPicker } from "../PlayerPicker";
 import { mastersFormatOf } from "../../lib/masters";
 import { MastersFormatPicker } from "./MastersFormatPicker";
 import { ChallengerFormatPicker } from "./ChallengerFormatPicker";
-import { FeeInputs } from "./FeeInputs";
 import { TournamentDetailsEditor } from "./TournamentDetailsInputs";
 import { TournamentSettingsEditor } from "./TournamentSettingsEditor";
 import { GroupHeading, TeamNumber } from "./TeamNumber";
@@ -74,25 +73,6 @@ export function TournamentSignupAdmin({ tournament }: { tournament: TournamentDa
         qc.invalidateQueries({ queryKey: getQueryKey(trpc.tournament.getById, { id: tournament.id }) });
         qc.invalidateQueries({ queryKey: getQueryKey(trpc.tournament.list) });
         qc.invalidateQueries({ queryKey: getQueryKey(trpc.tournament.withdrawals, { id: tournament.id }) });
-    }
-
-    // Fees are edited as text and saved together.
-    const feeText = (fee: number | null) => fee === null ? "" : String(fee);
-    const [entryFee, setEntryFee] = useState(feeText(tournament.entryFee));
-    const [advanceFee, setAdvanceFee] = useState(feeText(tournament.advanceFee));
-    useEffect(() => {
-        setEntryFee(feeText(tournament.entryFee));
-        setAdvanceFee(feeText(tournament.advanceFee));
-    }, [tournament.entryFee, tournament.advanceFee]);
-    const feesChanged = entryFee !== feeText(tournament.entryFee) || advanceFee !== feeText(tournament.advanceFee);
-
-    function saveFees() {
-        const parse = (text: string) => text.trim() === "" ? null : Number(text);
-        const fee = parse(entryFee);
-        const advance = parse(advanceFee);
-        if ([fee, advance].some(n => n !== null && (!Number.isInteger(n) || n < 0))) return setError("Fees must be whole numbers of lei.");
-        if (fee !== null && advance !== null && advance > fee) return setError("The advance can't be more than the total entry fee.");
-        updateRegistration.mutate({ id: tournament.id, entryFee: fee, advanceFee: advance });
     }
 
     const onError = (e: { message: string }) => setError(e.message);
@@ -243,28 +223,6 @@ export function TournamentSignupAdmin({ tournament }: { tournament: TournamentDa
                         >
                             {tournament.registrationOpen ? "Close sign-ups" : "Re-open sign-ups"}
                         </button>
-                    </div>
-
-                    <div>
-                        <p className="text-sm font-medium text-gray-700 mb-2">Fees (lei / person)</p>
-                        <div className="flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-3">
-                            <FeeInputs
-                                entryFee={entryFee}
-                                advanceFee={advanceFee}
-                                onEntryFee={setEntryFee}
-                                onAdvanceFee={setAdvanceFee}
-                                disabled={updateRegistration.isPending}
-                            />
-                            {feesChanged && (
-                                <button
-                                    onClick={saveFees}
-                                    disabled={updateRegistration.isPending}
-                                    className="sm:mt-5 text-sm font-medium px-4 py-2 rounded-lg bg-[#FF4200] text-white hover:bg-[#CC3500] disabled:opacity-50 shrink-0"
-                                >
-                                    Save fees
-                                </button>
-                            )}
-                        </div>
                     </div>
 
                     {tournament.type === "CHALLENGER" && (

@@ -278,8 +278,6 @@ function CreateTournamentForm({ onCreated, onImport }: { onCreated: () => void; 
     const [signupMode, setSignupMode] = useState(false);
     const [capacity, setCapacity] = useState(8);
     // Lei per person, advertised on the sign-up sheet. Blank = not shown.
-    const [entryFee, setEntryFee] = useState("");
-    const [advanceFee, setAdvanceFee] = useState("");
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
     const [playerFilter, setPlayerFilter] = useState("");
     // Team Americano state
@@ -393,13 +391,8 @@ function CreateTournamentForm({ onCreated, onImport }: { onCreated: () => void; 
         const detailsProblem = detailsError(details);
         if (detailsProblem) return setError(detailsProblem);
         if (signupMode) {
-            const fee = entryFee.trim() === "" ? null : Number(entryFee);
-            if (fee !== null && (!Number.isInteger(fee) || fee < 0)) return setError("Entry fee must be a whole number of lei.");
-            const advance = advanceFee.trim() === "" ? null : Number(advanceFee);
-            if (advance !== null && (!Number.isInteger(advance) || advance < 0)) return setError("Advance must be a whole number of lei.");
-            if (fee !== null && advance !== null && advance > fee) return setError("The advance can't be more than the total entry fee.");
             createOpen.mutate({
-                name: name.trim(), date, ...detailsInput(details), division, type, pointsPerGame, totalRounds, maxPlayers: capacity, entryFee: fee, advanceFee: advance, playerIds: selectedIds,
+                name: name.trim(), date, ...detailsInput(details), division, type, pointsPerGame, totalRounds, maxPlayers: capacity, playerIds: selectedIds,
                 ...(type === "MASTERS" ? mastersFormat : {}),
                 ...(type === "CHALLENGER" ? { challengerFormat } : {}),
             });
@@ -625,11 +618,21 @@ function CreateTournamentForm({ onCreated, onImport }: { onCreated: () => void; 
                 <PrizeInputs value={details} onChange={setDetails} />
             </Field>
 
-            {signupMode && (
-                <Field label="Fees (lei / person)">
-                    <FeeInputs entryFee={entryFee} advanceFee={advanceFee} onEntryFee={setEntryFee} onAdvanceFee={setAdvanceFee} />
-                </Field>
-            )}
+            <Field label="Price per person (lei) — optional">
+
+                <FeeInputs
+
+                    entryFee={details.entryFee}
+
+                    advanceFee={details.advanceFee}
+
+                    onEntryFee={entryFee => setDetails({ ...details, entryFee })}
+
+                    onAdvanceFee={advanceFee => setDetails({ ...details, advanceFee })}
+
+                />
+
+            </Field>
 
             {(!signupMode && isTeamBasedType(type)) ? (
                 <>

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { getQueryKey } from "@trpc/react-query";
 import { trpc } from "../../trpc";
+import { FeeInputs } from "./FeeInputs";
 import { USUAL_LOCATIONS, placeLabel, prizeList, timeRangeLabel } from "../../lib/tournaments";
 import { detailsError, detailsInput, detailsText, type DetailsText, type PrizeText, type StoredDetails } from "../../lib/tournamentDetails";
 
@@ -155,9 +156,9 @@ export function TournamentDetailsEditor({ tournament }: {
                 className="w-full flex items-center justify-between gap-3 px-4 sm:px-5 py-3 text-sm font-medium text-gray-700"
             >
                 <span className="text-left">
-                    Time, place & prizes
+                    Time, place, price & prizes
                     <span className="block text-xs font-normal text-gray-400">
-                        {times || "No times set"} · {tournament.location || "no location"} · {prizeCount > 0 ? "prizes set" : "no prizes"}
+                        {times || "No times set"} · {tournament.location || "no location"} · {tournament.entryFee !== null ? `${tournament.entryFee} lei` : "no price"} · {prizeCount > 0 ? "prizes set" : "no prizes"}
                     </span>
                 </span>
                 <svg
@@ -172,6 +173,16 @@ export function TournamentDetailsEditor({ tournament }: {
                     <div>
                         <p className="text-sm font-medium text-gray-700 mb-2">Time (local) and place</p>
                         <TimeInputs value={value} onChange={setValue} disabled={update.isPending} />
+                    </div>
+                    <div>
+                        <p className="text-sm font-medium text-gray-700 mb-2">Price per person (lei)</p>
+                        <FeeInputs
+                            entryFee={value.entryFee}
+                            advanceFee={value.advanceFee}
+                            onEntryFee={entryFee => setValue({ ...value, entryFee })}
+                            onAdvanceFee={advanceFee => setValue({ ...value, advanceFee })}
+                            disabled={update.isPending}
+                        />
                     </div>
                     <div>
                         <p className="text-sm font-medium text-gray-700 mb-2">Prizes</p>

@@ -1,5 +1,5 @@
-// The two sign-up fees, in lei per person: the total entry fee, and the advance
-// that's paid up front to confirm a spot (part of the total). Both are optional.
+// The price per person in lei, and the advance that's paid up front to confirm a spot
+// (part of the price). Both are optional.
 export function FeeInputs({ entryFee, advanceFee, onEntryFee, onAdvanceFee, disabled }: {
     entryFee: string;
     advanceFee: string;
@@ -26,7 +26,7 @@ export function FeeInputs({ entryFee, advanceFee, onEntryFee, onAdvanceFee, disa
     );
     return (
         <div className="flex gap-3">
-            {input("Total", "The full entry fee", entryFee, onEntryFee)}
+            {input("Total price", "Per person, in lei", entryFee, onEntryFee)}
             {input("Advance", "Paid to confirm the spot", advanceFee, onAdvanceFee)}
         </div>
     );
