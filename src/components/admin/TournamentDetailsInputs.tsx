@@ -48,6 +48,19 @@ export function TimeInputs({ value, onChange, disabled }: {
                     {USUAL_LOCATIONS.map(l => <option key={l} value={l} />)}
                 </datalist>
             </label>
+            <label className="flex items-start gap-2.5 text-sm text-gray-700">
+                <input
+                    type="checkbox"
+                    checked={value.womenOnly}
+                    onChange={e => onChange({ ...value, womenOnly: e.target.checked })}
+                    disabled={disabled}
+                    className="mt-0.5 w-4 h-4 shrink-0 accent-[#FF4200]"
+                />
+                <span>
+                    Women only
+                    <span className="block text-xs text-gray-400">Only players marked as women can sign themselves up (and their partners). Admins can still add anyone.</span>
+                </span>
+            </label>
         </div>
     );
 }
@@ -255,7 +268,7 @@ export function PayToSelect({ value, onChange, disabled }: {
 // The admin's card for changing a tournament's times and prizes after it's been
 // created, whatever its status.
 // Two cards on each tournament's admin page, whatever its status: "Price & payment"
-// (price, advance, who players pay) and "Time, place & prizes". Each saves its own fields.
+// (price, advance, who players pay) and "Time, place, prizes & who can play". Each saves its own fields.
 export function TournamentDetailsEditor({ tournament, section }: {
     tournament: StoredDetails & { id: string; payTo?: { type: string; bankName: string | null; accountHolder: string }[] };
     section: "payment" | "general";
@@ -290,13 +303,13 @@ export function TournamentDetailsEditor({ tournament, section }: {
             tournament.advanceFee !== null ? `${tournament.advanceFee} lei advance` : null,
             payToText ? `pay to ${payToText}` : "no payment accounts",
         ].filter(Boolean).join(" · ")
-        : `${times || "No times set"} · ${tournament.location || "no location"} · ${prizeCount > 0 ? "prizes set" : "no prizes"}`;
+        : `${times || "No times set"} · ${tournament.location || "no location"} · ${prizeCount > 0 ? "prizes set" : "no prizes"}${tournament.womenOnly ? " · women only" : ""}`;
     // Only this card's fields go out, so the other card's unsaved edits are never overwritten.
     function input() {
         const all = detailsInput(value);
         return isPayment
             ? { entryFee: all.entryFee, advanceFee: all.advanceFee, paymentAccountIds: all.paymentAccountIds }
-            : { startTime: all.startTime, endTime: all.endTime, location: all.location, prizes: all.prizes, prizeNotes: all.prizeNotes };
+            : { startTime: all.startTime, endTime: all.endTime, location: all.location, prizes: all.prizes, prizeNotes: all.prizeNotes, womenOnly: all.womenOnly };
     }
 
     return (
@@ -307,7 +320,7 @@ export function TournamentDetailsEditor({ tournament, section }: {
                 className="w-full flex items-center justify-between gap-3 px-4 sm:px-5 py-3 text-sm font-medium text-gray-700"
             >
                 <span className="text-left min-w-0">
-                    {isPayment ? "Price & payment" : "Time, place & prizes"}
+                    {isPayment ? "Price & payment" : "Time, place, prizes & who can play"}
                     <span className="block text-xs font-normal text-gray-400">{summary}</span>
                 </span>
                 <svg

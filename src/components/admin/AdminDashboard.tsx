@@ -41,6 +41,9 @@ export function AdminDashboard({ onLogout }: { onLogout: () => void }) {
     const tab = (searchParams.get("tab") as Tab) ?? "tournaments";
     const setTab = (t: Tab) => setSearchParams({ tab: t });
     const pendingClaims = trpc.profileClaim.pendingCount.useQuery();
+    // Players who signed themselves up and wait to be confirmed, on sheets that haven't started.
+    const awaiting = trpc.tournament.awaitingConfirmation.useQuery(undefined, { refetchInterval: 60_000 });
+    const tabBadges: Partial<Record<Tab, number>> = { players: pendingClaims.data ?? 0, tournaments: awaiting.data?.length ?? 0 };
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -65,12 +68,12 @@ export function AdminDashboard({ onLogout }: { onLogout: () => void }) {
                                 {t in SHORT_LABELS ? (
                                     <><span className="sm:hidden">{SHORT_LABELS[t]}</span><span className="hidden sm:inline">{TAB_LABELS[t]}</span></>
                                 ) : TAB_LABELS[t]}
-                                {/* Profile claims wait at the top of the Players tab. */}
-                                {t === "players" && (pendingClaims.data ?? 0) > 0 && (
+                                {/* Profile claims wait at the top of the Players tab, sign-ups to confirm on the Tournaments tab. */}
+                                {(tabBadges[t] ?? 0) > 0 && (
                                     <span className={`ml-1 inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1 rounded-full text-[11px] font-bold ${
                                         tab === t ? "bg-white text-[#FF4200]" : "bg-amber-500 text-white"
                                     }`}>
-                                        {pendingClaims.data}
+                                        {tabBadges[t]}
                                     </span>
                                 )}
                             </button>
@@ -171,6 +174,9 @@ function TournamentsTab() {
     const signups = data?.filter(t => t.status === "UPCOMING") ?? [];
     const active = data?.filter(t => t.status === "IN_PROGRESS") ?? [];
     const others = data?.filter(t => t.status === "COMPLETED") ?? [];
+    // Who waits to be confirmed on each sign-up sheet, oldest first.
+    const { data: awaiting } = trpc.tournament.awaitingConfirmation.useQuery(undefined, { refetchInterval: 60_000 });
+    const waitingFor = (id: string) => awaiting?.filter(a => a.tournamentId === id) ?? [];
 
     const deleteTournament = trpc.tournament.delete.useMutation({
         onSuccess: () => qc.invalidateQueries({ queryKey: getQueryKey(trpc.tournament.list) }),
@@ -187,22 +193,33 @@ function TournamentsTab() {
                 <section>
                     <h2 className="text-lg font-semibold text-gray-700 mb-3">Sign-ups</h2>
                     <div className="space-y-2">
-                        {signups.map(t => (
-                            <div key={t.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white rounded-lg border border-sky-200 px-4 py-3">
+                        {signups.map(t => {
+                            const waiting = waitingFor(t.id);
+                            return (
+                            <div key={t.id} className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white rounded-lg border px-4 py-3 ${waiting.length > 0 ? "border-amber-300 ring-1 ring-amber-200" : "border-sky-200"}`}>
                                 <div className="min-w-0">
                                     <TournamentNameEditor id={t.id} name={t.name} />
                                     <span className="text-xs text-gray-400 block">
                                         {divisionLabel(t.division)} · {tournamentWhen(t)} · {TOURNAMENT_TYPE_LABELS[t.type as TournamentType] ?? t.type}
                                         {" · "}{t._count.participants}{t.maxPlayers !== null ? `/${t.maxPlayers}` : ""} confirmed
                                         {!t.registrationOpen && " · closed"}
+                                        {t.womenOnly && " · women only"}
                                     </span>
+                                    {waiting.length > 0 && (
+                                        <p className="mt-1.5 text-xs text-amber-800 bg-amber-50 rounded-md px-2 py-1 [overflow-wrap:anywhere]">
+                                            <span className="font-semibold">
+                                                {waiting.length} new sign-up{waiting.length !== 1 ? "s" : ""} to confirm:
+                                            </span>{" "}
+                                            {waiting.map(w => w.player.name).join(", ")}
+                                        </p>
+                                    )}
                                 </div>
                                 <div className="flex items-center gap-2 self-start sm:self-auto shrink-0">
                                     <Link
                                         to={`/admin/tournament/${t.id}`}
-                                        className="inline-flex items-center gap-1.5 text-sm font-medium bg-sky-600 text-white px-4 py-2 rounded-lg hover:bg-sky-700 transition-colors"
+                                        className={`inline-flex items-center gap-1.5 text-sm font-medium text-white px-4 py-2 rounded-lg transition-colors ${waiting.length > 0 ? "bg-amber-500 hover:bg-amber-600" : "bg-sky-600 hover:bg-sky-700"}`}
                                     >
-                                        Manage sign-ups
+                                        {waiting.length > 0 ? "Confirm sign-ups" : "Manage sign-ups"}
                                     </Link>
                                     <button
                                         onClick={() => handleDelete(t.id, t.name)}
@@ -212,7 +229,8 @@ function TournamentsTab() {
                                     </button>
                                 </div>
                             </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 </section>
             )}

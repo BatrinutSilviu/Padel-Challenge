@@ -73,6 +73,7 @@ export function TournamentSignupAdmin({ tournament }: { tournament: TournamentDa
         qc.invalidateQueries({ queryKey: getQueryKey(trpc.tournament.getById, { id: tournament.id }) });
         qc.invalidateQueries({ queryKey: getQueryKey(trpc.tournament.list) });
         qc.invalidateQueries({ queryKey: getQueryKey(trpc.tournament.withdrawals, { id: tournament.id }) });
+        qc.invalidateQueries({ queryKey: getQueryKey(trpc.tournament.awaitingConfirmation) });
     }
 
     const onError = (e: { message: string }) => setError(e.message);

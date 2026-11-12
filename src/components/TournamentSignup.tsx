@@ -117,6 +117,7 @@ export function TournamentSignup({ tournament }: { tournament: TournamentData })
                         // Logged in, but the account doesn't play as a player yet.
                         <AccountStatusNotice />
                     ) : me ? (
+                        <div className="space-y-4">
                         <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                             {me.confirmed ? (
                                 <span className="inline-flex items-center gap-2 text-sm font-bold text-emerald-600">
@@ -152,9 +153,18 @@ export function TournamentSignup({ tournament }: { tournament: TournamentData })
                             >
                                 {leave.isPending ? "Withdrawing…" : "Withdraw"}
                             </button>
+                            </div>
+                            {teamBased && (
+                                <TeamUp tournament={tournament} me={me} nameOf={nameOf} onChange={refresh} onError={setError} />
+                            )}
                         </div>
                     ) : (
                         <div className="space-y-3">
+                            {tournament.womenOnly && (
+                                <p className="text-sm font-semibold text-pink-600 bg-pink-50 rounded-lg px-3 py-2">
+                                    Women only — only women can sign up{teamBased ? ", and a partner you bring must be a woman too" : ""}.
+                                </p>
+                            )}
                             {teamBased && tournament.registrationOpen && (
                                 <div>
                                     <p className="text-xs font-bold uppercase tracking-widest text-[#8E8E93] mb-1.5">
@@ -320,6 +330,101 @@ function PlayerList({ title, players, playerId, nameOf, openSpots }: {
             )}
             {players.length === 0 && openSpots == null && (
                 <p className="px-5 sm:px-6 py-3 text-sm text-[#8E8E93]">Nobody is confirmed yet.</p>
+            )}
+        </div>
+    );
+}
+
+// Teaming up after signing up: a confirmed player without a partner asks another
+// confirmed player on the sheet, who has to accept. Requests to the player come first;
+// with a partner, the player can leave the team (both stay on the list).
+function TeamUp({ tournament, me, nameOf, onChange, onError }: {
+    tournament: TournamentData;
+    me: TournamentData["participants"][number];
+    nameOf: Map<string, string>;
+    onChange: () => void;
+    onError: (message: string) => void;
+}) {
+    const [pick, setPick] = useState("");
+    const opts = { onSuccess: () => { setPick(""); onChange(); }, onError: (e: { message: string }) => onError(e.message) };
+    const ask = trpc.tournament.requestPartner.useMutation({
+        ...opts,
+        onSuccess: r => { setPick(""); onChange(); toast.success(r.paired ? "You're a team now." : "Request sent — they have to accept it."); },
+    });
+    const answer = trpc.tournament.answerPartnerRequest.useMutation({
+        ...opts,
+        onSuccess: r => { onChange(); if (r.paired) toast.success("You're a team now."); },
+    });
+    const cancel = trpc.tournament.cancelPartnerRequest.useMutation(opts);
+    const split = trpc.tournament.leaveTeam.useMutation(opts);
+    const busy = ask.isPending || answer.isPending || cancel.isPending || split.isPending;
+
+    const box = "rounded-xl border border-[#E5E5EA] bg-[#F5F5F7]/60 p-3 sm:p-4 space-y-2.5";
+    const button = "text-sm font-bold px-4 py-2.5 rounded-xl disabled:opacity-50 transition-colors";
+
+    if (me.partnerId) {
+        return (
+            <div className={box}>
+                <p className="text-sm text-[#3A3A4E]">Your partner: <span className="font-bold text-[#1A1A2E]">{nameOf.get(me.partnerId)}</span></p>
+                <button
+                    onClick={() => { if (confirm(`Leave the team with ${nameOf.get(me.partnerId!)}? You both stay signed up, without a partner.`)) split.mutate({ id: tournament.id }); }}
+                    disabled={busy}
+                    className={`${button} border border-[#E5E5EA] bg-white text-[#8E8E93] hover:border-red-300 hover:text-red-500`}
+                >
+                    Leave team
+                </button>
+            </div>
+        );
+    }
+    if (!me.confirmed) {
+        return <p className="text-xs text-[#8E8E93]">Once your spot is confirmed you can team up with someone else on the list.</p>;
+    }
+
+    const incoming = tournament.participants.filter(p => p.partnerRequestId === me.playerId && !p.partnerId);
+    const asked = me.partnerRequestId ? nameOf.get(me.partnerRequestId) : undefined;
+    // Who can be asked: confirmed, without a partner, not already asking me.
+    const candidates = tournament.participants.filter(p =>
+        p.playerId !== me.playerId && p.confirmed && !p.partnerId && p.partnerRequestId !== me.playerId);
+
+    return (
+        <div className={box}>
+            <p className="text-xs font-bold uppercase tracking-widest text-[#8E8E93]">Team partner</p>
+            {incoming.map(p => (
+                <div key={p.playerId} className="flex flex-col sm:flex-row sm:items-center gap-2 bg-white rounded-lg border border-[#FF4200]/30 px-3 py-2.5">
+                    <p className="text-sm text-[#1A1A2E] flex-1 min-w-0"><span className="font-bold">{p.player.name}</span> wants to team up with you</p>
+                    <div className="flex gap-2 shrink-0">
+                        <button onClick={() => answer.mutate({ id: tournament.id, fromPlayerId: p.playerId, accept: true })} disabled={busy}
+                            className={`${button} flex-1 sm:flex-none bg-[#FF4200] text-white hover:bg-[#CC3500]`}>Accept</button>
+                        <button onClick={() => answer.mutate({ id: tournament.id, fromPlayerId: p.playerId, accept: false })} disabled={busy}
+                            className={`${button} flex-1 sm:flex-none border border-[#E5E5EA] bg-white text-[#8E8E93]`}>Decline</button>
+                    </div>
+                </div>
+            ))}
+            {asked ? (
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                    <p className="text-sm text-[#3A3A4E] flex-1">⏳ Waiting for <span className="font-bold text-[#1A1A2E]">{asked}</span> to accept</p>
+                    <button onClick={() => cancel.mutate({ id: tournament.id })} disabled={busy}
+                        className={`${button} self-start border border-[#E5E5EA] bg-white text-[#8E8E93]`}>Cancel request</button>
+                </div>
+            ) : candidates.length === 0 ? (
+                incoming.length === 0 && <p className="text-sm text-[#8E8E93]">Nobody else confirmed is free to team up with yet. Without a partner you'll be paired up with someone.</p>
+            ) : (
+                <div className="flex flex-col sm:flex-row gap-2">
+                    <select
+                        value={pick}
+                        onChange={e => setPick(e.target.value)}
+                        aria-label="Player to team up with"
+                        className="flex-1 min-w-0 border border-gray-300 rounded-lg px-3 py-2.5 text-base sm:text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#FF4200]"
+                    >
+                        <option value="">Team up with…</option>
+                        {candidates.map(p => <option key={p.playerId} value={p.playerId}>{p.player.name}</option>)}
+                    </select>
+                    <button onClick={() => ask.mutate({ id: tournament.id, partnerId: pick })} disabled={busy || !pick}
+                        className={`${button} bg-[#FF4200] text-white hover:bg-[#CC3500]`}>Ask to team up</button>
+                </div>
+            )}
+            {!asked && candidates.length > 0 && (
+                <p className="text-xs text-[#8E8E93]">They have to accept. No partner? You'll be paired up with someone.</p>
             )}
         </div>
     );

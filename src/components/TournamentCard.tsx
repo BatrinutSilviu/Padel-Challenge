@@ -19,6 +19,7 @@ export type CardTournament = {
     entryFee?: number | null; // lei per person
     advanceFee?: number | null;
     maxPlayers: number | null;
+    womenOnly?: boolean;
     _count: { participants: number }; // confirmed players
 };
 
@@ -61,6 +62,7 @@ export function TournamentCard({ tournament: t, aside, highlight }: {
                         <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${badge?.className ?? "bg-[#F5F5F7] text-[#8E8E93]"}`}>
                             {divisionLabel(t.division)}
                         </span>
+                        {t.womenOnly && <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-pink-50 text-pink-600">Women only</span>}
                         <span className="text-xs text-[#8E8E93] font-medium">{tournamentTypeLabel(t.type)}</span>
                     </div>
                 </div>

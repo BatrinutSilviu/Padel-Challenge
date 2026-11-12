@@ -49,6 +49,7 @@ export function TournamentPage() {
                                 <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${DIVISION_BADGES[tournament.division]?.className ?? "bg-[#F5F5F7] text-[#8E8E93]"}`}>
                                     {divisionLabel(tournament.division)}
                                 </span>
+                                {tournament.womenOnly && <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-pink-50 text-pink-600">Women only</span>}
                                 <span className="text-sm text-[#8E8E93] font-medium">{tournamentTypeLabel(tournament.type)}</span>
                             </div>
                             {describe(tournament.division) && (
