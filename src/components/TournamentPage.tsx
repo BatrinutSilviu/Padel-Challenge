@@ -1,7 +1,7 @@
 import { useParams, Link } from "react-router-dom";
 import { trpc } from "../trpc";
 import { NavBar } from "./NavBar";
-import { DIVISION_BADGES, divisionLabel } from "../lib/divisions";
+import { DIVISION_BADGES, divisionLabel, useDivisionDescriptions } from "../lib/divisions";
 import { hasPrizes, timeRangeLabel, tournamentTypeLabel, tournamentWhen } from "../lib/tournaments";
 import { HowItWorks, PrizeList } from "./TournamentDetails";
 import { useState } from "react";
@@ -15,6 +15,7 @@ import { PayTo } from "./PaymentAccounts";
 
 export function TournamentPage() {
     const { id } = useParams<{ id: string }>();
+    const describe = useDivisionDescriptions();
     const { data: tournament, isPending, error } = trpc.tournament.getById.useQuery(
         { id: id! },
         // Keep partial results fresh while the tournament is being played.
@@ -50,6 +51,11 @@ export function TournamentPage() {
                                 </span>
                                 <span className="text-sm text-[#8E8E93] font-medium">{tournamentTypeLabel(tournament.type)}</span>
                             </div>
+                            {describe(tournament.division) && (
+                                <p className="text-xs text-[#8E8E93] mt-1.5">
+                                    <span className="font-semibold text-[#3A3A4E]">{divisionLabel(tournament.division)}:</span> {describe(tournament.division)}
+                                </p>
+                            )}
                             <div className="mt-2 grid gap-1 text-sm text-[#3A3A4E]">
                                 <p className="flex items-start gap-2">
                                     <span aria-hidden className="w-4 text-center">📅</span>

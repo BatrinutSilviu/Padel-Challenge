@@ -5,7 +5,7 @@ import { useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { AccountStatusNotice } from "./auth/AccountStatus";
 
-import { DIVISION_NAMES, DIVISION_BADGES, DIVISION_COLORS, divisionLabel } from "../lib/divisions";
+import { DIVISION_NAMES, DIVISION_BADGES, DIVISION_COLORS, divisionLabel, useDivisionDescriptions } from "../lib/divisions";
 import { TournamentType, TOURNAMENT_TYPE_LABELS } from "../lib/tournaments";
 import { BADGE_META, BadgeType } from "../lib/badges";
 import { RankingPointsInfo } from "./RankingPointsInfo";
@@ -105,6 +105,7 @@ function OpenSignups() {
 
 function DivisionsTab() {
     const { data, isPending } = trpc.division.list.useQuery();
+    const describe = useDivisionDescriptions();
     return (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {isPending && <p className="text-[#8E8E93]">Loading…</p>}
@@ -122,6 +123,7 @@ function DivisionsTab() {
                                 {badge.label}
                             </span>
                         </div>
+                        {describe(division) && <p className="text-sm text-[#3A3A4E] leading-snug line-clamp-2 mb-1.5">{describe(division)}</p>}
                         <p className="text-sm text-[#8E8E93] font-medium">{playerCount} player{playerCount !== 1 ? "s" : ""}</p>
                     </Link>
                 );

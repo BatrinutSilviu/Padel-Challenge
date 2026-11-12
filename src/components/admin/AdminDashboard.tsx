@@ -12,7 +12,7 @@ import { ChallengerFormatPicker } from "./ChallengerFormatPicker";
 import { GroupHeading, TeamNumber } from "./TeamNumber";
 import { FeeInputs } from "./FeeInputs";
 import { PaymentAccountsAdmin } from "./PaymentAccountsAdmin";
-import { PrivacyAdmin, SupportContactAdmin } from "../SupportContact";
+import { DivisionDescriptionsAdmin, PrivacyAdmin, SupportContactAdmin } from "../SupportContact";
 import { PayToSelect, PrizeInputs, TimeInputs } from "./TournamentDetailsInputs";
 import { EMPTY_DETAILS, detailsError, detailsInput } from "../../lib/tournamentDetails";
 import { PlayerPicker } from "../PlayerPicker";
@@ -158,6 +158,7 @@ function SettingsTab() {
             <PaymentAccountsAdmin />
             <SupportContactAdmin />
             <PrivacyAdmin />
+            <DivisionDescriptionsAdmin />
             <RankingSystemSettings />
         </div>
     );

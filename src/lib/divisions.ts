@@ -1,3 +1,5 @@
+import { trpc } from "../trpc";
+
 // 7 (Girls) is retired — only kept so its past tournaments still show their division.
 export const DIVISION_NAMES: Record<number, string> = {
     1: "Elite", 2: "Premier", 3: "Gold", 4: "Silver", 5: "Bronze", 6: "Beginner", 7: "Girls",
@@ -25,4 +27,10 @@ export const DIVISION_COLORS: Record<number, { bg: string; text: string; border:
 
 export function divisionLabel(division: number): string {
     return DIVISION_NAMES[division] ?? `Division ${division}`;
+}
+
+// What each level means (backend site.divisionDescriptions) — admin-edited, with defaults.
+export function useDivisionDescriptions() {
+    const { data } = trpc.site.divisionDescriptions.useQuery(undefined, { staleTime: 10 * 60 * 1000 });
+    return (division: number): string | null => data?.[division] ?? null;
 }

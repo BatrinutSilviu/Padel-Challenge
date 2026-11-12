@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { trpc } from "../trpc";
 import { NavBar } from "./NavBar";
-import { DIVISION_NAMES, DIVISION_BADGES } from "../lib/divisions";
+import { DIVISION_NAMES, DIVISION_BADGES, useDivisionDescriptions } from "../lib/divisions";
 import { BADGE_META, BadgeType } from "../lib/badges";
 import { StatusBadge } from "./HomePage";
 import { TournamentCard } from "./TournamentCard";
@@ -21,6 +21,7 @@ export function DivisionPage() {
     }
 
     const badge = DIVISION_BADGES[division];
+    const describe = useDivisionDescriptions();
 
     return (
         <div className="min-h-screen bg-[#F5F5F7]">
@@ -45,6 +46,7 @@ export function DivisionPage() {
                                 Division {division}
                             </span>
                         </div>
+                        {describe(division) && <p className="text-sm text-[#3A3A4E] mt-2 max-w-2xl">{describe(division)}</p>}
                     </div>
                 </div>
 
