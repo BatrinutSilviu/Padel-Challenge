@@ -19,7 +19,7 @@ export function RankingCoefficientsEditor() {
     const rows: { key: string; label: string; group: string; current: number; def: number }[] = data ? [
         ...TYPE_ORDER.map(t => ({ key: `type:${t}`, label: TOURNAMENT_TYPE_LABELS[t as TournamentType] ?? t, group: "Tournament type", current: data.current.type[t], def: data.defaults.type[t] })),
         { key: "league", label: "Act!ve Padel League", group: "Tournament type", current: data.current.league, def: data.defaults.league },
-        ...Object.keys(data.defaults.division).map(d => ({ key: `division:${d}`, label: divisionLabel(Number(d)), group: "Division", current: data.current.division[Number(d)], def: data.defaults.division[Number(d)] })),
+        ...Object.keys(data.defaults.division).map(d => ({ key: `division:${d}`, label: divisionLabel(Number(d)), group: "Level", current: data.current.division[Number(d)], def: data.defaults.division[Number(d)] })),
         ...Object.keys(data.defaults.leagueTier).map(l => ({ key: `leagueTier:${l}`, label: tierLabel(Number(l)), group: "League tier", current: data.current.leagueTier[Number(l)], def: data.defaults.leagueTier[Number(l)] })),
     ] : [];
 
@@ -53,7 +53,7 @@ export function RankingCoefficientsEditor() {
             </div>
             {!data ? <p className="text-gray-400 text-sm">Loading…</p> : (
                 <div className="grid sm:grid-cols-3 gap-4">
-                    {["Tournament type", "Division", "League tier"].map(group => (
+                    {["Tournament type", "Level", "League tier"].map(group => (
                         <div key={group} className="space-y-1.5">
                             <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">{group}</p>
                             {rows.filter(r => r.group === group).map(r => (

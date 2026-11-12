@@ -60,7 +60,7 @@ export function AddPlayerInline({
                     className="border border-gray-300 rounded-lg px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF4200] bg-white"
                 >
                     {[1, 2, 3, 4, 5, 6].map(d => (
-                        <option key={d} value={d}>{d === 6 ? "Beginner" : `Div ${d} — ${DIVISION_NAMES[d]}`}</option>
+                        <option key={d} value={d}>{DIVISION_NAMES[d]}</option>
                     ))}
                 </select>
                 <select

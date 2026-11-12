@@ -492,7 +492,7 @@ function CreateTournamentForm({ onCreated, onImport }: { onCreated: () => void; 
                 <TimeInputs value={details} onChange={setDetails} />
             </Field>
 
-            <Field label="Division">
+            <Field label="Level">
                 <div className="flex flex-wrap gap-2">
                     {[1, 2, 3, 4, 5, 6].map(d => (
                         <button
@@ -505,7 +505,7 @@ function CreateTournamentForm({ onCreated, onImport }: { onCreated: () => void; 
                                     : "border-gray-300 text-gray-600 hover:border-[#FF4200]"
                             }`}
                         >
-                            {d === 6 ? "Beginner" : `${d} — ${DIVISION_NAMES[d]}`}
+                            {DIVISION_NAMES[d]}
                         </button>
                     ))}
                 </div>
@@ -801,7 +801,7 @@ function CreateTournamentForm({ onCreated, onImport }: { onCreated: () => void; 
                                             className="text-left px-3 py-2.5 rounded-lg text-sm border transition-colors bg-[#FF4200]/10 border-[#FF4200] text-[#333366] font-medium">
                                             <span className="mr-1">✓</span>
                                             {p.name}
-                                            {isOtherDiv && <span className="ml-1.5 text-xs font-normal text-gray-400">(Div {p.division === 6 ? "Beg." : p.division})</span>}
+                                            {isOtherDiv && <span className="ml-1.5 text-xs font-normal text-gray-400">({divisionLabel(p.division)})</span>}
                                         </button>
                                     );
                                 })}
@@ -815,7 +815,7 @@ function CreateTournamentForm({ onCreated, onImport }: { onCreated: () => void; 
                                         <button key={p.id} type="button" onClick={() => togglePlayer(p.id)}
                                             className="text-left px-3 py-2.5 rounded-lg text-sm border transition-colors border-gray-200 text-gray-700 hover:border-[#FF4200]/50">
                                             {p.name}
-                                            {isOtherDiv && <span className="ml-1.5 text-xs font-normal text-gray-400">(Div {p.division === 6 ? "Beg." : p.division})</span>}
+                                            {isOtherDiv && <span className="ml-1.5 text-xs font-normal text-gray-400">({divisionLabel(p.division)})</span>}
                                         </button>
                                     );
                                 })}
@@ -1007,12 +1007,12 @@ function ImportRankedinTab({ onImported, onBack }: { onImported: () => void; onB
                         </div>
 
                         <div className="space-y-2">
-                            <label className="block text-sm font-medium text-gray-700">Division</label>
+                            <label className="block text-sm font-medium text-gray-700">Level</label>
                             <div className="flex flex-wrap gap-2">
                                 {[1, 2, 3, 4, 5, 6].map(d => (
                                     <button key={d} type="button" onClick={() => setDivision(d)}
                                         className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${division === d ? "bg-[#FF4200] text-white border-[#FF4200]" : "border-gray-300 text-gray-600 hover:border-[#FF4200]"}`}>
-                                        {d === 6 ? "Beginner" : `${d} — ${DIVISION_NAMES[d]}`}
+                                        {DIVISION_NAMES[d]}
                                     </button>
                                 ))}
                             </div>
@@ -1227,7 +1227,7 @@ function PlayersTab() {
                                                 <li key={p.id} className="flex items-center justify-between gap-2">
                                                     <span className="text-amber-800 font-semibold">{p.name}</span>
                                                     <span className="text-amber-600 text-xs">
-                                                        {p.division === 6 ? "Beginner" : `Div ${p.division}`} · {p.gender === "MALE" ? "♂" : "♀"}
+                                                        {divisionLabel(p.division)} · {p.gender === "MALE" ? "♂" : "♀"}
                                                     </span>
                                                 </li>
                                             ))}
@@ -1245,7 +1245,7 @@ function PlayersTab() {
                         className={`${input} self-start`}
                     >
                         {[1, 2, 3, 4, 5, 6].map(d => (
-                            <option key={d} value={d}>{d === 6 ? "Beginner" : `Div ${d} — ${DIVISION_NAMES[d]}`}</option>
+                            <option key={d} value={d}>{DIVISION_NAMES[d]}</option>
                         ))}
                     </select>
                     <select
@@ -1284,7 +1284,7 @@ function PlayersTab() {
                     <thead className="bg-gray-50 border-b border-gray-200">
                         <tr>
                             <th className="text-left px-4 py-2 text-gray-600 font-medium">Player</th>
-                            <th className="text-left px-4 py-2 text-gray-600 font-medium hidden sm:table-cell">Division</th>
+                            <th className="text-left px-4 py-2 text-gray-600 font-medium hidden sm:table-cell">Level</th>
                             <th className="w-10"></th>
                         </tr>
                     </thead>
@@ -1322,7 +1322,7 @@ function PlayerRow({ player: p, onDelete }: {
         },
         onError: (e) => setError(e.message),
     });
-    const divisionText = p.division === 6 ? "Beginner" : `Div ${p.division} — ${DIVISION_NAMES[p.division]}`;
+    const divisionText = DIVISION_NAMES[p.division] ?? `Division ${p.division}`;
     const genderText = p.gender === "FEMALE" ? "♀ Female" : "♂ Male";
 
     function startEditing() {
@@ -1363,10 +1363,10 @@ function PlayerRow({ player: p, onDelete }: {
                                 value={draft.division}
                                 onChange={e => setDraft({ ...draft, division: Number(e.target.value) })}
                                 className={`${input} flex-1 min-w-[10rem]`}
-                                aria-label="Division"
+                                aria-label="Level"
                             >
                                 {[1, 2, 3, 4, 5, 6].map(d => (
-                                    <option key={d} value={d}>{d === 6 ? "Beginner" : `Div ${d} — ${DIVISION_NAMES[d]}`}</option>
+                                    <option key={d} value={d}>{DIVISION_NAMES[d]}</option>
                                 ))}
                             </select>
                             <select

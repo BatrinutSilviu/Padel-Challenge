@@ -42,7 +42,7 @@ export function RankingPointsInfo() {
                                 ...TYPE_ORDER.map(t => [TOURNAMENT_TYPE_LABELS[t as TournamentType] ?? t, data.current.type[t]] as [string, number]),
                                 ["Act!ve Padel League", data.current.league],
                             ]} />
-                            <CoefTable title="Division" rows={Object.entries(data.current.division).map(([d, v]) => [divisionLabel(Number(d)), v])} />
+                            <CoefTable title="Level" rows={Object.entries(data.current.division).map(([d, v]) => [divisionLabel(Number(d)), v])} />
                             <CoefTable title="League tier" rows={Object.entries(data.current.leagueTier).map(([l, v]) => [tierLabel(Number(l)), v])} />
                         </div>
                     )}

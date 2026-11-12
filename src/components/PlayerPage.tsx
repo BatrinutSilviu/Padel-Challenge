@@ -55,7 +55,7 @@ export function PlayerPage() {
                             <h1 className="text-2xl font-black text-[#1A1A2E] tracking-tight leading-none">{player.name}</h1>
                             <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                                 <span className="text-sm text-[#8E8E93] font-medium">
-                                    {player.division === 6 ? "Beginner" : `Division ${player.division} — ${DIVISION_NAMES[player.division]}`}
+                                    {DIVISION_NAMES[player.division] ?? `Division ${player.division}`}
                                 </span>
                                 <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
                                     player.gender === "FEMALE" ? "bg-pink-100 text-pink-700" : "bg-sky-50 text-sky-600"

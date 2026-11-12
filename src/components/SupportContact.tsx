@@ -199,7 +199,7 @@ export function DivisionDescriptionsAdmin() {
             </div>
             {[1, 2, 3, 4, 5, 6].map(d => (
                 <label key={d} className="block">
-                    <span className="block text-sm font-medium text-gray-700 mb-1">{d === 6 ? "Beginner" : `Division ${d} — ${divisionLabel(d)}`}</span>
+                    <span className="block text-sm font-medium text-gray-700 mb-1">{divisionLabel(d)}</span>
                     <textarea
                         value={texts[d] ?? ""}
                         onChange={e => setTexts({ ...texts, [d]: e.target.value })}

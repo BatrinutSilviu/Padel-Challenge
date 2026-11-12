@@ -20,7 +20,6 @@ export function DivisionPage() {
         return <div className="p-8 text-red-600">Invalid division.</div>;
     }
 
-    const badge = DIVISION_BADGES[division];
     const describe = useDivisionDescriptions();
 
     return (
@@ -42,9 +41,6 @@ export function DivisionPage() {
                             <h1 className="text-3xl font-black text-[#1A1A2E] tracking-tight leading-none">
                                 {DIVISION_NAMES[division] ?? `Division ${division}`}
                             </h1>
-                            <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${badge.className}`}>
-                                Division {division}
-                            </span>
                         </div>
                         {describe(division) && <p className="text-sm text-[#3A3A4E] mt-2 max-w-2xl">{describe(division)}</p>}
                     </div>
