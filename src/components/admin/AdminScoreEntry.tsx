@@ -283,7 +283,8 @@ export function AdminScoreEntry() {
                 </div>
 
                 <TournamentSettingsEditor tournament={tournament} />
-                <TournamentDetailsEditor tournament={tournament} />
+                <TournamentDetailsEditor tournament={tournament} section="payment" />
+                <TournamentDetailsEditor tournament={tournament} section="general" />
 
                 {/* Participants */}
                 <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">

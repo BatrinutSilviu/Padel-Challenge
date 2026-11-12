@@ -63,8 +63,16 @@ export function PaymentAccountsAdmin() {
             <input value={draft.accountHolder} onChange={e => setDraft({ ...draft, accountHolder: e.target.value })} placeholder="Account holder, e.g. Asociația Act!ve" className={field} />
             {draft.type === "bank" ? (
                 <>
-                    <input value={draft.bankName} onChange={e => setDraft({ ...draft, bankName: e.target.value })} placeholder="Bank, e.g. Banca Transilvania" className={field} />
+                    <input value={draft.bankName} onChange={e => setDraft({ ...draft, bankName: e.target.value })} placeholder="Bank, e.g. ING, Raiffeisen, CEC" className={field} />
                     <input value={draft.iban} onChange={e => setDraft({ ...draft, iban: e.target.value })} placeholder="IBAN, e.g. RO49 AAAA 1B31 0075 9384 0000" className={`${field} font-mono`} autoCapitalize="characters" />
+                    <input
+                        value={draft.paymentHandle}
+                        onChange={e => setDraft({ ...draft, paymentHandle: e.target.value })}
+                        placeholder="and/or the phone number to pay to"
+                        inputMode="tel"
+                        className={field}
+                    />
+                    <p className="text-xs text-gray-400">An IBAN, a phone number (for the bank app's pay-by-phone), or both.</p>
                 </>
             ) : (
                 <input

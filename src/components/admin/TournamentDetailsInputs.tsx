@@ -254,8 +254,11 @@ export function PayToSelect({ value, onChange, disabled }: {
 
 // The admin's card for changing a tournament's times and prizes after it's been
 // created, whatever its status.
-export function TournamentDetailsEditor({ tournament }: {
-    tournament: StoredDetails & { id: string };
+// Two cards on each tournament's admin page, whatever its status: "Price & payment"
+// (price, advance, who players pay) and "Time, place & prizes". Each saves its own fields.
+export function TournamentDetailsEditor({ tournament, section }: {
+    tournament: StoredDetails & { id: string; payTo?: { type: string; bankName: string | null; accountHolder: string }[] };
+    section: "payment" | "general";
 }) {
     const qc = useQueryClient();
     // The texts plus the accounts players pay into (none picked = every active one).
@@ -279,6 +282,22 @@ export function TournamentDetailsEditor({ tournament }: {
 
     const times = timeRangeLabel(tournament);
     const prizeCount = prizeList(tournament).length + (tournament.prizeNotes ? 1 : 0);
+    const isPayment = section === "payment";
+    const payToText = (tournament.payTo ?? []).map(a => `${accountTitle(a as Parameters<typeof accountTitle>[0])} ${a.accountHolder.split(" ")[0]}`).join(", ");
+    const summary = isPayment
+        ? [
+            tournament.entryFee !== null ? `${tournament.entryFee} lei` : "no price",
+            tournament.advanceFee !== null ? `${tournament.advanceFee} lei advance` : null,
+            payToText ? `pay to ${payToText}` : "no payment accounts",
+        ].filter(Boolean).join(" · ")
+        : `${times || "No times set"} · ${tournament.location || "no location"} · ${prizeCount > 0 ? "prizes set" : "no prizes"}`;
+    // Only this card's fields go out, so the other card's unsaved edits are never overwritten.
+    function input() {
+        const all = detailsInput(value);
+        return isPayment
+            ? { entryFee: all.entryFee, advanceFee: all.advanceFee, paymentAccountIds: all.paymentAccountIds }
+            : { startTime: all.startTime, endTime: all.endTime, location: all.location, prizes: all.prizes, prizeNotes: all.prizeNotes };
+    }
 
     return (
         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
@@ -287,11 +306,9 @@ export function TournamentDetailsEditor({ tournament }: {
                 onClick={() => setOpen(v => !v)}
                 className="w-full flex items-center justify-between gap-3 px-4 sm:px-5 py-3 text-sm font-medium text-gray-700"
             >
-                <span className="text-left">
-                    Time, place, price & prizes
-                    <span className="block text-xs font-normal text-gray-400">
-                        {times || "No times set"} · {tournament.location || "no location"} · {tournament.entryFee !== null ? `${tournament.entryFee} lei` : "no price"} · {prizeCount > 0 ? "prizes set" : "no prizes"}
-                    </span>
+                <span className="text-left min-w-0">
+                    {isPayment ? "Price & payment" : "Time, place & prizes"}
+                    <span className="block text-xs font-normal text-gray-400">{summary}</span>
                 </span>
                 <svg
                     className={`w-4 h-4 text-gray-400 transition-transform shrink-0 ${open ? "rotate-180" : ""}`}
@@ -302,10 +319,13 @@ export function TournamentDetailsEditor({ tournament }: {
             </button>
             {open && (
                 <div className="border-t border-gray-100 px-4 sm:px-5 py-4 space-y-4">
+                    {!isPayment && (
                     <div>
                         <p className="text-sm font-medium text-gray-700 mb-2">Time (local) and place</p>
                         <TimeInputs value={value} onChange={setValue} disabled={update.isPending} />
                     </div>
+                    )}
+                    {isPayment && (
                     <div>
                         <p className="text-sm font-medium text-gray-700 mb-2">Price per person (lei)</p>
                         <FeeInputs
@@ -319,10 +339,13 @@ export function TournamentDetailsEditor({ tournament }: {
                             <PayToSelect value={value} onChange={setValue} disabled={update.isPending} />
                         </div>
                     </div>
+                    )}
+                    {!isPayment && (
                     <div>
                         <p className="text-sm font-medium text-gray-700 mb-2">Prizes</p>
                         <PrizeInputs value={value} onChange={setValue} disabled={update.isPending} />
                     </div>
+                    )}
                     {error && <p className="text-sm text-red-500">{error}</p>}
                     {changed && (
                         <div className="flex gap-2">
@@ -331,7 +354,7 @@ export function TournamentDetailsEditor({ tournament }: {
                                 onClick={() => {
                                     const problem = detailsError(value);
                                     if (problem) return setError(problem);
-                                    update.mutate({ id: tournament.id, ...detailsInput(value) });
+                                    update.mutate({ id: tournament.id, ...input() });
                                 }}
                                 disabled={update.isPending}
                                 className="text-sm font-medium px-4 py-2 rounded-lg bg-[#FF4200] text-white hover:bg-[#CC3500] disabled:opacity-50"

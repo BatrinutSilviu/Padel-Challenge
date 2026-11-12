@@ -199,7 +199,8 @@ export function TournamentSignupAdmin({ tournament }: { tournament: TournamentDa
                 </div>
 
                 <TournamentSettingsEditor tournament={tournament} />
-                <TournamentDetailsEditor tournament={tournament} />
+                <TournamentDetailsEditor tournament={tournament} section="payment" />
+                <TournamentDetailsEditor tournament={tournament} section="general" />
 
                 {/* Sign-up settings */}
                 <div className="bg-white rounded-xl border border-gray-200 px-4 sm:px-5 py-4 space-y-4">

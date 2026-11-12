@@ -14,16 +14,21 @@ export type PaymentAccount = {
     isActive: boolean;
 };
 
-export const PAYMENT_TYPE_LABELS: Record<string, string> = { bank: "Bank transfer", revolut: "Revolut", btpay: "BT Pay" };
+export const PAYMENT_TYPE_LABELS: Record<string, string> = { bank: "Other bank", revolut: "Revolut", btpay: "BT Pay" };
 
 export function accountTitle(a: PaymentAccount): string {
-    return a.type === "bank" ? a.bankName || "Bank transfer" : PAYMENT_TYPE_LABELS[a.type] ?? a.type;
+    return a.type === "bank" ? a.bankName || "Bank" : PAYMENT_TYPE_LABELS[a.type] ?? a.type;
 }
 
-// What players copy: the IBAN (grouped in fours, as banks print it) or the handle.
+// What players copy: the IBAN (grouped in fours, as banks print it) and/or the phone
+// number or handle — a bank can have either or both.
+export function accountValues(a: PaymentAccount): string[] {
+    const iban = a.type === "bank" && a.iban ? a.iban.replace(/(.{4})/g, "$1 ").trim() : null;
+    return [iban, a.paymentHandle].filter((v): v is string => !!v);
+}
+
 export function accountValue(a: PaymentAccount): string {
-    if (a.type === "bank") return (a.iban ?? "").replace(/(.{4})/g, "$1 ").trim();
-    return a.paymentHandle ?? "";
+    return accountValues(a).join(" · ");
 }
 
 // A Revolut @tag opens revolut.me.
@@ -78,10 +83,12 @@ export function PayTo({ accounts, entryFee, advanceFee, tournamentName }: {
                     <div key={a.id} className="bg-white rounded-xl border border-amber-100 p-3">
                         <p className="text-sm font-bold text-[#1A1A2E]">{accountTitle(a)}</p>
                         <p className="text-xs text-[#8E8E93]">{a.accountHolder}</p>
-                        <div className="flex items-center justify-between gap-2 mt-1.5">
-                            <span className="font-mono text-[13px] sm:text-sm text-[#1A1A2E] break-words">{accountValue(a)}</span>
-                            <CopyButton text={accountValue(a)} />
-                        </div>
+                        {accountValues(a).map(v => (
+                            <div key={v} className="flex items-center justify-between gap-2 mt-1.5">
+                                <span className="font-mono text-[13px] sm:text-sm text-[#1A1A2E] break-words">{v}</span>
+                                <CopyButton text={v} />
+                            </div>
+                        ))}
                         {link && (
                             <a
                                 href={link}
