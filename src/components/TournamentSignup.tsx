@@ -7,6 +7,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { isTeamBasedType } from "../lib/tournaments";
 import { HowItWorks, PrizeList } from "./TournamentDetails";
 import { AccountStatusNotice } from "./auth/AccountStatus";
+import { toast } from "sonner";
 import { PayTo } from "./PaymentAccounts";
 import { PrivacyConsent } from "./PrivacyPage";
 import { PlayerPicker } from "./PlayerPicker";
@@ -38,8 +39,15 @@ export function TournamentSignup({ tournament }: { tournament: TournamentData })
     const acceptPrivacy = trpc.auth.acceptPrivacy.useMutation({
         onSuccess: () => qc.invalidateQueries({ queryKey: getQueryKey(trpc.auth.me) }),
     });
+    // What a player pays to get a spot: the advance, or the full price when there's no advance.
+    const payNow = tournament.advanceFee ?? tournament.entryFee;
     const join = trpc.tournament.join.useMutation({
-        onSuccess: () => { setPartnerId(""); setPartnerName(""); refresh(); },
+        onSuccess: () => {
+            setPartnerId(""); setPartnerName(""); refresh();
+            toast.success(payNow !== null
+                ? `You're on the waiting list — pay the ${payNow} lei ${tournament.advanceFee !== null ? "advance" : "entry fee"} to confirm your spot.`
+                : "You're on the waiting list — an admin will confirm your spot.");
+        },
         onError: e => setError(e.message),
     });
     const leave = trpc.tournament.leave.useMutation({ onSuccess: refresh, onError: e => setError(e.message) });
@@ -120,10 +128,16 @@ export function TournamentSignup({ tournament }: { tournament: TournamentData })
                                     <span className="w-5 h-5 rounded-full bg-amber-50 flex items-center justify-center text-xs shrink-0">⏳</span>
                                     <span>
                                         You're on the waiting list{myPartnerName && ` with ${myPartnerName}`}
-                                        <span className="block text-xs font-medium text-[#8E8E93]">
-                                            Your spot is confirmed once you've paid{tournament.advanceFee !== null
-                                                ? ` the ${tournament.advanceFee} lei advance`
-                                                : tournament.entryFee !== null && ` the ${tournament.entryFee} lei entry fee`} and an admin has checked it.
+                                        {payNow !== null && (
+                                            <span className="block text-sm font-black text-[#1A1A2E] mt-1">
+                                                Pay the {payNow} lei {tournament.advanceFee !== null ? "advance" : "entry fee"} to confirm your spot
+                                            </span>
+                                        )}
+                                        <span className="block text-xs font-medium text-[#8E8E93] mt-0.5">
+                                            {tournament.advanceFee !== null && tournament.entryFee !== null && tournament.entryFee > tournament.advanceFee
+                                                ? `The other ${tournament.entryFee - tournament.advanceFee} lei of the ${tournament.entryFee} lei total are paid on the day. `
+                                                : ""}
+                                            {payNow !== null ? "An admin confirms your spot once the payment arrives — see How to pay below." : "An admin confirms your spot."}
                                         </span>
                                     </span>
                                 </span>
@@ -215,19 +229,23 @@ export function TournamentSignup({ tournament }: { tournament: TournamentData })
             </div>
 
             <div className="px-5 sm:px-6 py-4 border-b border-[#F5F5F7] space-y-4">
+                {/* The advance is what players pay to get in; the total comes second. */}
                 {(tournament.entryFee !== null || tournament.advanceFee !== null) && (
                     <div className="space-y-0.5">
-                        {tournament.entryFee !== null && (
-                            <p className="text-sm text-[#1A1A2E]">
-                                <span className="font-bold">Entry fee:</span> {tournament.entryFee} lei / person
-                            </p>
-                        )}
-                        {tournament.advanceFee !== null && (
-                            <p className="text-sm text-[#1A1A2E]">
-                                <span className="font-bold">Advance to confirm your spot:</span> {tournament.advanceFee} lei / person
+                        {tournament.advanceFee !== null ? (
+                            <>
+                                <p className="text-base text-[#1A1A2E]">
+                                    <span className="font-black">Advance: {tournament.advanceFee} lei</span> / person — pay it to confirm your spot
+                                </p>
                                 {tournament.entryFee !== null && (
-                                    <span className="text-[#8E8E93]"> — the other {tournament.entryFee - tournament.advanceFee} lei later</span>
+                                    <p className="text-sm text-[#8E8E93]">
+                                        Total price {tournament.entryFee} lei / person · the other {tournament.entryFee - tournament.advanceFee} lei are paid on the day
+                                    </p>
                                 )}
+                            </>
+                        ) : (
+                            <p className="text-base text-[#1A1A2E]">
+                                <span className="font-black">Price: {tournament.entryFee} lei</span> / person — pay it to confirm your spot
                             </p>
                         )}
                     </div>
