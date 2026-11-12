@@ -8,7 +8,7 @@ import { trpc, trpcClient } from './trpc';
 import { AuthProvider } from './contexts/AuthContext';
 import { Toaster } from './components/ui/sonner';
 
-const USER_SCOPED_ROUTERS = ['individualMatch', 'profile'];
+const USER_SCOPED_ROUTERS = ['profile'];
 // The league and tournament routers mix admin procedures with ones players use.
 const USER_SCOPED_PROCEDURES = [
     'league.myOpenMatches', 'league.submitScore', 'league.confirmScore', 'league.setSchedule',

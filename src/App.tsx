@@ -11,8 +11,6 @@ import { LoginPage } from "./components/auth/LoginPage";
 import { SignupPage } from "./components/auth/SignupPage";
 import { ChooseProfilePage } from "./components/auth/AccountStatus";
 import { RequireAuth } from "./components/auth/RequireAuth";
-import { RecordMatchPage } from "./components/matches/RecordMatchPage";
-import { MatchesPage } from "./components/matches/MatchesPage";
 import { LatestLiveBoard, MastersLiveBoard } from "./components/masters/MastersLiveBoard";
 import { LeaguesPage } from "./components/league/LeaguesPage";
 import { LeaguePage } from "./components/league/LeaguePage";
@@ -33,8 +31,6 @@ export default function App() {
             <Route path="/privacy" element={<PrivacyPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/signup" element={<SignupPage />} />
-            <Route path="/matches" element={<MatchesPage />} />
-            <Route path="/matches/new" element={<RequireAuth><RecordMatchPage /></RequireAuth>} />
             <Route path="/admin" element={<AdminPage />} />
             <Route path="/admin/tournament/:id" element={<AdminScoreEntry />} />
             <Route path="/admin/league/:id" element={<AdminLeaguePage />} />

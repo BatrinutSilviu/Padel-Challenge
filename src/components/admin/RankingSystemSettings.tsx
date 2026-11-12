@@ -8,12 +8,12 @@ const OPTIONS: { system: RankingSystem; title: string; description: string }[] =
     {
         system: "ELO",
         title: "ELO rating",
-        description: "Every match won or lost moves a player's rating, weighted by how strong the opponents were. Friendly matches count too.",
+        description: "Every tournament match won or lost moves a player's rating, weighted by how strong the opponents were.",
     },
     {
         system: "POINTS",
         title: "Ranking points",
-        description: "Points for each finishing place in the last 12 months, times coefficients for the tournament type and division. Friendly matches don't count.",
+        description: "Points for each finishing place in the last 12 months, times coefficients for the tournament type and division.",
     },
 ];
 
@@ -89,7 +89,7 @@ export function RankingSystemSettings() {
                     </button>
                     {eloMsg && <p className={`text-sm self-center ${eloMsg.startsWith("Error") ? "text-red-500" : "text-green-600"}`}>{eloMsg}</p>}
                 </div>
-                <p className="text-xs text-gray-400">Resets all ELO ratings to 1000 and replays every completed tournament and friendly match in chronological order.</p>
+                <p className="text-xs text-gray-400">Resets all ELO ratings to 1000 and replays every completed tournament in chronological order (plus the friendly matches recorded before that feature was removed).</p>
             </div>
             {system === "POINTS" && <RankingCoefficientsEditor />}
         </>

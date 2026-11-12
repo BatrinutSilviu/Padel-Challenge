@@ -48,7 +48,7 @@ export function RankingPointsInfo() {
                     )}
                     <p className="text-xs text-[#8E8E93]">
                         Example: winning a 16-player Americano in a division with coefficient 1.4 gives 26 × 1.0 × 1.4 = 36 points.
-                        Friendly matches don't count. The top and bottom 15% of each division by points are promoted and relegated.
+                        The top and bottom 15% of each division by points are promoted and relegated.
                     </p>
                 </div>
             )}

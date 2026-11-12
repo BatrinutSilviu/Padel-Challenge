@@ -26,12 +26,6 @@ export function NavBar() {
                             🏆 League
                         </Link>
                         <Link
-                            to="/matches"
-                            className="text-sm font-semibold px-3 py-2 rounded-lg bg-white/10 text-white hover:bg-white/20 transition-colors whitespace-nowrap"
-                        >
-                            🎾 Matches
-                        </Link>
-                        <Link
                             to="/badges"
                             className="text-sm font-semibold px-3 py-2 rounded-lg bg-white/10 text-white hover:bg-white/20 transition-colors whitespace-nowrap"
                         >
@@ -47,12 +41,6 @@ export function NavBar() {
                         )}
                         {token ? (
                             <>
-                                <Link
-                                    to="/matches/new"
-                                    className="text-sm font-semibold px-3 py-2 rounded-lg bg-[#FF4200] text-white hover:bg-[#CC3500] transition-colors whitespace-nowrap"
-                                >
-                                    Record Match
-                                </Link>
                                 <Link
                                     to="/profile"
                                     className="text-sm font-semibold px-3 py-2 rounded-lg text-white/70 hover:text-white transition-colors whitespace-nowrap"
@@ -85,8 +73,7 @@ export function NavBar() {
 function MobileBottomNav({ isAdmin }: { isAdmin: boolean }) {
     const { pathname } = useLocation();
     const isLeague = pathname.startsWith("/league");
-    const isHome = !pathname.startsWith("/badges") && !pathname.startsWith("/admin") && !pathname.startsWith("/matches") && !isLeague;
-    const isMatches = pathname.startsWith("/matches");
+    const isHome = !pathname.startsWith("/badges") && !pathname.startsWith("/admin") && !isLeague;
     const isBadges = pathname.startsWith("/badges");
     const isAdminPage = pathname.startsWith("/admin");
 
@@ -98,9 +85,6 @@ function MobileBottomNav({ isAdmin }: { isAdmin: boolean }) {
                 </BottomTab>
                 <BottomTab to="/league" label="League" active={isLeague}>
                     <TrophyIcon />
-                </BottomTab>
-                <BottomTab to="/matches" label="Matches" active={isMatches}>
-                    <MatchIcon />
                 </BottomTab>
                 <BottomTab to="/badges" label="Badges" active={isBadges}>
                     <StarIcon />
@@ -137,13 +121,6 @@ function HomeIcon() {
     );
 }
 
-function MatchIcon() {
-    return (
-        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM7 8a1 1 0 000 2h6a1 1 0 100-2H7zm0 4a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
-        </svg>
-    );
-}
 
 function TrophyIcon() {
     return (
