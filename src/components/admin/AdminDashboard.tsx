@@ -1186,7 +1186,14 @@ function PlayersTab() {
     const [search, setSearch] = useState("");
     const fold = (v: string) => v.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
     const searchKey = fold(search.trim());
-    const listed = (players.data ?? []).filter(p => !searchKey || fold(p.name).includes(searchKey));
+    // Contact details (admins only): the account's email and the profile's phone.
+    const contacts = trpc.player.contacts.useQuery();
+    const contactOf = (id: string) => contacts.data?.[id];
+    const listed = (players.data ?? []).filter(p => {
+        if (!searchKey) return true;
+        const c = contactOf(p.id);
+        return [p.name, c?.email ?? "", (c?.phone ?? "").replace(/\s+/g, "")].some(v => fold(v).includes(searchKey.replace(/\s+(?=\d)/g, "")));
+    });
 
     const q = name.trim().toLowerCase();
     const matches = q.length >= 2
@@ -1273,7 +1280,7 @@ function PlayersTab() {
                         type="search"
                         value={search}
                         onChange={e => setSearch(e.target.value)}
-                        placeholder={`Search ${players.data?.length ?? ""} players…`}
+                        placeholder={`Search ${players.data?.length ?? ""} players by name, email or phone…`}
                         className={`${input} w-full`}
                         autoComplete="off"
                     />
@@ -1293,6 +1300,7 @@ function PlayersTab() {
                             <PlayerRow
                                 key={p.id}
                                 player={p}
+                                contact={contactOf(p.id)}
                                 onDelete={() => { if (confirm(`Delete "${p.name}"? This cannot be undone.`)) remove.mutate({ id: p.id }); }}
                             />
                         ))}
@@ -1305,13 +1313,16 @@ function PlayersTab() {
 
 // A player in the admin list. Edit changes their name, division and gender (players who
 // signed up themselves sometimes pick the wrong ones).
-function PlayerRow({ player: p, onDelete }: {
+type PlayerContact = { email: string | null; hasAccount: boolean; google: boolean; phone: string | null };
+
+function PlayerRow({ player: p, contact, onDelete }: {
     player: { id: string; name: string; division: number; gender: string };
+    contact?: PlayerContact;
     onDelete: () => void;
 }) {
     const qc = useQueryClient();
     const [editing, setEditing] = useState(false);
-    const [draft, setDraft] = useState({ name: p.name, division: p.division, gender: p.gender });
+    const [draft, setDraft] = useState({ name: p.name, division: p.division, gender: p.gender, phone: "", email: "" });
     const [error, setError] = useState("");
     const update = trpc.player.update.useMutation({
         onSuccess: () => {
@@ -1326,7 +1337,7 @@ function PlayerRow({ player: p, onDelete }: {
     const genderText = p.gender === "FEMALE" ? "♀ Female" : "♂ Male";
 
     function startEditing() {
-        setDraft({ name: p.name, division: p.division, gender: p.gender });
+        setDraft({ name: p.name, division: p.division, gender: p.gender, phone: contact?.phone ?? "", email: contact?.email ?? "" });
         setError("");
         setEditing(true);
     }
@@ -1339,6 +1350,8 @@ function PlayerRow({ player: p, onDelete }: {
             ...(name !== p.name ? { name } : {}),
             ...(draft.division !== p.division ? { division: draft.division } : {}),
             ...(draft.gender !== p.gender ? { gender: draft.gender as "MALE" | "FEMALE" } : {}),
+            ...(draft.phone.trim() !== (contact?.phone ?? "") ? { phone: draft.phone.trim() || null } : {}),
+            ...(contact?.hasAccount && draft.email.trim() && draft.email.trim() !== contact.email ? { email: draft.email.trim() } : {}),
         };
         if (Object.keys(changes).length === 0) return setEditing(false);
         update.mutate({ id: p.id, ...changes });
@@ -1379,6 +1392,29 @@ function PlayerRow({ player: p, onDelete }: {
                                 <option value="FEMALE">Female</option>
                             </select>
                         </div>
+                        <div className="grid sm:grid-cols-2 gap-2">
+                            <input
+                                value={draft.phone}
+                                onChange={e => setDraft({ ...draft, phone: e.target.value })}
+                                placeholder="Phone"
+                                inputMode="tel"
+                                aria-label="Phone"
+                                className={`${input} w-full`}
+                            />
+                            {contact?.hasAccount ? (
+                                <input
+                                    value={draft.email}
+                                    onChange={e => setDraft({ ...draft, email: e.target.value })}
+                                    placeholder="Email"
+                                    type="email"
+                                    aria-label="Email"
+                                    className={`${input} w-full`}
+                                />
+                            ) : (
+                                <p className="text-xs text-gray-400 self-center">No account yet, so no email.</p>
+                            )}
+                        </div>
+                        {contact?.google && <p className="text-xs text-gray-400">Signs in with Google — changing the email doesn't change their Google account.</p>}
                         {error && <p className="text-xs text-red-500">{error}</p>}
                         <div className="flex gap-2">
                             <button
@@ -1407,6 +1443,12 @@ function PlayerRow({ player: p, onDelete }: {
             <td className="px-4 py-2 font-medium text-gray-800">
                 <div>{p.name}</div>
                 <div className="text-xs text-gray-400 sm:hidden">{divisionText} · {genderText}</div>
+                {(contact?.email || contact?.phone) && (
+                    <div className="text-xs font-normal text-gray-500 mt-0.5">
+                        {contact.phone && <a href={`tel:${contact.phone.replace(/\s+/g, "")}`} className="block hover:text-[#FF4200]">📞 {contact.phone}</a>}
+                        {contact.email && <a href={`mailto:${contact.email}`} className="block hover:text-[#FF4200] [overflow-wrap:anywhere]">✉️ {contact.email}</a>}
+                    </div>
+                )}
             </td>
             <td className="px-4 py-2 text-gray-500 hidden sm:table-cell">{divisionText} · {genderText}</td>
             <td className="px-4 py-2 text-right">
