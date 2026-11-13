@@ -182,7 +182,8 @@ export function TournamentChat({ tournamentId, tournamentName }: { tournamentId:
                     const at = new Date(m.createdAt);
                     const prev = messages[i - 1];
                     const newDay = !prev || new Date(prev.createdAt).toDateString() !== at.toDateString();
-                    const mine = (!m.fromAdmin && !!playerId && m.player?.id === playerId) || (m.fromAdmin && isAdmin);
+                    // Mine: written from my player account, or — for an admin not logged in as a player — as Act!ve.
+                    const mine = m.player ? !!playerId && m.player.id === playerId : m.fromAdmin && isAdmin && !playerId;
                     const sameAuthor = !newDay && prev && prev.fromAdmin === m.fromAdmin && prev.player?.id === m.player?.id;
                     const canDelete = isAdmin || (data.open && !m.fromAdmin && !!playerId && m.player?.id === playerId);
                     return (
@@ -194,12 +195,15 @@ export function TournamentChat({ tournamentId, tournamentName }: { tournamentId:
                                     : m.fromAdmin ? "bg-[#333366] text-white rounded-bl-md"
                                     : "bg-white border border-[#E5E5EA] text-[#1A1A2E] rounded-bl-md"
                                 }`}>
-                                    {!mine && !sameAuthor && (
-                                        m.fromAdmin
-                                            ? <p className="text-[11px] font-black text-[#9FD2DD]">Act!ve · organiser</p>
-                                            : m.player
-                                            ? <Link to={`/player/${m.player.id}`} className="block text-[11px] font-bold text-[#FF4200] truncate">{m.player.name}</Link>
-                                            : null
+                                    {!sameAuthor && (
+                                        <p className={`text-[11px] font-bold truncate ${mine ? "text-white/85 text-right" : m.fromAdmin ? "text-[#9FD2DD]" : "text-[#FF4200]"}`}>
+                                            {mine
+                                                ? "You"
+                                                : m.player
+                                                ? <Link to={`/player/${m.player.id}`} className="hover:underline">{m.player.name}</Link>
+                                                : "Act!ve"}
+                                            {m.fromAdmin && <span className="font-black"> · organiser</span>}
+                                        </p>
                                     )}
                                     <p className="text-sm whitespace-pre-wrap [overflow-wrap:anywhere]">{m.body}</p>
                                     <p className={`text-[10px] text-right mt-0.5 ${mine || m.fromAdmin ? "text-white/70" : "text-[#8E8E93]"}`}>
