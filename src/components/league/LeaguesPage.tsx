@@ -23,7 +23,15 @@ export function LeaguesPage() {
                     </p>
                 </div>
 
-                {leagues?.some(l => l.myTeamId && l.status !== "COMPLETED") && <MyAvailabilityCard />}
+                {leagues?.some(l => l.myTeamId && l.status !== "COMPLETED") ? <MyAvailabilityCard /> : token && (
+                    <Link to="/league/availability" className="flex items-center justify-between gap-3 bg-white rounded-2xl border border-[#E5E5EA] px-4 py-3 hover:border-[#FF4200]/40">
+                        <span className="min-w-0">
+                            <span className="block text-sm font-bold text-[#1A1A2E]">My contact & availability</span>
+                            <span className="block text-xs text-[#8E8E93]">Your phone and when and where you can play — for arranging league matches.</span>
+                        </span>
+                        <span className="text-[#FF4200] font-bold shrink-0">→</span>
+                    </Link>
+                )}
 
                 {openMatches && openMatches.length > 0 && (
                     <section className="space-y-2">

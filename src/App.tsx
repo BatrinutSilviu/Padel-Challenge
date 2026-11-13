@@ -37,7 +37,9 @@ export default function App() {
             <Route path="/league" element={<LeaguesPage />} />
             <Route path="/league/:id" element={<LeaguePage />} />
             <Route path="/league/match/:id" element={<LeagueMatchPage />} />
-            <Route path="/profile" element={<RequireAuth><ProfilePage /></RequireAuth>} />
+            <Route path="/league/availability" element={<RequireAuth><ProfilePage /></RequireAuth>} />
+            {/* The old address of the availability page. */}
+            <Route path="/profile" element={<Navigate to="/league/availability" replace />} />
             <Route path="/account/profile" element={<RequireAuth requirePlayer={false}><ChooseProfilePage /></RequireAuth>} />
             <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

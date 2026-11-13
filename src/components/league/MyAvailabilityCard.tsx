@@ -23,7 +23,7 @@ export function MyAvailabilityCard() {
                         Add {what} so the other teams can arrange your matches with you.
                     </p>
                 </div>
-                <Link to="/profile" className="shrink-0 text-center text-sm font-bold px-5 py-3 rounded-xl bg-white text-[#FF4200] hover:bg-white/90">
+                <Link to="/league/availability" className="shrink-0 text-center text-sm font-bold px-5 py-3 rounded-xl bg-white text-[#FF4200] hover:bg-white/90">
                     Add my contact & availability
                 </Link>
             </section>
@@ -34,7 +34,7 @@ export function MyAvailabilityCard() {
         <section className="bg-white rounded-2xl border-2 border-[#333366]/15 p-4 sm:p-5 shadow-sm space-y-2">
             <div className="flex items-center justify-between gap-3">
                 <h2 className="font-black text-[#1A1A2E]">My contact & availability</h2>
-                <Link to="/profile" className="shrink-0 text-sm font-bold px-4 py-2 rounded-xl bg-[#333366] text-white hover:bg-[#3D3D75]">
+                <Link to="/league/availability" className="shrink-0 text-sm font-bold px-4 py-2 rounded-xl bg-[#333366] text-white hover:bg-[#3D3D75]">
                     Edit
                 </Link>
             </div>

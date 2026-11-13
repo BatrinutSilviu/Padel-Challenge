@@ -8,7 +8,7 @@ export type Profile = {
     note: string | null;
 };
 
-// Phone number and when/where a player likes to play. Players fill it in on /profile;
+// Phone number and when/where a player likes to play. Players fill it in on /league/availability;
 // admins fill it in for players without an account.
 export function ProfileForm({
     profile,

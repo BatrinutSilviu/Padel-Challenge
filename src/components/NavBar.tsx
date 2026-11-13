@@ -41,12 +41,6 @@ export function NavBar() {
                         )}
                         {token ? (
                             <>
-                                <Link
-                                    to="/profile"
-                                    className="text-sm font-semibold px-3 py-2 rounded-lg text-white/70 hover:text-white transition-colors whitespace-nowrap"
-                                >
-                                    My availability
-                                </Link>
                                 <button
                                     onClick={logout}
                                     className="text-sm font-semibold px-3 py-2 rounded-lg text-white/70 hover:text-white transition-colors whitespace-nowrap"

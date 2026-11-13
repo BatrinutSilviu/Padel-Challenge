@@ -306,7 +306,7 @@ function ContactsSection({ match }: { match: LeagueMatchDetails }) {
             </div>
 
             {me && (!me.phone || me.availability.length === 0) && (
-                <Link to="/profile" className="block text-center text-sm font-semibold px-4 py-3 rounded-xl border border-[#FF4200] text-[#FF4200] hover:bg-[#FF4200]/5">
+                <Link to="/league/availability" className="block text-center text-sm font-semibold px-4 py-3 rounded-xl border border-[#FF4200] text-[#FF4200] hover:bg-[#FF4200]/5">
                     {!me.phone ? "Add your phone number and availability" : "Add when and where you can play"}
                 </Link>
             )}
