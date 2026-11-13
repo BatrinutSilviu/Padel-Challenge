@@ -1,17 +1,7 @@
 import { useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
-import { getQueryKey } from "@trpc/react-query";
 import { trpc } from "../../../trpc";
+import { useInvalidateLeague } from "./useInvalidateLeague";
 import { MAX_TEAMS_PER_GROUP, MIN_TEAMS_PER_GROUP, rulesSummary, type League, type LeagueTier } from "../../../lib/league";
-
-export function useInvalidateLeague() {
-    const qc = useQueryClient();
-    return () => {
-        qc.invalidateQueries({ queryKey: getQueryKey(trpc.league.getById) });
-        qc.invalidateQueries({ queryKey: getQueryKey(trpc.league.list) });
-        qc.invalidateQueries({ queryKey: getQueryKey(trpc.league.match) });
-    };
-}
 
 // ─── Rules and prizes (also editable while the league is played) ───────────────
 

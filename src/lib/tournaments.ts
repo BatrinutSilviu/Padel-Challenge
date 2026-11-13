@@ -193,3 +193,8 @@ export function playerCountError(type: string, count: number, masters?: MastersF
             return [8, 12, 16].includes(count) ? null : "Americano needs exactly 8, 12 or 16 players";
     }
 }
+
+// Spots still free on a sign-up sheet (only confirmed players take one); null when it has no limit.
+export function spotsLeft(t: { maxPlayers: number | null; _count: { participants: number } }): number | null {
+    return t.maxPlayers === null ? null : Math.max(0, t.maxPlayers - t._count.participants);
+}

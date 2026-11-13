@@ -22,6 +22,12 @@ export default defineConfig([
     },
   },
   {
+    // Generated shadcn-style UI kit: its files export variants and hooks next to their
+    // components by design, which only costs a full reload instead of a fast refresh.
+    files: ['src/components/ui/**'],
+    rules: { 'react-refresh/only-export-components': 'off' },
+  },
+  {
     files: ['**/*.js'],
     extends: [js.configs.recommended],
     languageOptions: { globals: globals.node },

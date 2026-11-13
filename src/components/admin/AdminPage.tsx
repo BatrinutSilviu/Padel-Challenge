@@ -1,5 +1,6 @@
 import { AdminDashboard } from "./AdminDashboard";
-import { useAdminSession, LoginPage, SessionExpiredModal } from "./AdminAuth";
+import { LoginPage, SessionExpiredModal } from "./AdminAuth";
+import { useAdminSession } from "./useAdminSession";
 
 export function AdminPage() {
     const { token, sessionExpired, handleLogin, handleLogout } = useAdminSession();

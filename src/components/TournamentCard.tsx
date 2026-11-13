@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { DIVISION_BADGES, divisionLabel } from "../lib/divisions";
-import { timeRangeLabel, tournamentTypeLabel } from "../lib/tournaments";
+import { spotsLeft, timeRangeLabel, tournamentTypeLabel } from "../lib/tournaments";
 
 // A tournament in a list: its name, level and type, then the date and time, the location,
 // the price and the free spots, each on its own line so they read at a glance on a phone.
@@ -30,10 +30,6 @@ function cardDate(value: string | Date): string {
     return d.toLocaleDateString("en-GB", {
         weekday: "short", day: "numeric", month: "short", ...(thisYear ? {} : { year: "numeric" }), timeZone: "UTC",
     });
-}
-
-export function spotsLeft(t: CardTournament): number | null {
-    return t.maxPlayers === null ? null : Math.max(0, t.maxPlayers - t._count.participants);
 }
 
 export function TournamentCard({ tournament: t, aside, highlight }: {

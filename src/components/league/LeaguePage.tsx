@@ -2,9 +2,9 @@ import { useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { NavBar } from "../NavBar";
 import { trpc } from "../../trpc";
-import { useAuth } from "../../contexts/AuthContext";
+import { useAuth } from "../../contexts/useAuth";
 import {
-    currentWeek, formatSeasonRange, formatWeekRange, rulesSummary, teamName, tierLabel,
+    currentWeek, formatSeasonRange, formatWeekRange, leagueWeeks, rulesSummary, teamName, tierLabel,
     type League, type LeagueGroup, type LeagueMatch, type LeagueTeam, type LeagueTier,
 } from "../../lib/league";
 import { LeagueStandings, OutcomeLegend } from "./LeagueStandings";
@@ -32,10 +32,6 @@ function Shell({ children }: { children: React.ReactNode }) {
             </main>
         </div>
     );
-}
-
-export function leagueWeeks(league: League): number {
-    return Math.max(0, ...league.matches.map(m => m.week ?? 0));
 }
 
 function LeagueView({ league }: { league: League }) {

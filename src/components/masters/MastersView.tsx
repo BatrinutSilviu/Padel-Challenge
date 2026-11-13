@@ -1,5 +1,4 @@
 import { Link } from "react-router-dom";
-import { trpc } from "../../trpc";
 import { STAGE_INFO, mastersKnockoutStages, mastersPartnerMap, mastersProgress } from "../../lib/masters";
 import { GroupSection } from "../challenger/ChallengerView";
 import { TeamFinalStandings } from "../TeamFinalStandings";

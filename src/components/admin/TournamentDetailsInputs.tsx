@@ -4,7 +4,7 @@ import { getQueryKey } from "@trpc/react-query";
 import { trpc } from "../../trpc";
 import { FeeInputs } from "./FeeInputs";
 import { field as baseField } from "./formStyles";
-import { accountTitle } from "../PaymentAccounts";
+import { accountTitle } from "../../lib/paymentAccounts";
 import { MAX_PRIZES, USUAL_LOCATIONS, prizeList, timeRangeLabel } from "../../lib/tournaments";
 import { detailsError, detailsInput, detailsText, newPrize, type DetailsText, type PrizeText, type StoredDetails } from "../../lib/tournamentDetails";
 

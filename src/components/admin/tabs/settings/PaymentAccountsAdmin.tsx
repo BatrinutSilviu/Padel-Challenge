@@ -3,7 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { getQueryKey } from "@trpc/react-query";
 import { trpc } from "../../../../trpc";
 import { field } from "../../formStyles";
-import { PAYMENT_TYPE_LABELS, accountTitle, accountValue, type PaymentAccount } from "../../../PaymentAccounts";
+import { PAYMENT_TYPE_LABELS, accountTitle, accountValue, type PaymentAccount } from "../../../../lib/paymentAccounts";
 
 // Admin: the accounts players can pay into. Each tournament shows the ones picked for
 // it (in its time, place, price & prizes card), or every active one.

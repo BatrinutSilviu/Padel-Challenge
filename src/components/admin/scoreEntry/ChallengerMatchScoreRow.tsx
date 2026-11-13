@@ -78,7 +78,6 @@ export function ChallengerMatchScoreRow({
             setTb2(match.team2TiebreakPoints != null ? String(match.team2TiebreakPoints) : "");
             setStatus("locked");
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isScored, match.team1Score, match.team2Score, match.team1TiebreakPoints, match.team2TiebreakPoints, match.id]);
 
     useEffect(() => {

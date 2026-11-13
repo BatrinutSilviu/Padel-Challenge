@@ -3,14 +3,14 @@ import { trpc } from "../trpc";
 import type { RouterOutputs } from "../backendRouter";
 import { NavBar } from "./NavBar";
 import { useState } from "react";
-import { useAuth } from "../contexts/AuthContext";
+import { useAuth } from "../contexts/useAuth";
 import { AccountStatusNotice } from "./auth/AccountStatus";
 
-import { DIVISION_NAMES, DIVISION_COLORS, divisionLabel, useDivisionDescriptions } from "../lib/divisions";
-import { TournamentType, TOURNAMENT_TYPE_LABELS } from "../lib/tournaments";
+import { DIVISION_COLORS, divisionLabel, useDivisionDescriptions } from "../lib/divisions";
+import { TournamentType, TOURNAMENT_TYPE_LABELS, spotsLeft } from "../lib/tournaments";
 import { BADGE_META, BadgeType } from "../lib/badges";
 import { RankingPointsInfo } from "./RankingPointsInfo";
-import { TournamentCard, spotsLeft } from "./TournamentCard";
+import { TournamentCard } from "./TournamentCard";
 import { SupportContact } from "./SupportContact";
 import { useRankingSystem } from "../lib/ranking";
 

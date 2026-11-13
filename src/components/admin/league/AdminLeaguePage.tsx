@@ -2,11 +2,13 @@ import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { NavBar } from "../../NavBar";
 import { trpc } from "../../../trpc";
-import { useAdminSession, LoginPage, SessionExpiredModal } from "../AdminAuth";
+import { LoginPage, SessionExpiredModal } from "../AdminAuth";
+import { useAdminSession } from "../useAdminSession";
 import { PlayerPicker } from "../../PlayerPicker";
 import { MIN_TEAMS_PER_GROUP, groupSizes, teamName, tierLabel, weekCount, type League, type LeagueTeam, type LeagueTier } from "../../../lib/league";
 import { AdminLeagueLive } from "./AdminLeagueLive";
-import { TierRulesEditor, useInvalidateLeague } from "./TierRulesEditor";
+import { TierRulesEditor } from "./TierRulesEditor";
+import { useInvalidateLeague } from "./useInvalidateLeague";
 
 export function AdminLeaguePage() {
     const { id } = useParams<{ id: string }>();

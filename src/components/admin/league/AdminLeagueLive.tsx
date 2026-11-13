@@ -2,14 +2,15 @@ import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { trpc } from "../../../trpc";
 import {
-    OUTCOME_INFO, currentWeek, formatResult, formatScheduledAt, teamName, tierLabel, winnerSide,
+    OUTCOME_INFO, currentWeek, formatResult, formatScheduledAt, leagueWeeks, teamName, tierLabel, winnerSide,
     type League, type LeagueMatch, type LeagueTeam, type LeagueTier, type Outcome,
 } from "../../../lib/league";
 import { LeagueStandings, OutcomeLegend } from "../../league/LeagueStandings";
 import { LeagueScoreForm } from "../../league/LeagueScoreForm";
-import { WeekPicker, leagueWeeks } from "../../league/LeaguePage";
+import { WeekPicker } from "../../league/LeaguePage";
 import { ProfileForm } from "../../ProfileForm";
-import { TierRulesEditor, useInvalidateLeague } from "./TierRulesEditor";
+import { TierRulesEditor } from "./TierRulesEditor";
+import { useInvalidateLeague } from "./useInvalidateLeague";
 
 export function AdminLeagueLive({ league }: { league: League }) {
     const teams = useMemo(() => new Map(league.teams.map(t => [t.id, t])), [league.teams]);

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { trpc } from "../../trpc";
-import { useAuth } from "../../contexts/AuthContext";
+import { useAuth } from "../../contexts/useAuth";
 
 // "Continue with Google", through Google Identity Services: Google's own button hands us
 // an ID token, which the backend verifies (auth.googleLogin). It logs in a known account,

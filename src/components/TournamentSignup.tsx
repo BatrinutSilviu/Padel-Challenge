@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { getQueryKey } from "@trpc/react-query";
 import { trpc } from "../trpc";
-import { useAuth } from "../contexts/AuthContext";
+import { useAuth } from "../contexts/useAuth";
 import { isTeamBasedType, type TournamentData } from "../lib/tournaments";
 import { HowItWorks, PrizeList } from "./TournamentDetails";
 import { AccountStatusNotice } from "./auth/AccountStatus";

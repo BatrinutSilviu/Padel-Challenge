@@ -16,8 +16,17 @@ const USER_SCOPED_PROCEDURES = [
     'tournament.join', 'tournament.leave', 'tournament.mySignups',
 ];
 
+// What a failed request carries: tRPC's error code and the HTTP status, and the tokens it
+// was sent with (added by sentTokensLink in trpc.ts).
+type RequestError = {
+    data?: { code?: string };
+    meta?: { response?: { status?: number } };
+    sentUserToken?: string | null;
+    sentAdminToken?: string | null;
+} | null;
+
 function handleUnauthorized(error: unknown, path: string[] | undefined, retry: () => void) {
-    if ((error as any)?.data?.code !== 'UNAUTHORIZED') return;
+    if ((error as RequestError)?.data?.code !== 'UNAUTHORIZED') return;
     const routerName = path?.[0];
     // A wrong password at login is not an expired session
     if (routerName === 'auth') return;
@@ -25,7 +34,7 @@ function handleUnauthorized(error: unknown, path: string[] | undefined, retry: (
     const userScoped = (!!routerName && USER_SCOPED_ROUTERS.includes(routerName))
         || (!!path && USER_SCOPED_PROCEDURES.includes(path.join('.')));
     const storageKey = userScoped ? 'user_token' : 'admin_token';
-    const sentToken = (error as any)[userScoped ? 'sentUserToken' : 'sentAdminToken'] ?? null;
+    const sentToken = (error as RequestError)?.[userScoped ? 'sentUserToken' : 'sentAdminToken'] ?? null;
     const currentToken = localStorage.getItem(storageKey);
 
     // The request went out with an older token than the one stored now (e.g. it was in
@@ -42,7 +51,7 @@ function handleUnauthorized(error: unknown, path: string[] | undefined, retry: (
 const queryClient = new QueryClient({
     defaultOptions: {
         queries: {
-            retry: (failureCount, error) => (error as any)?.data?.code !== 'UNAUTHORIZED' && failureCount < 3,
+            retry: (failureCount, error) => (error as RequestError)?.data?.code !== 'UNAUTHORIZED' && failureCount < 3,
         },
         // Offline, changes wait (the button keeps saying "Saving…") and go out once the
         // connection is back — React Query's "online" network mode. When the proxy answers
@@ -51,8 +60,8 @@ const queryClient = new QueryClient({
         // ever done twice.
         mutations: {
             retry: (failureCount, error) => {
-                const status = (error as any)?.meta?.response?.status;
-                return isConnectionError(error) && [502, 503, 504].includes(status) && failureCount < 4;
+                const status = (error as RequestError)?.meta?.response?.status;
+                return isConnectionError(error) && status !== undefined && [502, 503, 504].includes(status) && failureCount < 4;
             },
             retryDelay: attempt => Math.min(1000 * 2 ** attempt, 8000),
         },

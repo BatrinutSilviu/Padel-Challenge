@@ -1,5 +1,4 @@
 import { Link } from "react-router-dom";
-import { trpc } from "../../trpc";
 import {
     challengerProgress,
     computeGroupStandings,

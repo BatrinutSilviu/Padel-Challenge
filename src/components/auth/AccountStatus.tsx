@@ -5,8 +5,9 @@ import { getQueryKey } from "@trpc/react-query";
 import { toast } from "sonner";
 import { NavBar } from "../NavBar";
 import { trpc } from "../../trpc";
-import { useAuth } from "../../contexts/AuthContext";
-import { ProfileStep, identityInput } from "./ProfileStep";
+import { useAuth } from "../../contexts/useAuth";
+import { ProfileStep } from "./ProfileStep";
+import { identityInput } from "./identity";
 
 // For a logged-in account that doesn't play as a player yet: its claim on an existing
 // profile is waiting for an admin, or was rejected. Renders nothing otherwise.

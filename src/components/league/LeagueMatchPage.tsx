@@ -5,7 +5,7 @@ import { getQueryKey } from "@trpc/react-query";
 import { toast } from "sonner";
 import { NavBar } from "../NavBar";
 import { trpc } from "../../trpc";
-import { useAuth } from "../../contexts/AuthContext";
+import { useAuth } from "../../contexts/useAuth";
 import {
     DAY_LABELS, VENUES, formatRange, rangesByDay, formatResult, formatScheduledAt, formatWeekRange, teamName, tierLabel,
     weekRange, winnerSide, type LeagueMatchDetails, type Venue,

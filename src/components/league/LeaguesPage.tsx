@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { NavBar } from "../NavBar";
 import { trpc } from "../../trpc";
-import { useAuth } from "../../contexts/AuthContext";
+import { useAuth } from "../../contexts/useAuth";
 import { MyAvailabilityCard } from "./MyAvailabilityCard";
 import { formatScheduledAt, formatWeekRange, teamName } from "../../lib/league";
 

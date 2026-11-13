@@ -3,7 +3,7 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { NavBar } from "../NavBar";
 import { trpc } from "../../trpc";
-import { useAuth } from "../../contexts/AuthContext";
+import { useAuth } from "../../contexts/useAuth";
 import { GoogleSignInButton } from "./GoogleSignInButton";
 
 export function LoginPage() {

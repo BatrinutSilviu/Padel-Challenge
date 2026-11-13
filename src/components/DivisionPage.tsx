@@ -16,12 +16,11 @@ export function DivisionPage() {
     const standings = trpc.division.standings.useQuery({ division });
     const tournaments = trpc.tournament.list.useQuery({ division });
     const { scoreOf, name: rankingName } = useRankingSystem();
+    const describe = useDivisionDescriptions();
 
     if (isNaN(division) || division < 1 || division > 7) {
         return <div className="p-8 text-red-600">Invalid division.</div>;
     }
-
-    const describe = useDivisionDescriptions();
 
     return (
         <div className="min-h-screen bg-[#F5F5F7]">

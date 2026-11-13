@@ -74,7 +74,6 @@ export function KingOfTheCourtMatchScoreRow({
             setGp(match.goldenPointWinner != null ? String(match.goldenPointWinner) : "");
             setStatus("locked");
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isScored, match.team1Score, match.team2Score, match.goldenPointWinner, match.id]);
 
     useEffect(() => {

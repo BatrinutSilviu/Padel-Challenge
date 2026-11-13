@@ -1,8 +1,8 @@
-import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from "react";
+import { useState, useCallback, useEffect, type ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { getQueryKey } from "@trpc/react-query";
 import { trpc } from "../trpc";
-import type { RouterOutputs } from "../backendRouter";
+import { AuthContext, type AuthContextValue } from "./useAuth";
 
 const STORAGE_KEY = "user_token";
 
@@ -15,20 +15,6 @@ type AuthState = {
     token: string | null;
     userId: string | null;
     tokenPlayerId: string | null;
-};
-
-type Account = RouterOutputs["auth"]["me"];
-
-type AuthContextValue = {
-    token: string | null;
-    userId: string | null;
-    // The player this account plays as — null when logged out, or while its profile claim
-    // waits for an admin (or was rejected): see `account.claim`.
-    playerId: string | null;
-    // The logged-in account, once loaded.
-    account: Account | null;
-    login: (token: string) => void;
-    logout: () => void;
 };
 
 function decodeUserToken(token: string): UserPayload | null {
@@ -51,8 +37,6 @@ function stateFor(token: string | null): AuthState {
     if (!token || !payload) return LOGGED_OUT;
     return { token, userId: payload.userId, tokenPlayerId: payload.playerId };
 }
-
-const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
     const qc = useQueryClient();
@@ -100,10 +84,4 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         logout,
     };
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-}
-
-export function useAuth(): AuthContextValue {
-    const ctx = useContext(AuthContext);
-    if (!ctx) throw new Error("useAuth must be used within an AuthProvider");
-    return ctx;
 }

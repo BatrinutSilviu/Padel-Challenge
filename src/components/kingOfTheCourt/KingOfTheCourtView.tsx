@@ -1,5 +1,4 @@
 import { Link } from "react-router-dom";
-import { trpc } from "../../trpc";
 import { formatKotcScore, isKotcMatchScored, sortMatchesByCourt, sortRoundsByNumber } from "../../lib/kingOfTheCourt";
 import { TeamFinalStandings } from "../TeamFinalStandings";
 import type { TournamentData } from "../../lib/tournaments";

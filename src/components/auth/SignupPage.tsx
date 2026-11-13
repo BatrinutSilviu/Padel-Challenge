@@ -3,8 +3,9 @@ import { Link, useLocation, useNavigate, useSearchParams } from "react-router-do
 import { toast } from "sonner";
 import { NavBar } from "../NavBar";
 import { trpc } from "../../trpc";
-import { useAuth } from "../../contexts/AuthContext";
-import { ProfileStep, identityInput, type Identity } from "./ProfileStep";
+import { useAuth } from "../../contexts/useAuth";
+import { ProfileStep } from "./ProfileStep";
+import { identityInput, type Identity } from "./identity";
 import { PrivacyConsent } from "../PrivacyPage";
 import { GoogleSignInButton, type GoogleSignup } from "./GoogleSignInButton";
 

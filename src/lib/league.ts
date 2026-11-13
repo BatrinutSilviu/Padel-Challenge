@@ -78,6 +78,11 @@ export function formatWeekRange(startDate: string | Date, week: number): string 
     return `${from.toLocaleDateString("en-GB", opts)} – ${to.toLocaleDateString("en-GB", opts)}`;
 }
 
+// How many weeks the season has: the week of its last match.
+export function leagueWeeks(league: League): number {
+    return Math.max(0, ...league.matches.map(m => m.week ?? 0));
+}
+
 // "2 Nov – 6 Dec 2026", from the Monday of week 1 to the Sunday of the last week.
 export function formatSeasonRange(startDate: string | Date, weeks: number): string {
     const { from } = weekRange(startDate, 1);
