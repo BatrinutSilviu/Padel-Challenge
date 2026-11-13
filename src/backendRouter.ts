@@ -14,7 +14,6 @@ import type {
     TRPCDefaultErrorShape,
     TRPCMutationProcedure,
     TRPCQueryProcedure,
-    inferRouterInputs,
     inferRouterOutputs,
 } from '@trpc/server';
 import type { AppRouter as BackendRouter } from '@backend/src/router';
@@ -50,5 +49,4 @@ export type AppRouter = TRPCBuiltRouter<
     TranslateRecord<BackendRouter['_def']['record']>
 >;
 
-export type RouterInputs = inferRouterInputs<AppRouter>;
 export type RouterOutputs = inferRouterOutputs<AppRouter>;

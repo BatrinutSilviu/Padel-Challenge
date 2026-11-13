@@ -1,6 +1,4 @@
 import { useEffect, useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
-import { getQueryKey } from "@trpc/react-query";
 import { trpc } from "../../../../trpc";
 import { field } from "../../formStyles";
 import { SaveMessage } from "./SaveMessage";
@@ -11,7 +9,7 @@ type ContactDraft = { name: string; phone: string; whatsapp: boolean };
 const MAX_CONTACTS = 6;
 
 export function SupportContactsAdmin() {
-    const qc = useQueryClient();
+    const utils = trpc.useUtils();
     const { data } = trpc.site.contacts.useQuery();
     const [rows, setRows] = useState<ContactDraft[]>([]);
     const { message, flash, fail } = useFlashMessage();
@@ -22,7 +20,7 @@ export function SupportContactsAdmin() {
     }, [data]);
     const save = trpc.site.setContacts.useMutation({
         onSuccess: () => {
-            qc.invalidateQueries({ queryKey: getQueryKey(trpc.site.contacts) });
+            utils.site.contacts.invalidate();
             flash("Saved.");
         },
         onError: fail,

@@ -1,5 +1,3 @@
-import { useQueryClient } from "@tanstack/react-query";
-import { getQueryKey } from "@trpc/react-query";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
 import { NavBar } from "./NavBar";
@@ -9,12 +7,12 @@ import { ProfileForm } from "./ProfileForm";
 // League: the player's phone number and when and where they like to play, which their
 // league opponents see to arrange matches. Lives under /league/availability.
 export function ProfilePage() {
-    const qc = useQueryClient();
+    const utils = trpc.useUtils();
     const { data: profile, isPending } = trpc.profile.me.useQuery();
     const update = trpc.profile.update.useMutation({
         onSuccess: () => {
-            qc.invalidateQueries({ queryKey: getQueryKey(trpc.profile.me) });
-            qc.invalidateQueries({ queryKey: getQueryKey(trpc.league.match) });
+            utils.profile.me.invalidate();
+            utils.league.match.invalidate();
             toast.success("Saved");
         },
     });

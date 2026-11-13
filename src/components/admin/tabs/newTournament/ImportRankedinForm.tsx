@@ -1,6 +1,4 @@
 import { useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
-import { getQueryKey } from "@trpc/react-query";
 import { trpc } from "../../../../trpc";
 import { DIVISION_NAMES } from "../../../../lib/divisions";
 import { TOURNAMENT_TYPE_LABELS } from "../../../../lib/tournaments";
@@ -29,7 +27,7 @@ export function ImportRankedinForm({ onImported, onBack }: { onImported: () => v
     const [resolutions, setResolutions] = useState<Record<number, Resolution>>({});
     const [error, setError] = useState("");
     const [imported, setImported] = useState(false);
-    const qc = useQueryClient();
+    const utils = trpc.useUtils();
 
     const preview = trpc.tournament.previewRankedinImport.useMutation({
         onSuccess: (data) => {
@@ -43,7 +41,7 @@ export function ImportRankedinForm({ onImported, onBack }: { onImported: () => v
 
     const importMutation = trpc.tournament.importFromRankedin.useMutation({
         onSuccess: () => {
-            qc.invalidateQueries({ queryKey: getQueryKey(trpc.tournament.list) });
+            utils.tournament.list.invalidate();
             setImported(true);
         },
         onError: (e) => setError(e.message),

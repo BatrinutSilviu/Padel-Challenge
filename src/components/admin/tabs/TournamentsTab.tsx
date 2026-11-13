@@ -1,7 +1,5 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { useQueryClient } from "@tanstack/react-query";
-import { getQueryKey } from "@trpc/react-query";
 import { trpc } from "../../../trpc";
 import { divisionLabel } from "../../../lib/divisions";
 import { tournamentTypeLabel, tournamentWhen } from "../../../lib/tournaments";
@@ -9,7 +7,7 @@ import { tournamentTypeLabel, tournamentWhen } from "../../../lib/tournaments";
 // Every tournament, by stage: sign-up sheets first (with who waits to be confirmed), then
 // the ones being played, then the rest.
 export function TournamentsTab() {
-    const qc = useQueryClient();
+    const utils = trpc.useUtils();
     // Admins still see the retired Girls division's past tournaments.
     const { data, isPending } = trpc.tournament.list.useQuery({ includeRetired: true });
     const signups = data?.filter(t => t.status === "UPCOMING") ?? [];
@@ -20,7 +18,7 @@ export function TournamentsTab() {
     const waitingFor = (id: string) => awaiting?.filter(a => a.tournamentId === id) ?? [];
 
     const deleteTournament = trpc.tournament.delete.useMutation({
-        onSuccess: () => qc.invalidateQueries({ queryKey: getQueryKey(trpc.tournament.list) }),
+        onSuccess: () => utils.tournament.list.invalidate(),
     });
 
     function handleDelete(id: string, name: string) {
@@ -132,13 +130,13 @@ function Summary({ tournament: t }: { tournament: Parameters<typeof tournamentWh
 
 // The tournament's name; click it to rename it in place (Enter or leaving the field saves, Escape cancels).
 function TournamentNameEditor({ id, name }: { id: string; name: string }) {
-    const qc = useQueryClient();
+    const utils = trpc.useUtils();
     const [editing, setEditing] = useState(false);
     const [value, setValue] = useState(name);
 
     const rename = trpc.tournament.rename.useMutation({
         onSuccess: () => {
-            qc.invalidateQueries({ queryKey: getQueryKey(trpc.tournament.list) });
+            utils.tournament.list.invalidate();
             setEditing(false);
         },
     });

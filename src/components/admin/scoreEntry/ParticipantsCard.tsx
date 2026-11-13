@@ -1,6 +1,4 @@
 import { useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
-import { getQueryKey } from "@trpc/react-query";
 import { trpc } from "../../../trpc";
 import type { TournamentData } from "../../../lib/tournaments";
 import { PlayerPicker } from "../../PlayerPicker";
@@ -8,7 +6,7 @@ import { PlayerPicker } from "../../PlayerPicker";
 // The players in a started tournament, folded away by default. Any of them can be replaced
 // by another player, who takes over their matches and scores.
 export function ParticipantsCard({ tournament }: { tournament: TournamentData }) {
-    const qc = useQueryClient();
+    const utils = trpc.useUtils();
     const id = tournament.id;
     const isCompleted = tournament.status === "COMPLETED";
     const [participantsOpen, setParticipantsOpen] = useState(false);
@@ -17,10 +15,10 @@ export function ParticipantsCard({ tournament }: { tournament: TournamentData })
 
     const swapParticipant = trpc.tournament.swapParticipant.useMutation({
         onSuccess: () => {
-            qc.invalidateQueries({ queryKey: getQueryKey(trpc.tournament.getById, { id }) });
+            utils.tournament.getById.invalidate({ id });
             if (isCompleted) {
-                qc.invalidateQueries({ queryKey: getQueryKey(trpc.player.list) });
-                qc.invalidateQueries({ queryKey: getQueryKey(trpc.division.allPlayers) });
+                utils.player.list.invalidate();
+                utils.division.allPlayers.invalidate();
             }
             setReplacingId(null);
         },

@@ -1,7 +1,5 @@
 import { useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { useQueryClient } from "@tanstack/react-query";
-import { getQueryKey } from "@trpc/react-query";
 import { NavBar } from "../../NavBar";
 import { trpc } from "../../../trpc";
 import { divisionLabel } from "../../../lib/divisions";
@@ -29,7 +27,7 @@ import { useScoreSaving } from "./useScoreSaving";
 export function AdminScoreEntry() {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
-    const qc = useQueryClient();
+    const utils = trpc.useUtils();
     const { token, sessionExpired, handleLogin } = useAdminSession();
     const [confirmComplete, setConfirmComplete] = useState(false);
     const [recalcSuccess, setRecalcSuccess] = useState(false);
@@ -38,8 +36,8 @@ export function AdminScoreEntry() {
     const { scoredIds, isSaving, onSaveStart, onSaveEnd, onSaved, onMastersSaved, onKotcSaved } = useScoreSaving(id!, tournament);
 
     // Every action changes the tournament; completing or recalculating also changes its results in the list.
-    const refreshTournament = () => qc.invalidateQueries({ queryKey: getQueryKey(trpc.tournament.getById, { id: id! }) });
-    const refreshList = () => qc.invalidateQueries({ queryKey: getQueryKey(trpc.tournament.list) });
+    const refreshTournament = () => utils.tournament.getById.invalidate({ id: id! });
+    const refreshList = () => utils.tournament.list.invalidate();
 
     const complete = trpc.tournament.complete.useMutation({
         onSuccess: () => {

@@ -48,17 +48,6 @@ function teamKey(p1Id: string, p2Id: string): string {
     return [p1Id, p2Id].sort().join("|");
 }
 
-export function buildTeamsFromMatches(rounds: { matches: ChallengerMatch[] }[]): Map<string, ChallengerTeam> {
-    const teams = new Map<string, ChallengerTeam>();
-    for (const round of rounds) {
-        for (const m of round.matches) {
-            teams.set(teamKey(m.team1Player1.id, m.team1Player2.id), { player1: m.team1Player1, player2: m.team1Player2 });
-            teams.set(teamKey(m.team2Player1.id, m.team2Player2.id), { player1: m.team2Player1, player2: m.team2Player2 });
-        }
-    }
-    return teams;
-}
-
 export function groupRoundsByGroup(rounds: ChallengerRound[]): { A: ChallengerRound[]; B: ChallengerRound[] } {
     return {
         A: rounds.filter(r => r.groupName === "A").sort((a, b) => a.roundNumber - b.roundNumber),

@@ -1,6 +1,4 @@
 import { useEffect, useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
-import { getQueryKey } from "@trpc/react-query";
 import { trpc } from "../../../../trpc";
 import { divisionLabel } from "../../../../lib/divisions";
 import { TOURNAMENT_TYPE_LABELS, type TournamentType } from "../../../../lib/tournaments";
@@ -13,7 +11,7 @@ const TYPE_ORDER = ["AMERICANO", "TEAM_AMERICANO", "KING_OF_THE_COURT", "AMERICA
 // Ranking points multipliers (backend lib/rankingPoints). Saving recalculates everyone's
 // points straight away — they're worked out from the results every time.
 export function RankingCoefficientsEditor() {
-    const qc = useQueryClient();
+    const utils = trpc.useUtils();
     const { data } = trpc.ranking.coefficients.useQuery();
     const [values, setValues] = useState<Record<string, string>>({});
     const { message, flash, fail } = useFlashMessage(4000);
@@ -32,9 +30,9 @@ export function RankingCoefficientsEditor() {
 
     const save = trpc.ranking.setCoefficients.useMutation({
         onSuccess: () => {
-            qc.invalidateQueries({ queryKey: getQueryKey(trpc.ranking.coefficients) });
-            qc.invalidateQueries({ queryKey: getQueryKey(trpc.player) });
-            qc.invalidateQueries({ queryKey: getQueryKey(trpc.division) });
+            utils.ranking.coefficients.invalidate();
+            utils.player.invalidate();
+            utils.division.invalidate();
             flash("Saved — everyone's ranking points are updated.");
         },
         onError: fail,

@@ -1,6 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
-import { getQueryKey } from "@trpc/react-query";
 import { trpc } from "../../trpc";
 import { FeeInputs } from "./FeeInputs";
 import { field as baseField } from "./formStyles";
@@ -274,7 +272,7 @@ export function TournamentDetailsEditor({ tournament, section }: {
     tournament: StoredDetails & { id: string; status?: string; maxPlayers?: number | null; payTo?: { type: string; bankName: string | null; accountHolder: string }[] };
     section: "payment" | "general";
 }) {
-    const qc = useQueryClient();
+    const utils = trpc.useUtils();
     // The texts plus the accounts players pay into (none picked = every active one).
     const stored = detailsText(tournament);
     const storedKey = JSON.stringify(stored);
@@ -288,8 +286,8 @@ export function TournamentDetailsEditor({ tournament, section }: {
     const update = trpc.tournament.updateDetails.useMutation({
         onSuccess: () => {
             setError("");
-            qc.invalidateQueries({ queryKey: getQueryKey(trpc.tournament.getById, { id: tournament.id }) });
-            qc.invalidateQueries({ queryKey: getQueryKey(trpc.tournament.list) });
+            utils.tournament.getById.invalidate({ id: tournament.id });
+            utils.tournament.list.invalidate();
         },
         onError: e => setError(e.message),
     });

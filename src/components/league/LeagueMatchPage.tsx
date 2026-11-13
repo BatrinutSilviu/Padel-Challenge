@@ -1,7 +1,5 @@
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { useQueryClient } from "@tanstack/react-query";
-import { getQueryKey } from "@trpc/react-query";
 import { toast } from "sonner";
 import { NavBar } from "../NavBar";
 import { trpc } from "../../trpc";
@@ -96,11 +94,11 @@ function ResultLine({ match }: { match: LeagueMatchDetails }) {
 }
 
 function useInvalidateMatch(matchId: string) {
-    const qc = useQueryClient();
+    const utils = trpc.useUtils();
     return () => {
-        qc.invalidateQueries({ queryKey: getQueryKey(trpc.league.match, { id: matchId }) });
-        qc.invalidateQueries({ queryKey: getQueryKey(trpc.league.getById) });
-        qc.invalidateQueries({ queryKey: getQueryKey(trpc.league.myOpenMatches) });
+        utils.league.match.invalidate({ id: matchId });
+        utils.league.getById.invalidate();
+        utils.league.myOpenMatches.invalidate();
     };
 }
 

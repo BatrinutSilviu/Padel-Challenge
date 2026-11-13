@@ -1,6 +1,4 @@
 import { useEffect, useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
-import { getQueryKey } from "@trpc/react-query";
 import { trpc } from "../../../../trpc";
 import { divisionLabel } from "../../../../lib/divisions";
 import { field } from "../../formStyles";
@@ -10,14 +8,14 @@ import { useFlashMessage } from "./useFlashMessage";
 // Admin: what each level (division) means, shown on division and tournament pages.
 // Leaving one empty puts its default back.
 export function DivisionDescriptionsAdmin() {
-    const qc = useQueryClient();
+    const utils = trpc.useUtils();
     const { data } = trpc.site.divisionDescriptions.useQuery();
     const [texts, setTexts] = useState<Record<number, string>>({});
     const { message, flash, fail } = useFlashMessage();
     useEffect(() => { if (data) setTexts(data); }, [data]);
     const save = trpc.site.setDivisionDescriptions.useMutation({
         onSuccess: () => {
-            qc.invalidateQueries({ queryKey: getQueryKey(trpc.site.divisionDescriptions) });
+            utils.site.divisionDescriptions.invalidate();
             flash("Saved.");
         },
         onError: fail,

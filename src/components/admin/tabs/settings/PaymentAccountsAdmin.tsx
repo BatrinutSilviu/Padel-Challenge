@@ -1,6 +1,4 @@
 import { useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
-import { getQueryKey } from "@trpc/react-query";
 import { trpc } from "../../../../trpc";
 import { field } from "../../formStyles";
 import { PAYMENT_TYPE_LABELS, accountTitle, accountValue, type PaymentAccount } from "../../../../lib/paymentAccounts";
@@ -12,15 +10,15 @@ type Draft = { type: string; bankName: string; accountHolder: string; iban: stri
 const EMPTY: Draft = { type: "bank", bankName: "", accountHolder: "", iban: "", paymentHandle: "", notes: "" };
 
 export function PaymentAccountsAdmin() {
-    const qc = useQueryClient();
+    const utils = trpc.useUtils();
     const { data: accounts } = trpc.paymentAccount.list.useQuery();
     const [editing, setEditing] = useState<string | "new" | null>(null);
     const [draft, setDraft] = useState<Draft>(EMPTY);
     const [error, setError] = useState("");
 
     const refresh = () => {
-        qc.invalidateQueries({ queryKey: getQueryKey(trpc.paymentAccount.list) });
-        qc.invalidateQueries({ queryKey: getQueryKey(trpc.tournament.getById) });
+        utils.paymentAccount.list.invalidate();
+        utils.tournament.getById.invalidate();
     };
     const done = () => { refresh(); setEditing(null); setError(""); };
     const onError = (e: { message: string }) => setError(e.message);

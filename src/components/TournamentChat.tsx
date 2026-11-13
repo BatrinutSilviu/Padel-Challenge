@@ -1,7 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { useQueryClient } from "@tanstack/react-query";
-import { getQueryKey } from "@trpc/react-query";
 import { trpc } from "../trpc";
 import { useAuth } from "../contexts/useAuth";
 
@@ -63,7 +61,6 @@ function dayLabel(d: Date): string {
 export function TournamentChat({ tournamentId, tournamentName }: { tournamentId: string; tournamentName: string }) {
     const { token, playerId } = useAuth();
     const isAdmin = !!localStorage.getItem("admin_token");
-    const qc = useQueryClient();
     const { data } = useChat(tournamentId);
     const [text, setText] = useState("");
     const [error, setError] = useState("");
@@ -77,7 +74,7 @@ export function TournamentChat({ tournamentId, tournamentName }: { tournamentId:
     // The list's height before older messages went in on top, to keep the reader's place.
     const heightBefore = useRef<number | null>(null);
 
-    const refresh = () => qc.invalidateQueries({ queryKey: getQueryKey(trpc.chat.messages, { tournamentId }) });
+    const refresh = () => utils.chat.messages.invalidate({ tournamentId });
     const send = trpc.chat.send.useMutation({
         onSuccess: () => { setText(""); setError(""); nearBottom.current = true; refresh(); },
         onError: e => setError(e.message),

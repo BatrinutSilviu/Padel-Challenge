@@ -1,6 +1,4 @@
 import { useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
-import { getQueryKey } from "@trpc/react-query";
 import { trpc } from "../../../../trpc";
 import { DIVISION_NAMES, divisionLabel } from "../../../../lib/divisions";
 import { compactField } from "../../formStyles";
@@ -9,7 +7,7 @@ import { PlayerRow } from "./PlayerRow";
 
 // Adding, finding and editing players, with profile claims to approve at the top.
 export function PlayersTab() {
-    const qc = useQueryClient();
+    const utils = trpc.useUtils();
     const [name, setName] = useState("");
     const [division, setDivision] = useState(6);
     const [gender, setGender] = useState<"MALE" | "FEMALE">("MALE");
@@ -18,7 +16,7 @@ export function PlayersTab() {
     const players = trpc.player.list.useQuery();
     const create = trpc.player.create.useMutation({
         onSuccess: () => {
-            qc.invalidateQueries({ queryKey: getQueryKey(trpc.player.list) });
+            utils.player.list.invalidate();
             setName("");
             setGender("MALE");
             setError("");
@@ -26,7 +24,7 @@ export function PlayersTab() {
         onError: (e) => setError(e.message),
     });
     const remove = trpc.player.delete.useMutation({
-        onSuccess: () => qc.invalidateQueries({ queryKey: getQueryKey(trpc.player.list) }),
+        onSuccess: () => utils.player.list.invalidate(),
     });
 
     // Searching the list below — accents and case don't matter ("stefan" finds "Ștefan").

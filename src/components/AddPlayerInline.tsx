@@ -1,6 +1,4 @@
 import { useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
-import { getQueryKey } from "@trpc/react-query";
 import { trpc } from "../trpc";
 import { DIVISION_NAMES } from "../lib/divisions";
 
@@ -17,15 +15,15 @@ export function AddPlayerInline({
     onCreated: (player: NewPlayer) => void;
     onCancel: () => void;
 }) {
-    const qc = useQueryClient();
+    const utils = trpc.useUtils();
     const [name, setName] = useState(defaultName);
     const [division, setDivision] = useState(defaultDivision);
     const [gender, setGender] = useState<"MALE" | "FEMALE">("MALE");
 
     const create = trpc.player.create.useMutation({
         onSuccess: (player) => {
-            qc.invalidateQueries({ queryKey: getQueryKey(trpc.division.allPlayers) });
-            qc.invalidateQueries({ queryKey: getQueryKey(trpc.division.players) });
+            utils.division.allPlayers.invalidate();
+            utils.division.players.invalidate();
             onCreated(player);
         },
     });

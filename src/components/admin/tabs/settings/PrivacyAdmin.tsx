@@ -1,6 +1,4 @@
 import { useEffect, useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
-import { getQueryKey } from "@trpc/react-query";
 import { trpc } from "../../../../trpc";
 import { field } from "../../formStyles";
 import { SaveMessage } from "./SaveMessage";
@@ -8,7 +6,7 @@ import { useFlashMessage } from "./useFlashMessage";
 
 // Admin: who the privacy policy names as the data controller, and the privacy email.
 export function PrivacyAdmin() {
-    const qc = useQueryClient();
+    const utils = trpc.useUtils();
     const { data } = trpc.site.privacy.useQuery();
     const [controller, setController] = useState("");
     const [email, setEmail] = useState("");
@@ -20,7 +18,7 @@ export function PrivacyAdmin() {
     }, [data]);
     const save = trpc.site.setPrivacy.useMutation({
         onSuccess: () => {
-            qc.invalidateQueries({ queryKey: getQueryKey(trpc.site.privacy) });
+            utils.site.privacy.invalidate();
             flash("Saved.");
         },
         onError: fail,

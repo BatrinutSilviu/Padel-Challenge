@@ -1,7 +1,5 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { useQueryClient } from "@tanstack/react-query";
-import { getQueryKey } from "@trpc/react-query";
 import { trpc } from "../trpc";
 import { useAuth } from "../contexts/useAuth";
 import { isTeamBasedType, type TournamentData } from "../lib/tournaments";
@@ -22,7 +20,7 @@ export function TournamentSignup({ tournament }: { tournament: TournamentData })
     // Accounts made before sign-up asked for it agree to the privacy policy once, here.
     const needsConsent = !!account && !account.privacyConsentAt;
     const [consent, setConsent] = useState(false);
-    const qc = useQueryClient();
+    const utils = trpc.useUtils();
     const [error, setError] = useState("");
     const [partnerId, setPartnerId] = useState("");
     // A partner who isn't in the database yet — created when the sign-up goes through.
@@ -30,12 +28,12 @@ export function TournamentSignup({ tournament }: { tournament: TournamentData })
 
     function refresh() {
         setError("");
-        qc.invalidateQueries({ queryKey: getQueryKey(trpc.tournament.getById, { id: tournament.id }) });
-        qc.invalidateQueries({ queryKey: getQueryKey(trpc.tournament.list) });
+        utils.tournament.getById.invalidate({ id: tournament.id });
+        utils.tournament.list.invalidate();
     }
 
     const acceptPrivacy = trpc.auth.acceptPrivacy.useMutation({
-        onSuccess: () => qc.invalidateQueries({ queryKey: getQueryKey(trpc.auth.me) }),
+        onSuccess: () => utils.auth.me.invalidate(),
     });
     // What a player pays to get a spot: the advance, or the full price when there's no advance.
     const payNow = tournament.advanceFee ?? tournament.entryFee;

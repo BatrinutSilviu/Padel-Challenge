@@ -1,6 +1,4 @@
 import { useCallback, useEffect, useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
-import { getQueryKey } from "@trpc/react-query";
 import { trpc } from "../../../trpc";
 import { isChallengerMatchScored, type MatchSet } from "../../../lib/challenger";
 import { isKotcMatchScored } from "../../../lib/kingOfTheCourt";
@@ -13,7 +11,7 @@ type Match = TournamentData["rounds"][number]["matches"][number];
 // still on their way. The on…Saved callbacks are what each format's score rows call
 // once a score is saved.
 export function useScoreSaving(id: string, tournament: TournamentData | undefined) {
-    const qc = useQueryClient();
+    const utils = trpc.useUtils();
     const [scoredIds, setScoredIds] = useState<Set<string>>(() => new Set());
     const [pendingSaves, setPendingSaves] = useState(0);
 
@@ -49,11 +47,7 @@ export function useScoreSaving(id: string, tournament: TournamentData | undefine
     // Masters knockout stage, a new King of the Court round), which a patch can't materialize.
     const patchMatch = useCallback((matchId: string, changes: Partial<Match>) => {
         setScoredIds(prev => new Set([...prev, matchId]));
-        // setQueryData needs the exact key useQuery reads from — unlike
-        // invalidateQueries, it does not do a partial/fuzzy match, so the
-        // 'query' type must be included or this silently patches nothing.
-        const queryKey = getQueryKey(trpc.tournament.getById, { id }, 'query');
-        qc.setQueryData(queryKey, (old: TournamentData | undefined) => {
+        utils.tournament.getById.setData({ id }, old => {
             if (!old) return old;
             return {
                 ...old,
@@ -63,8 +57,8 @@ export function useScoreSaving(id: string, tournament: TournamentData | undefine
                 })),
             };
         });
-        qc.invalidateQueries({ queryKey: getQueryKey(trpc.tournament.getById, { id }) });
-    }, [qc, id]);
+        utils.tournament.getById.invalidate({ id });
+    }, [utils, id]);
 
     // Americano and Challenger (Challenger matches can end in a tiebreak).
     const onSaved = useCallback((

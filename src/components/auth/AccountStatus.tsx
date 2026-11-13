@@ -1,7 +1,5 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useQueryClient } from "@tanstack/react-query";
-import { getQueryKey } from "@trpc/react-query";
 import { toast } from "sonner";
 import { NavBar } from "../NavBar";
 import { trpc } from "../../trpc";
@@ -49,12 +47,12 @@ export function AccountStatusNotice({ className = "" }: { className?: string }) 
 // Picking a profile again, for an account whose claim was rejected.
 export function ChooseProfilePage() {
     const navigate = useNavigate();
-    const qc = useQueryClient();
+    const utils = trpc.useUtils();
     const { account } = useAuth();
     const [error, setError] = useState("");
     const choose = trpc.auth.chooseProfile.useMutation({
         onSuccess: data => {
-            qc.invalidateQueries({ queryKey: getQueryKey(trpc.auth.me) });
+            utils.auth.me.invalidate();
             toast.success(data.pendingApproval ? "Claim sent — an admin will confirm it soon." : "You're all set!");
             navigate("/");
         },

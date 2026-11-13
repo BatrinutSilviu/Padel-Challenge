@@ -1,7 +1,5 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { useQueryClient } from "@tanstack/react-query";
-import { getQueryKey } from "@trpc/react-query";
 import { NavBar } from "../../NavBar";
 import { trpc } from "../../../trpc";
 import { divisionLabel } from "../../../lib/divisions";
@@ -21,7 +19,7 @@ import { WithdrawalsCard } from "./WithdrawalsCard";
 // players on the waiting list once they've paid, then allocate the confirmed
 // players to teams and groups and generate the draw.
 export function TournamentSignupAdmin({ tournament }: { tournament: TournamentData }) {
-    const qc = useQueryClient();
+    const utils = trpc.useUtils();
     const [error, setError] = useState("");
 
     const allPlayersQuery = trpc.division.allPlayers.useQuery();
@@ -32,10 +30,10 @@ export function TournamentSignupAdmin({ tournament }: { tournament: TournamentDa
 
     function refresh() {
         setError("");
-        qc.invalidateQueries({ queryKey: getQueryKey(trpc.tournament.getById, { id: tournament.id }) });
-        qc.invalidateQueries({ queryKey: getQueryKey(trpc.tournament.list) });
-        qc.invalidateQueries({ queryKey: getQueryKey(trpc.tournament.withdrawals, { id: tournament.id }) });
-        qc.invalidateQueries({ queryKey: getQueryKey(trpc.tournament.awaitingConfirmation) });
+        utils.tournament.getById.invalidate({ id: tournament.id });
+        utils.tournament.list.invalidate();
+        utils.tournament.withdrawals.invalidate({ id: tournament.id });
+        utils.tournament.awaitingConfirmation.invalidate();
     }
 
     const onError = (e: { message: string }) => setError(e.message);

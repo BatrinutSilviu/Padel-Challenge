@@ -1,7 +1,5 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { useQueryClient } from "@tanstack/react-query";
-import { getQueryKey } from "@trpc/react-query";
 import { trpc } from "../../../../trpc";
 import { divisionLabel } from "../../../../lib/divisions";
 
@@ -9,14 +7,14 @@ import { divisionLabel } from "../../../../lib/divisions";
 // links the profile (and its history) to the account at once; rejecting lets them pick
 // another profile or create a new one. Renders nothing while the queue is empty.
 export function ProfileClaimsQueue() {
-    const qc = useQueryClient();
+    const utils = trpc.useUtils();
     const [error, setError] = useState("");
     const { data: claims } = trpc.profileClaim.list.useQuery();
 
     function refresh() {
         setError("");
-        qc.invalidateQueries({ queryKey: getQueryKey(trpc.profileClaim.list) });
-        qc.invalidateQueries({ queryKey: getQueryKey(trpc.profileClaim.pendingCount) });
+        utils.profileClaim.list.invalidate();
+        utils.profileClaim.pendingCount.invalidate();
     }
     const approve = trpc.profileClaim.approve.useMutation({ onSuccess: refresh, onError: e => { setError(e.message); refresh(); } });
     const reject = trpc.profileClaim.reject.useMutation({ onSuccess: refresh, onError: e => { setError(e.message); refresh(); } });
