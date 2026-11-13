@@ -1,16 +1,42 @@
-# React + Vite
+# Act!ve Padel — frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+The player and admin web app for padel.activetimisoara.ro: tournaments (Americano, Challenger,
+Masters, King of the Court), sign-ups and partner requests, tournament chat, the league and
+ranking points, player profiles and badges, and the admin dashboard.
 
-Currently, two official plugins are available:
+React + Vite + Tailwind. It talks to the backend (`padel-challenge-backend`) over tRPC.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Run locally
 
-## React Compiler
+```bash
+# the backend repo must sit next to this one; its router types are imported via the .backend link
+ln -s ../padel-challenge-backend-main .backend   # once (the link is git-ignored)
+npm install
+npm run dev          # http://localhost:5173, expects the backend on :3001
+```
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Checks
 
-## Expanding the ESLint configuration
+```bash
+npm run typecheck    # tsc -b
+npm run lint         # eslint
+npm run build        # writes build/
+```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+`build/` is committed: the server serves it with nginx (see `Dockerfile`, `nginx.conf`), so run
+`npm run build` and commit the result with any change to `src/`.
+
+## Layout
+
+- `src/main.tsx`, `src/App.tsx`: providers (react-query, tRPC, auth) and routes
+- `src/trpc.ts`, `src/backendRouter.ts`: the tRPC client, typed from the backend's router
+- `src/components/`: pages and their parts; `admin/` holds the dashboard, one module per tab
+- `src/lib/`: pure helpers (formats, standings, ranking, badges)
+- `src/contexts/`: auth
+
+## Deploy
+
+Pushing to `main` deploys: a GitHub Action runs `~/Projects/deploy.sh` on the VPS, which pulls
+both repos, backs up the database and rebuilds. A backend-only change needs a push here to go
+live (an empty commit is fine). Server operations (backups, alerts, logs) are described in the
+backend repo's `ops/README.md`.
