@@ -1,4 +1,4 @@
-import { challengerProgress, placementMatchTitle, type ChallengerBracketSection, type ChallengerMatch, type ChallengerRound } from "../../lib/challenger";
+import { challengerProgress, placementMatchTitle, type ChallengerBracketSection, type ChallengerMatch, type ChallengerRound } from "../../../lib/challenger";
 import { ChallengerMatchScoreRow } from "./ChallengerMatchScoreRow";
 
 const ACCENTS: Record<ChallengerBracketSection["key"], string> = {

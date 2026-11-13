@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
-import { trpc } from "../../trpc";
-import { isChallengerMatchScored, isValidChallengerSetScore, type ChallengerMatch } from "../../lib/challenger";
+import { trpc } from "../../../trpc";
+import { isChallengerMatchScored, isValidChallengerSetScore, type ChallengerMatch } from "../../../lib/challenger";
 
 type ScoreStatus = "editing" | "confirming" | "saving" | "locked" | "unlock-pending";
 

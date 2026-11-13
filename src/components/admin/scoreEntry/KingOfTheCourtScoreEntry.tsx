@@ -1,4 +1,4 @@
-import { sortMatchesByCourt, sortRoundsByNumber, type KotcRound } from "../../lib/kingOfTheCourt";
+import { sortMatchesByCourt, sortRoundsByNumber, type KotcRound } from "../../../lib/kingOfTheCourt";
 import { KingOfTheCourtMatchScoreRow } from "./KingOfTheCourtMatchScoreRow";
 
 type OnSaved = (

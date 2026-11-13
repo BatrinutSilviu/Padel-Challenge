@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { trpc } from "../../trpc";
-import { MASTERS_COURT_COUNT, isIndoorCourt } from "../../lib/masters";
+import { trpc } from "../../../trpc";
+import { MASTERS_COURT_COUNT, isIndoorCourt } from "../../../lib/masters";
 
 // Puts a Masters match on a given court, whatever its stage. Tapping the court it's
 // already on does nothing; "Auto" hands it back to the default rotation.

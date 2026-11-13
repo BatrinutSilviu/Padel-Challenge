@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { isChallengerMatchScored } from "../../lib/challenger";
-import { MASTERS_THIRD_PLACE_COURT, STAGE_INFO, courtName, mastersKnockoutCourt, mastersProgress, type MastersMatch, type MastersRound } from "../../lib/masters";
+import { isChallengerMatchScored } from "../../../lib/challenger";
+import { MASTERS_THIRD_PLACE_COURT, STAGE_INFO, courtName, mastersKnockoutCourt, mastersProgress, type MastersMatch, type MastersRound } from "../../../lib/masters";
 import { MastersCourtPicker } from "./MastersCourtPicker";
 import { MastersMatchScoreRow, type OnMastersSaved } from "./MastersMatchScoreRow";
 

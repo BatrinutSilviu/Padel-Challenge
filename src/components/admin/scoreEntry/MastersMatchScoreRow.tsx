@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, type ReactNode } from "react";
-import { trpc } from "../../trpc";
-import { formatChallengerScore, isChallengerMatchScored, type ChallengerMatch, type MatchSet } from "../../lib/challenger";
-import { checkMastersScore, isValidSet, mastersStage } from "../../lib/masters";
+import { trpc } from "../../../trpc";
+import { formatChallengerScore, isChallengerMatchScored, type ChallengerMatch, type MatchSet } from "../../../lib/challenger";
+import { checkMastersScore, isValidSet, mastersStage } from "../../../lib/masters";
 
 type ScoreStatus = "editing" | "confirming" | "saving" | "locked" | "unlock-pending";
 // Up to three columns: set 1, set 2, then the group tiebreak or the knockout's third set.

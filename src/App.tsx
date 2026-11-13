@@ -5,7 +5,7 @@ import { DivisionPage } from "./components/DivisionPage";
 import { TournamentPage } from "./components/TournamentPage";
 import { PlayerPage } from "./components/PlayerPage";
 import { AdminPage } from "./components/admin/AdminPage";
-import { AdminScoreEntry } from "./components/admin/AdminScoreEntry";
+import { AdminScoreEntry } from "./components/admin/scoreEntry/AdminScoreEntry";
 import { BadgesPage } from "./components/BadgesPage";
 import { LoginPage } from "./components/auth/LoginPage";
 import { SignupPage } from "./components/auth/SignupPage";

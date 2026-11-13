@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
-import { trpc } from "../../trpc";
-import { isKotcMatchScored, isValidKotcScore, type KotcMatch } from "../../lib/kingOfTheCourt";
+import { trpc } from "../../../trpc";
+import { isKotcMatchScored, isValidKotcScore, type KotcMatch } from "../../../lib/kingOfTheCourt";
 
 type ScoreStatus = "editing" | "confirming" | "saving" | "locked" | "unlock-pending";
 
