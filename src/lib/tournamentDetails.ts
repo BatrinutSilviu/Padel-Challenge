@@ -49,7 +49,7 @@ const parseFee = (s: string) => (s.trim() === "" ? null : Number(s));
 export function detailsError(d: DetailsText): string | null {
     const fee = parseFee(d.entryFee), advance = parseFee(d.advanceFee);
     if ([fee, advance].some(n => n !== null && (!Number.isInteger(n) || n < 0))) return "The price and the advance must be whole numbers of lei.";
-    if (fee !== null && advance !== null && advance > fee) return "The advance can't be more than the total price.";
+    if (fee !== null && advance !== null && advance > fee) return "The advance can't be more than the price per person.";
     const p = d.prizes.find(p => p.prize.trim() && p.who === "PARTNER" && !p.partner.trim());
     return p ? `Name the partner offering the prize "${p.label || p.prize}".` : null;
 }
