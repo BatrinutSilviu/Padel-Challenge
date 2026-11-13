@@ -270,7 +270,7 @@ export function PayToSelect({ value, onChange, disabled }: {
 // Two cards on each tournament's admin page, whatever its status: "Price & payment"
 // (price, advance, who players pay) and "Time, place, prizes & who can play". Each saves its own fields.
 export function TournamentDetailsEditor({ tournament, section }: {
-    tournament: StoredDetails & { id: string; payTo?: { type: string; bankName: string | null; accountHolder: string }[] };
+    tournament: StoredDetails & { id: string; status?: string; maxPlayers?: number | null; payTo?: { type: string; bankName: string | null; accountHolder: string }[] };
     section: "payment" | "general";
 }) {
     const qc = useQueryClient();
@@ -296,12 +296,17 @@ export function TournamentDetailsEditor({ tournament, section }: {
     const times = timeRangeLabel(tournament);
     const prizeCount = prizeList(tournament).length + (tournament.prizeNotes ? 1 : 0);
     const isPayment = section === "payment";
+    // What the tournament brings in, as the management app counts it: the players it's
+    // planned for (its capacity) × the price while it's upcoming, then the players who play.
+    const players = tournament.status === "UPCOMING" && tournament.maxPlayers ? tournament.maxPlayers : null;
+    const income = players !== null && tournament.entryFee ? { players, total: players * tournament.entryFee } : null;
     const payToText = (tournament.payTo ?? []).map(a => `${accountTitle(a as Parameters<typeof accountTitle>[0])} ${a.accountHolder.split(" ")[0]}`).join(", ");
     const summary = isPayment
         ? [
             tournament.entryFee !== null ? `${tournament.entryFee} lei` : "no price",
             tournament.advanceFee !== null ? `${tournament.advanceFee} lei advance` : null,
             payToText ? `pay to ${payToText}` : "no payment accounts",
+            income ? `${income.total} lei income for ${income.players} players` : null,
         ].filter(Boolean).join(" · ")
         : `${times || "No times set"} · ${tournament.location || "no location"} · ${prizeCount > 0 ? "prizes set" : "no prizes"}${tournament.womenOnly ? " · women only" : ""}`;
     // Only this card's fields go out, so the other card's unsaved edits are never overwritten.
@@ -348,6 +353,12 @@ export function TournamentDetailsEditor({ tournament, section }: {
                             onAdvanceFee={advanceFee => setValue({ ...value, advanceFee })}
                             disabled={update.isPending}
                         />
+                        {income && (
+                            <p className="mt-2 text-xs text-gray-500">
+                                Income if it fills up: {income.players} players × {tournament.entryFee} lei = <b className="text-gray-700">{income.total} lei</b>
+                                {" "}— what the management app counts. Change the number of players under Spots, below.
+                            </p>
+                        )}
                         <div className="mt-3">
                             <PayToSelect value={value} onChange={setValue} disabled={update.isPending} />
                         </div>
