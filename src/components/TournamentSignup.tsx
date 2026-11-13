@@ -4,7 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { getQueryKey } from "@trpc/react-query";
 import { trpc } from "../trpc";
 import { useAuth } from "../contexts/AuthContext";
-import { isTeamBasedType } from "../lib/tournaments";
+import { isTeamBasedType, type TournamentData } from "../lib/tournaments";
 import { HowItWorks, PrizeList } from "./TournamentDetails";
 import { AccountStatusNotice } from "./auth/AccountStatus";
 import { toast } from "sonner";
@@ -12,8 +12,6 @@ import { PayTo } from "./PaymentAccounts";
 import { PrivacyConsent } from "./PrivacyPage";
 import { PlayerPicker } from "./PlayerPicker";
 import { cleanPlayerName, playerNameError } from "../lib/playerName";
-
-type TournamentData = NonNullable<ReturnType<typeof trpc.tournament.getById.useQuery>["data"]>;
 
 // The player-facing sign-up sheet: shown on a tournament that hasn't been started
 // yet. Anyone with an account can sign up; they wait on the waiting list until an

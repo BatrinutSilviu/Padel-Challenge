@@ -2,8 +2,8 @@ import { Link } from "react-router-dom";
 import { trpc } from "../../trpc";
 import { formatKotcScore, isKotcMatchScored, sortMatchesByCourt, sortRoundsByNumber } from "../../lib/kingOfTheCourt";
 import { TeamFinalStandings } from "../TeamFinalStandings";
+import type { TournamentData } from "../../lib/tournaments";
 
-type TournamentData = NonNullable<ReturnType<typeof trpc.tournament.getById.useQuery>["data"]>;
 type RoundData = TournamentData["rounds"][number];
 
 export function KingOfTheCourtView({ tournament }: { tournament: TournamentData }) {

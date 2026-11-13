@@ -8,11 +8,9 @@ import {
     type ChallengerRound,
 } from "../../lib/challenger";
 import { isIndoorCourt } from "../../lib/masters";
-import { challengerFormatOf } from "../../lib/tournaments";
+import { challengerFormatOf, type TournamentData } from "../../lib/tournaments";
 import { ChallengerBracket } from "./ChallengerBracket";
 import { TeamFinalStandings } from "../TeamFinalStandings";
-
-type TournamentData = NonNullable<ReturnType<typeof trpc.tournament.getById.useQuery>["data"]>;
 
 export function ChallengerView({ tournament }: { tournament: TournamentData }) {
     const progress = challengerProgress(tournament);

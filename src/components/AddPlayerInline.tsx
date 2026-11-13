@@ -4,7 +4,7 @@ import { getQueryKey } from "@trpc/react-query";
 import { trpc } from "../trpc";
 import { DIVISION_NAMES } from "../lib/divisions";
 
-type NewPlayer = { id: string; name: string; division: number; gender: "MALE" | "FEMALE" };
+type NewPlayer = { id: string; name: string; division: number; gender: string };
 
 export function AddPlayerInline({
     defaultName = "",

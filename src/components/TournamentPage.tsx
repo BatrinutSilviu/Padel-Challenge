@@ -2,7 +2,7 @@ import { useParams, Link } from "react-router-dom";
 import { trpc } from "../trpc";
 import { NavBar } from "./NavBar";
 import { DIVISION_BADGES, divisionLabel, useDivisionDescriptions } from "../lib/divisions";
-import { hasPrizes, timeRangeLabel, tournamentTypeLabel, tournamentWhen } from "../lib/tournaments";
+import { hasPrizes, timeRangeLabel, tournamentTypeLabel, tournamentWhen, type TournamentData } from "../lib/tournaments";
 import { HowItWorks, PrizeList } from "./TournamentDetails";
 import { useState } from "react";
 import { StatusBadge } from "./HomePage";
@@ -195,8 +195,6 @@ export function TournamentPage() {
         </div>
     );
 }
-
-type TournamentData = NonNullable<ReturnType<typeof trpc.tournament.getById.useQuery>["data"]>;
 
 function TeamStandings({ tournament }: { tournament: TournamentData }) {
     // Build a partner map by scanning all matches (teams are fixed, so any match works)

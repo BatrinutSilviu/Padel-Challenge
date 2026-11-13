@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { trpc } from "../trpc";
+import type { RouterOutputs } from "../backendRouter";
 import { NavBar } from "./NavBar";
 import { DIVISION_NAMES, DIVISION_BADGES, useDivisionDescriptions } from "../lib/divisions";
 import { BADGE_META, BadgeType } from "../lib/badges";
@@ -52,7 +53,7 @@ export function DivisionPage() {
                     {standings.data?.length === 0 && <p className="text-[#8E8E93]">No players in this division.</p>}
                     <div className="bg-white rounded-2xl border border-[#E5E5EA] overflow-hidden shadow-sm">
                         {(() => {
-                            const byPoints = (a: typeof standings.data[number], b: typeof standings.data[number]) =>
+                            const byPoints = (a: PlayerEntry, b: PlayerEntry) =>
                                 scoreOf(b) - scoreOf(a) || a.name.localeCompare(b.name);
                             const sorted = (standings.data ?? []).slice().sort(byPoints);
                             return sorted.map((player, i) => {
@@ -96,7 +97,7 @@ export function DivisionPage() {
     );
 }
 
-type PlayerEntry = NonNullable<ReturnType<typeof trpc.division.standings.useQuery>["data"]>[number];
+type PlayerEntry = RouterOutputs["division"]["standings"][number];
 
 function PlayerRow({ player, rank, division, avg }: {
     player: PlayerEntry;

@@ -5,7 +5,7 @@ import { getQueryKey } from "@trpc/react-query";
 import { NavBar } from "../NavBar";
 import { trpc } from "../../trpc";
 import { divisionLabel } from "../../lib/divisions";
-import { capacityOptions, challengerFormatOf, isTeamBasedType, playerCountError, tournamentTypeLabel, tournamentWhen } from "../../lib/tournaments";
+import { capacityOptions, challengerFormatOf, isTeamBasedType, playerCountError, tournamentTypeLabel, tournamentWhen, type TournamentData } from "../../lib/tournaments";
 import { PlayerPicker } from "../PlayerPicker";
 import { mastersFormatOf } from "../../lib/masters";
 import { MastersFormatPicker } from "./MastersFormatPicker";
@@ -14,8 +14,6 @@ import { TournamentDetailsEditor } from "./TournamentDetailsInputs";
 import { ChatJumpLink, TournamentChat } from "../TournamentChat";
 import { TournamentSettingsEditor } from "./TournamentSettingsEditor";
 import { GroupHeading, TeamNumber } from "./TeamNumber";
-
-type TournamentData = NonNullable<ReturnType<typeof trpc.tournament.getById.useQuery>["data"]>;
 
 // Admin view of a tournament that players are still signing up for: confirm the
 // players on the waiting list once they've paid, then allocate the confirmed

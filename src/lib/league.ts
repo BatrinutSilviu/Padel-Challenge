@@ -2,12 +2,9 @@
 // is a round robin in groups of fixed teams, one round a week; teams agree on when and
 // where to play within their week. Matches are best of 3 sets, standard sets with a
 // tiebreak at 6-6, star point at deuce.
-// The backend runs tRPC v10 and the client v11, so infer with the backend's own types.
-import type { inferRouterOutputs } from "../../../padel-challenge-backend/node_modules/@trpc/server";
-import type { AppRouter } from "../../../padel-challenge-backend/src/router";
+import type { RouterOutputs as Outputs } from "../backendRouter";
 import { checkMastersScore } from "./masters";
 
-type Outputs = inferRouterOutputs<AppRouter>;
 export type League = Outputs["league"]["getById"];
 export type LeagueTier = League["tiers"][number];
 export type LeagueGroup = LeagueTier["groups"][number];

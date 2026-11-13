@@ -1,7 +1,7 @@
 import { createTRPCReact } from '@trpc/react-query';
 import { httpBatchLink, type TRPCLink } from '@trpc/client';
 import { observable } from '@trpc/server/observable';
-import type { AppRouter } from '../../padel-challenge-backend/src/router';
+import type { AppRouter } from './backendRouter';
 
 export const trpc = createTRPCReact<AppRouter>();
 
@@ -36,11 +36,17 @@ const sentTokensLink: TRPCLink<AppRouter> = () => ({ op, next }) => observable(o
     });
 });
 
+const plainJson = { serialize: (data: unknown) => data, deserialize: (data: unknown) => data };
+
 export const trpcClient = trpc.createClient({
     links: [
         sentTokensLink,
         httpBatchLink({
             url: import.meta.env.VITE_API_URL ?? '/api',
+            // The backend sends plain JSON, so data passes through untouched — the same as
+            // tRPC does when no transformer is given. It's spelled out only because our
+            // router type (backendRouter.ts) declares outputs already in their JSON shape.
+            transformer: plainJson,
             headers() {
                 const adminToken = localStorage.getItem('admin_token');
                 const userToken = localStorage.getItem('user_token');

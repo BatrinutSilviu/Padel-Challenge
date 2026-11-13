@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useCallback, useEffect, type React
 import { useQueryClient } from "@tanstack/react-query";
 import { getQueryKey } from "@trpc/react-query";
 import { trpc } from "../trpc";
+import type { RouterOutputs } from "../backendRouter";
 
 const STORAGE_KEY = "user_token";
 
@@ -16,7 +17,7 @@ type AuthState = {
     tokenPlayerId: string | null;
 };
 
-type Account = NonNullable<ReturnType<typeof trpc.auth.me.useQuery>["data"]>;
+type Account = RouterOutputs["auth"]["me"];
 
 type AuthContextValue = {
     token: string | null;

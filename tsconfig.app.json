@@ -1,0 +1,30 @@
+{
+  "compilerOptions": {
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
+    "target": "ES2022",
+    "useDefineForClassFields": true,
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "types": ["vite/client"],
+    "skipLibCheck": true,
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "moduleDetection": "force",
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "esModuleInterop": true,
+    "strict": true,
+    "noFallthroughCasesInSwitch": true,
+    "baseUrl": ".",
+    // `@backend/*` lets src/backendRouter.ts import the backend's router type for type-checking.
+    // TypeScript tries each location in order: `.backend` (an optional, git-ignored symlink to the
+    // backend checkout that matches this one, e.g. `ln -s ../padel-challenge-backend-main .backend`
+    // for a worktree), then the sibling `../padel-challenge-backend` checkout. Only types come from
+    // there and Vite erases them, so `vite build` (and the Docker image) never needs the backend.
+    "paths": {
+      "@/*": ["./src/*"],
+      "@backend/*": ["./.backend/*", "../padel-challenge-backend/*"]
+    }
+  },
+  "include": ["src"]
+}

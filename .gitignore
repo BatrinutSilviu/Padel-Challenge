@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Optional link to the backend checkout, for type-checking only (see tsconfig.app.json)
+.backend

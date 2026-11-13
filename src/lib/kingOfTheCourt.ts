@@ -34,11 +34,11 @@ export function isValidKotcScore(team1Score: number, team2Score: number, goldenP
     return goldenPointWinner == null;
 }
 
-export function sortMatchesByCourt(matches: KotcMatch[]): KotcMatch[] {
+export function sortMatchesByCourt<M extends KotcMatch>(matches: M[]): M[] {
     return [...matches].sort((a, b) => (a.court ?? 0) - (b.court ?? 0));
 }
 
-export function sortRoundsByNumber(rounds: KotcRound[]): KotcRound[] {
+export function sortRoundsByNumber<R extends KotcRound>(rounds: R[]): R[] {
     return [...rounds].sort((a, b) => a.roundNumber - b.roundNumber);
 }
 

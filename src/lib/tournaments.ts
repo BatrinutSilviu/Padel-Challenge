@@ -1,5 +1,9 @@
 import { RECOMMENDED_MASTERS_FORMAT, mastersFormatNotes, mastersFormatOf, mastersTeamCount, type MastersFormat } from "./masters";
 import { challengerFormatNotes } from "./challenger";
+import type { RouterOutputs } from "../backendRouter";
+
+// A tournament as the tournament page loads it (tournament.getById), with its rounds and players.
+export type TournamentData = NonNullable<RouterOutputs["tournament"]["getById"]>;
 
 export type TournamentType = "AMERICANO" | "AMERICANO_CHAMPIONS" | "AMERICANO_GIRLS" | "CHALLENGER" | "TEAM_AMERICANO" | "KING_OF_THE_COURT" | "MASTERS";
 

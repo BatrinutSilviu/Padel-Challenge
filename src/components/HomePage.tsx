@@ -1,5 +1,6 @@
 import { Link, useSearchParams } from "react-router-dom";
 import { trpc } from "../trpc";
+import type { RouterOutputs } from "../backendRouter";
 import { NavBar } from "./NavBar";
 import { useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
@@ -59,13 +60,15 @@ export function HomePage() {
 }
 
 
+type MySignup = RouterOutputs["tournament"]["mySignups"][number];
+
 // Tournaments taking sign-ups, at the top of every tab so players find them; for a
 // logged-in player, the ones they're already on say so.
 function OpenSignups() {
     const { token } = useAuth();
     const { data } = trpc.tournament.list.useQuery();
     const { data: mine } = trpc.tournament.mySignups.useQuery(undefined, { enabled: !!token });
-    const mySignups = new Map((token ? mine ?? [] : []).map(s => [s.tournamentId, s]));
+    const mySignups = new Map<string, MySignup>((token ? mine ?? [] : []).map(s => [s.tournamentId, s]));
     const openForSignup = (data ?? []).filter(t => t.status === "UPCOMING" && t.registrationOpen);
 
     return (

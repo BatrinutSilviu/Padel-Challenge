@@ -11,6 +11,7 @@
 import { Fragment, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { Link, useParams } from "react-router-dom";
 import { trpc } from "../../trpc";
+import type { TournamentData } from "../../lib/tournaments";
 import {
     computeGroupStandings,
     isChallengerMatchScored,
@@ -29,7 +30,6 @@ import {
     type MastersSlotSource,
 } from "../../lib/masters";
 
-type TournamentData = NonNullable<ReturnType<typeof trpc.tournament.getById.useQuery>["data"]>;
 type SceneKind = "groups" | "bracket";
 type Scene = { key: string; kind: SceneKind; label: string; groups: string[] };
 type Standings = Record<string, GroupStanding[]>;

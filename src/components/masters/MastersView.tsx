@@ -4,8 +4,7 @@ import { STAGE_INFO, mastersKnockoutStages, mastersPartnerMap, mastersProgress }
 import { GroupSection } from "../challenger/ChallengerView";
 import { TeamFinalStandings } from "../TeamFinalStandings";
 import { MastersBracket } from "./MastersBracket";
-
-type TournamentData = NonNullable<ReturnType<typeof trpc.tournament.getById.useQuery>["data"]>;
+import type { TournamentData } from "../../lib/tournaments";
 
 export function MastersView({ tournament }: { tournament: TournamentData }) {
     const progress = mastersProgress(tournament);
