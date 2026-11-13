@@ -17,6 +17,7 @@ import { PlayerPicker } from "../PlayerPicker";
 import { useAdminSession, LoginPage, SessionExpiredModal } from "./AdminAuth";
 import { TournamentSignupAdmin } from "./TournamentSignupAdmin";
 import { TournamentDetailsEditor } from "./TournamentDetailsInputs";
+import { ChatJumpLink, TournamentChat } from "../TournamentChat";
 import { TournamentSettingsEditor } from "./TournamentSettingsEditor";
 
 export function AdminScoreEntry() {
@@ -285,6 +286,7 @@ export function AdminScoreEntry() {
                 <TournamentSettingsEditor tournament={tournament} />
                 <TournamentDetailsEditor tournament={tournament} section="payment" />
                 <TournamentDetailsEditor tournament={tournament} section="general" />
+                <div className="px-1"><ChatJumpLink tournamentId={tournament.id} /></div>
 
                 {/* Participants */}
                 <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
@@ -600,6 +602,7 @@ export function AdminScoreEntry() {
                         )}
                     </div>
                 )}
+                <TournamentChat tournamentId={tournament.id} tournamentName={tournament.name} />
             </main>
         </div>
         {sessionExpired && <SessionExpiredModal onLogin={handleLogin} />}

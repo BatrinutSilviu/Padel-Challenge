@@ -12,6 +12,7 @@ import { MastersView } from "./masters/MastersView";
 import { TournamentSignup } from "./TournamentSignup";
 import { SupportContact } from "./SupportContact";
 import { PayTo } from "./PaymentAccounts";
+import { ChatJumpLink, TournamentChat } from "./TournamentChat";
 
 export function TournamentPage() {
     const { id } = useParams<{ id: string }>();
@@ -78,6 +79,7 @@ export function TournamentPage() {
                                         ? `${tournament.participants.filter(p => p.confirmed).length}${tournament.maxPlayers !== null ? ` / ${tournament.maxPlayers}` : ""} confirmed`
                                         : `${tournament.participants.length} players`}
                                 </p>
+                                <ChatJumpLink tournamentId={tournament.id} />
                             </div>
                         </div>
                         <StatusBadge status={tournament.status} />
@@ -187,6 +189,7 @@ export function TournamentPage() {
                 {tournament.status !== "UPCOMING" && (
                     <PayTo accounts={tournament.payTo} entryFee={tournament.entryFee} advanceFee={tournament.advanceFee} tournamentName={tournament.name} />
                 )}
+                <TournamentChat tournamentId={tournament.id} tournamentName={tournament.name} />
                 <SupportContact context={tournament.name} />
             </main>
         </div>

@@ -11,6 +11,7 @@ import { mastersFormatOf } from "../../lib/masters";
 import { MastersFormatPicker } from "./MastersFormatPicker";
 import { ChallengerFormatPicker } from "./ChallengerFormatPicker";
 import { TournamentDetailsEditor } from "./TournamentDetailsInputs";
+import { ChatJumpLink, TournamentChat } from "../TournamentChat";
 import { TournamentSettingsEditor } from "./TournamentSettingsEditor";
 import { GroupHeading, TeamNumber } from "./TeamNumber";
 
@@ -202,6 +203,7 @@ export function TournamentSignupAdmin({ tournament }: { tournament: TournamentDa
                 <TournamentSettingsEditor tournament={tournament} />
                 <TournamentDetailsEditor tournament={tournament} section="payment" />
                 <TournamentDetailsEditor tournament={tournament} section="general" />
+                <div className="px-1"><ChatJumpLink tournamentId={tournament.id} /></div>
 
                 {/* Sign-up settings */}
                 <div className="bg-white rounded-xl border border-gray-200 px-4 sm:px-5 py-4 space-y-4">
@@ -523,6 +525,7 @@ export function TournamentSignupAdmin({ tournament }: { tournament: TournamentDa
                 {waiting.length > 0 && (
                     <p className="text-xs text-gray-400">Players still on the waiting list are dropped when the tournament starts.</p>
                 )}
+                <TournamentChat tournamentId={tournament.id} tournamentName={tournament.name} />
             </main>
         </div>
     );

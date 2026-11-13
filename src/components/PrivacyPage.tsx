@@ -37,6 +37,7 @@ export function PrivacyPage() {
                         <li><b>Profilul de jucător:</b> numele, sexul și divizia (nivelul).</li>
                         <li><b>Activitatea sportivă:</b> înscrierile la turnee, partenerii, scorurile, locurile obținute, ratingul (ELO), punctele de clasament și insignele.</li>
                         <li><b>Date pe care alegi să le completezi:</b> numărul de telefon, când și unde preferi să joci și o notă — folosite pentru programarea meciurilor din ligă.</li>
+                        <li><b>Mesajele din chatul turneelor:</b> ce scrii în chatul unui turneu la care ești înscris. Le văd doar jucătorii înscriși la acel turneu și organizatorii; chatul se închide la o zi după turneu.</li>
                         <li><b>Plăți:</b> doar dacă ai achitat taxa sau avansul (confirmarea locului). Plata se face direct în contul nostru; aplicația nu vede și nu păstrează datele cardului sau ale contului tău bancar.</li>
                         <li><b>Acordul tău:</b> data la care ai acceptat această politică.</li>
                     </ul>
