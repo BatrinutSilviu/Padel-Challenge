@@ -6,8 +6,9 @@ import { trpc } from "../trpc";
 import { useAuth } from "../contexts/AuthContext";
 
 // The tournament's chat (backend chat router): open from when the tournament is created
-// until a day after it's completed, for the players on its list and the admins. New
-// messages are fetched every few seconds while the page is open.
+// until a day after it's completed, for the players on its list and the admins. Only the
+// newest page of messages is shown and refreshed every few seconds; older ones are loaded
+// a page at a time when the reader asks for them.
 
 const MAX_LENGTH = 1000;
 const POLL_MS = 5000;
@@ -19,13 +20,15 @@ function useChat(tournamentId: string) {
     );
 }
 
-// The messages the viewer hasn't seen yet, counted from the last one they saw here.
-const seenKey = (id: string) => `chat-seen-${id}`;
-function readSeen(id: string): string | null {
-    try { return localStorage.getItem(seenKey(id)); } catch { return null; }
+type ChatMessage = NonNullable<ReturnType<typeof useChat>["data"]>["messages"][number];
+
+// The messages the viewer hasn't seen yet: newer than the last one they saw here.
+const seenKey = (id: string) => `chat-seen-at-${id}`;
+function readSeen(id: string): number | null {
+    try { const v = localStorage.getItem(seenKey(id)); return v ? Number(v) : null; } catch { return null; }
 }
-function writeSeen(id: string, messageId: string) {
-    try { localStorage.setItem(seenKey(id), messageId); } catch { /* private mode */ }
+function writeSeen(id: string, at: number) {
+    try { localStorage.setItem(seenKey(id), String(at)); } catch { /* private mode */ }
 }
 
 // A link in the tournament's header that jumps down to the chat, with the number of new messages.
@@ -33,12 +36,13 @@ export function ChatJumpLink({ tournamentId }: { tournamentId: string }) {
     const { data } = useChat(tournamentId);
     if (!data?.canRead) return null;
     const seen = readSeen(tournamentId);
-    const seenAt = seen ? data.messages.findIndex(m => m.id === seen) : -1;
-    const unread = seen ? (seenAt === -1 ? 0 : data.messages.length - seenAt - 1) : data.messages.length;
+    const unreadCount = data.messages.filter(m => seen === null || new Date(m.createdAt).getTime() > seen).length;
+    // Only the newest page is known here: "30+" when all of it is new and there's more.
+    const unread = unreadCount === data.messages.length && data.hasMore ? `${unreadCount}+` : unreadCount;
     return (
         <a href="#chat" className="inline-flex items-center gap-1.5 text-sm font-bold text-[#333366] hover:text-[#FF4200]">
             <span aria-hidden>💬</span> Chat
-            {unread > 0 && (
+            {unreadCount > 0 && (
                 <span className="min-w-[1.25rem] h-5 px-1.5 rounded-full bg-[#FF4200] text-white text-[11px] font-bold inline-flex items-center justify-center">{unread}</span>
             )}
         </a>
@@ -65,22 +69,62 @@ export function TournamentChat({ tournamentId, tournamentName }: { tournamentId:
     const [error, setError] = useState("");
     const listRef = useRef<HTMLDivElement>(null);
     const nearBottom = useRef(true);
+    // Older messages the reader loaded, oldest first, and whether there are more before them.
+    const utils = trpc.useUtils();
+    const [older, setOlder] = useState<ChatMessage[]>([]);
+    const [olderHasMore, setOlderHasMore] = useState<boolean | null>(null);
+    const [loadingOlder, setLoadingOlder] = useState(false);
+    // The list's height before older messages went in on top, to keep the reader's place.
+    const heightBefore = useRef<number | null>(null);
 
     const refresh = () => qc.invalidateQueries({ queryKey: getQueryKey(trpc.chat.messages, { tournamentId }) });
     const send = trpc.chat.send.useMutation({
         onSuccess: () => { setText(""); setError(""); nearBottom.current = true; refresh(); },
         onError: e => setError(e.message),
     });
-    const remove = trpc.chat.delete.useMutation({ onSuccess: refresh, onError: e => setError(e.message) });
+    const remove = trpc.chat.delete.useMutation({
+        onSuccess: (_, { id }) => { setOlder(o => o.filter(m => m.id !== id)); refresh(); },
+        onError: e => setError(e.message),
+    });
 
-    const messages = data?.messages ?? [];
+    const latest = data?.messages ?? [];
+    const latestIds = new Set(latest.map(m => m.id));
+    const messages = [...older.filter(m => !latestIds.has(m.id)), ...latest];
+    const hasEarlier = olderHasMore ?? data?.hasMore ?? false;
     const lastId = messages.at(-1)?.id;
+
+    async function loadOlder() {
+        const first = messages[0];
+        if (!first || loadingOlder) return;
+        setLoadingOlder(true);
+        try {
+            const page = await utils.chat.messages.fetch({ tournamentId, before: first.id }, { staleTime: Infinity });
+            heightBefore.current = listRef.current?.scrollHeight ?? null;
+            setOlder(o => [...page.messages, ...o]);
+            setOlderHasMore(page.hasMore);
+        } catch (e) {
+            setError((e as Error).message);
+        } finally {
+            setLoadingOlder(false);
+        }
+    }
+    // After older messages go in on top, keep the same messages in view.
+    useLayoutEffect(() => {
+        const el = listRef.current;
+        if (el && heightBefore.current !== null) {
+            el.scrollTop += el.scrollHeight - heightBefore.current;
+            heightBefore.current = null;
+        }
+    }, [older]);
     // Stay at the newest message as they come in, unless the reader has scrolled up.
     useLayoutEffect(() => {
         const el = listRef.current;
         if (el && nearBottom.current) el.scrollTop = el.scrollHeight;
     }, [lastId]);
-    useEffect(() => { if (lastId && data?.canRead) writeSeen(tournamentId, lastId); }, [lastId, data?.canRead, tournamentId]);
+    const lastAt = latest.at(-1)?.createdAt;
+    useEffect(() => {
+        if (lastAt && data?.canRead) writeSeen(tournamentId, new Date(lastAt).getTime());
+    }, [lastAt, data?.canRead, tournamentId]);
 
     if (!data) return null;
     if (!data.canRead) {
@@ -118,8 +162,17 @@ export function TournamentChat({ tournamentId, tournamentName }: { tournamentId:
                 onScroll={e => { const el = e.currentTarget; nearBottom.current = el.scrollHeight - el.scrollTop - el.clientHeight < 60; }}
                 className="max-h-[60vh] sm:max-h-96 overflow-y-auto px-3 sm:px-4 py-3 space-y-1.5 bg-[#F5F5F7]/60"
             >
-                {data.total > messages.length && (
-                    <p className="text-center text-[11px] text-[#8E8E93] pb-1">Showing the latest {messages.length} messages</p>
+                {hasEarlier && (
+                    <div className="text-center pb-1">
+                        <button
+                            type="button"
+                            onClick={loadOlder}
+                            disabled={loadingOlder}
+                            className="text-xs font-bold px-3 py-1.5 rounded-full bg-white border border-[#E5E5EA] text-[#333366] hover:border-[#FF4200] hover:text-[#FF4200] disabled:opacity-50"
+                        >
+                            {loadingOlder ? "Loading…" : "↑ Show earlier messages"}
+                        </button>
+                    </div>
                 )}
                 {messages.length === 0 && (
                     <p className="text-center text-sm text-[#8E8E93] py-6">
