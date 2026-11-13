@@ -16,6 +16,27 @@ import { useRankingSystem } from "../lib/ranking";
 
 type Tab = "divisions" | "players" | "tournaments";
 
+// Partner invitations waiting for the logged-in player: someone signed up and picked them as
+// their partner; they join that tournament when they accept it on its page.
+function PartnerInvitations() {
+    const { token, playerId } = useAuth();
+    const { data } = trpc.tournament.myInvitations.useQuery(undefined, { enabled: !!token && !!playerId });
+    if (!data?.length) return null;
+    return (
+        <div className="space-y-2 mb-6">
+            {data.map(inv => (
+                <Link key={inv.tournament.id} to={`/tournament/${inv.tournament.id}`}
+                    className="flex items-center justify-between gap-3 rounded-2xl border border-[#FF4200]/40 bg-white px-4 py-3 shadow-sm hover:border-[#FF4200]">
+                    <span className="text-sm text-[#1A1A2E] min-w-0">
+                        🤝 <span className="font-bold">{inv.from}</span> invited you to play together in <span className="font-bold">{inv.tournament.name}</span>
+                    </span>
+                    <span className="shrink-0 text-sm font-bold text-[#FF4200]">Answer →</span>
+                </Link>
+            ))}
+        </div>
+    );
+}
+
 export function HomePage() {
     const [searchParams, setSearchParams] = useSearchParams();
     const tab = (searchParams.get("tab") as Tab) ?? "divisions";
@@ -26,6 +47,7 @@ export function HomePage() {
             <NavBar />
             <main className="max-w-5xl mx-auto px-3 sm:px-4 py-6 sm:py-8 pb-24 sm:pb-8">
                 <AccountStatusNotice className="mb-6" />
+                <PartnerInvitations />
                 <OpenSignups />
 
                 <div className="flex gap-1 bg-white border border-[#E5E5EA] rounded-2xl p-1 mb-6 w-full sm:w-fit shadow-sm">

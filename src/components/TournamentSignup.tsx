@@ -38,8 +38,9 @@ export function TournamentSignup({ tournament }: { tournament: TournamentData })
     // What a player pays to get a spot: the advance, or the full price when there's no advance.
     const payNow = tournament.advanceFee ?? tournament.entryFee;
     const join = trpc.tournament.join.useMutation({
-        onSuccess: () => {
+        onSuccess: r => {
             setPartnerId(""); setPartnerName(""); refresh();
+            if (r.partnerRequestId) toast.info("Your partner got an invitation — they join the list with you when they accept.");
             toast.success(payNow !== null
                 ? `You're on the waiting list — pay the ${payNow} lei ${tournament.advanceFee !== null ? "advance" : "entry fee"} to confirm your spot.`
                 : "You're on the waiting list — an admin will confirm your spot.");
@@ -58,9 +59,17 @@ export function TournamentSignup({ tournament }: { tournament: TournamentData })
     const busy = join.isPending || leave.isPending;
 
     const teamBased = isTeamBasedType(tournament.type);
-    const allPlayersQuery = trpc.division.allPlayers.useQuery(undefined, { enabled: teamBased && !!token && !me });
+    // The players to pick a partner from — and the name of someone I invited, who isn't on the list yet.
+    const allPlayersQuery = trpc.division.allPlayers.useQuery(undefined, { enabled: teamBased && !!token && (!me || !!me.partnerRequestId) });
     const signedUpIds = new Set(tournament.participants.map(p => p.playerId));
-    const nameOf = new Map(tournament.participants.map(p => [p.playerId, p.player.name]));
+    const nameOf = new Map([
+        ...(allPlayersQuery.data ?? []).map(p => [p.id, p.name] as const),
+        ...tournament.participants.map(p => [p.playerId, p.player.name] as const),
+    ]);
+    // Invitations to me from players who signed up and picked me as their partner.
+    const invitations = !me && playerId
+        ? tournament.participants.filter(p => p.partnerRequestId === playerId && !p.partnerId)
+        : [];
     const partnerNameError = partnerName ? playerNameError(partnerName) : null;
     const hasPartner = !!partnerId || !!partnerName;
     const myPartnerName = me?.partnerId ? nameOf.get(me.partnerId) : undefined;
@@ -156,6 +165,9 @@ export function TournamentSignup({ tournament }: { tournament: TournamentData })
                         </div>
                     ) : (
                         <div className="space-y-3">
+                            {invitations.length > 0 && tournament.registrationOpen && (
+                                <Invitations tournamentId={tournament.id} invitations={invitations} onChange={refresh} onError={setError} />
+                            )}
                             {tournament.womenOnly && (
                                 <p className="text-sm font-semibold text-pink-600 bg-pink-50 rounded-lg px-3 py-2">
                                     Women only — only women can sign up{teamBased ? ", and a partner you bring must be a woman too" : ""}.
@@ -195,7 +207,9 @@ export function TournamentSignup({ tournament }: { tournament: TournamentData })
                                     {partnerNameError && <p className="text-xs text-red-500 mt-1.5">{partnerNameError}</p>}
                                     <p className="text-xs text-[#8E8E93] mt-1.5">
                                         {!hasPartner && "Can't find them? Type their full name to add them as a new player. "}
-                                        {hasPartner
+                                        {partnerId
+                                            ? "They get an invitation and join the waiting list with you when they accept — each spot is confirmed once it's paid."
+                                            : partnerName
                                             ? "You'll both go on the waiting list as a team — each spot is confirmed once it's paid."
                                             : "No partner? Sign up alone and you'll be paired up with someone."}
                                     </p>
@@ -373,6 +387,15 @@ function TeamUp({ tournament, me, nameOf, onChange, onError }: {
         );
     }
     if (!me.confirmed) {
+        if (me.partnerRequestId) {
+            return (
+                <div className={`${box} flex flex-col sm:flex-row sm:items-center gap-2`}>
+                    <p className="text-sm text-[#3A3A4E] flex-1">⏳ Invitation sent to <span className="font-bold text-[#1A1A2E]">{nameOf.get(me.partnerRequestId) ?? "your partner"}</span> — they join the list with you when they accept</p>
+                    <button onClick={() => cancel.mutate({ id: tournament.id })} disabled={busy}
+                        className={`${button} self-start border border-[#E5E5EA] bg-white text-[#8E8E93]`}>Cancel invitation</button>
+                </div>
+            );
+        }
         return <p className="text-xs text-[#8E8E93]">Once your spot is confirmed you can team up with someone else on the list.</p>;
     }
 
@@ -422,6 +445,35 @@ function TeamUp({ tournament, me, nameOf, onChange, onError }: {
             {!asked && candidates.length > 0 && (
                 <p className="text-xs text-[#8E8E93]">They have to accept. No partner? You'll be paired up with someone.</p>
             )}
+        </div>
+    );
+}
+
+// Invitations from players who signed up and picked me as their partner: accepting signs me up,
+// paired with them, on the waiting list.
+function Invitations({ tournamentId, invitations, onChange, onError }: {
+    tournamentId: string;
+    invitations: TournamentData["participants"];
+    onChange: () => void;
+    onError: (message: string) => void;
+}) {
+    const answer = trpc.tournament.answerPartnerRequest.useMutation({
+        onSuccess: r => { onChange(); if (r.paired) toast.success("You're signed up as a team — pay to confirm your spot."); },
+        onError: e => onError(e.message),
+    });
+    return (
+        <div className="space-y-2">
+            {invitations.map(p => (
+                <div key={p.playerId} className="flex flex-col sm:flex-row sm:items-center gap-2 rounded-xl border border-[#FF4200]/40 bg-[#FF4200]/5 px-3 py-3">
+                    <p className="text-sm text-[#1A1A2E] flex-1 min-w-0"><span className="font-bold">{p.player.name}</span> invited you to play together</p>
+                    <div className="flex gap-2 shrink-0">
+                        <button onClick={() => answer.mutate({ id: tournamentId, fromPlayerId: p.playerId, accept: true })} disabled={answer.isPending}
+                            className="flex-1 sm:flex-none text-sm font-bold px-4 py-2.5 rounded-xl bg-[#FF4200] text-white hover:bg-[#CC3500] disabled:opacity-50">Accept & sign up</button>
+                        <button onClick={() => answer.mutate({ id: tournamentId, fromPlayerId: p.playerId, accept: false })} disabled={answer.isPending}
+                            className="flex-1 sm:flex-none text-sm font-bold px-4 py-2.5 rounded-xl border border-[#E5E5EA] bg-white text-[#8E8E93] disabled:opacity-50">Decline</button>
+                    </div>
+                </div>
+            ))}
         </div>
     );
 }
