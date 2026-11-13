@@ -48,7 +48,7 @@ function CopyButton({ text }: { text: string }) {
                     setTimeout(() => setCopied(false), 2000);
                 } catch { /* clipboard blocked — the text can still be selected */ }
             }}
-            className="shrink-0 text-xs font-bold px-3 py-2 rounded-lg border border-[#E5E5EA] text-[#3A3A4E] hover:border-[#FF4200] hover:text-[#FF4200] transition-colors"
+            className="shrink-0 text-[11px] font-bold px-2 py-1 rounded-md border border-[#E5E5EA] text-[#3A3A4E] hover:border-[#FF4200] hover:text-[#FF4200] transition-colors"
         >
             {copied ? "Copied ✓" : "Copy"}
         </button>
@@ -56,7 +56,8 @@ function CopyButton({ text }: { text: string }) {
 }
 
 // The "how to pay" box, on every tournament page: the amount to send now (the advance, or
-// else the full price) when there is one, and every account it can go to.
+// else the full price) when there is one, and every account it can go to — kept compact,
+// one short row per account.
 export function PayTo({ accounts, entryFee, advanceFee, tournamentName }: {
     accounts: PaymentAccount[];
     entryFee: number | null;
@@ -66,43 +67,34 @@ export function PayTo({ accounts, entryFee, advanceFee, tournamentName }: {
     const amount = advanceFee ?? entryFee;
     if (accounts.length === 0 || amount === 0) return null; // 0 = free
     return (
-        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 space-y-3">
-            <div>
-                <p className="text-sm font-black text-amber-900">💳 How to pay</p>
-                <p className="text-sm text-amber-800 mt-0.5">
-                    {amount !== null
-                        ? <>Send <b>{amount} lei</b>{advanceFee !== null ? " (the advance)" : ""} to one of these to confirm your spot. </>
-                        : <>Pay the entry fee to one of these. </>}
-                    Write your name and <i>{tournamentName}</i> in the payment details.
-                    {advanceFee !== null && entryFee !== null && entryFee > advanceFee && ` The other ${entryFee - advanceFee} lei are paid on the day.`}
-                </p>
-            </div>
-            {accounts.map(a => {
-                const link = revolutLink(a);
-                return (
-                    <div key={a.id} className="bg-white rounded-xl border border-amber-100 p-3">
-                        <p className="text-sm font-bold text-[#1A1A2E]">{accountTitle(a)}</p>
-                        <p className="text-xs text-[#8E8E93]">{a.accountHolder}</p>
-                        {accountValues(a).map(v => (
-                            <div key={v} className="flex items-center justify-between gap-2 mt-1.5">
-                                <span className="font-mono text-[13px] sm:text-sm text-[#1A1A2E] break-words">{v}</span>
-                                <CopyButton text={v} />
-                            </div>
-                        ))}
-                        {link && (
-                            <a
-                                href={link}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center mt-2 bg-[#1A1A2E] text-white text-xs font-bold px-3 py-2 rounded-lg"
-                            >
-                                Pay with Revolut ↗
-                            </a>
-                        )}
-                        {a.notes && <p className="text-xs text-[#8E8E93] mt-1.5">{a.notes}</p>}
-                    </div>
-                );
-            })}
+        <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5">
+            <p className="text-xs text-amber-900">
+                <span className="font-black">💳 How to pay:</span>{" "}
+                {amount !== null ? <>send <b>{amount} lei</b> to one of these</> : <>pay to one of these</>}, with your name and <i>{tournamentName}</i> in the details.
+            </p>
+            <ul className="mt-1.5 divide-y divide-amber-100 bg-white rounded-lg border border-amber-100">
+                {accounts.map(a => {
+                    const link = revolutLink(a);
+                    return (
+                        <li key={a.id} className="px-2.5 py-1.5">
+                            <p className="text-xs text-[#8E8E93] truncate">
+                                <span className="font-bold text-[#1A1A2E]">{accountTitle(a)}</span> · {a.accountHolder}
+                                {a.notes && <> · {a.notes}</>}
+                            </p>
+                            {accountValues(a).map(v => (
+                                <div key={v} className="flex items-center justify-between gap-2">
+                                    {link && v === a.paymentHandle ? (
+                                        <a href={link} target="_blank" rel="noopener noreferrer" className="font-mono text-xs text-[#FF4200] font-semibold [overflow-wrap:anywhere]">{v} ↗</a>
+                                    ) : (
+                                        <span className="font-mono text-xs text-[#1A1A2E] [overflow-wrap:anywhere]">{v}</span>
+                                    )}
+                                    <CopyButton text={v} />
+                                </div>
+                            ))}
+                        </li>
+                    );
+                })}
+            </ul>
         </div>
     );
 }
