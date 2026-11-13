@@ -1,8 +1,9 @@
-import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { trpc } from "../../trpc";
-import { useRankingSystem, type RankingSystem } from "../../lib/ranking";
+import { trpc } from "../../../../trpc";
+import { useRankingSystem, type RankingSystem } from "../../../../lib/ranking";
 import { RankingCoefficientsEditor } from "./RankingCoefficientsEditor";
+import { SaveMessage } from "./SaveMessage";
+import { useFlashMessage } from "./useFlashMessage";
 
 const OPTIONS: { system: RankingSystem; title: string; description: string }[] = [
     {
@@ -22,7 +23,7 @@ const OPTIONS: { system: RankingSystem; title: string; description: string }[] =
 export function RankingSystemSettings() {
     const qc = useQueryClient();
     const { system } = useRankingSystem();
-    const [eloMsg, setEloMsg] = useState("");
+    const { message: eloMessage, flash: flashElo, fail: failElo } = useFlashMessage(4000);
 
     const setSystem = trpc.ranking.setSystem.useMutation({
         // Every ranking on the site changes, so refetch everything.
@@ -31,10 +32,9 @@ export function RankingSystemSettings() {
     const recalcElo = trpc.player.recalculateElo.useMutation({
         onSuccess: () => {
             qc.invalidateQueries();
-            setEloMsg("ELO recalculated successfully.");
-            setTimeout(() => setEloMsg(""), 4000);
+            flashElo("ELO recalculated successfully.");
         },
-        onError: (e) => setEloMsg(`Error: ${e.message}`),
+        onError: failElo,
     });
 
     function choose(next: RankingSystem) {
@@ -87,7 +87,7 @@ export function RankingSystemSettings() {
                         </svg>
                         {recalcElo.isPending ? "Recalculating…" : "Recalculate ELO"}
                     </button>
-                    {eloMsg && <p className={`text-sm self-center ${eloMsg.startsWith("Error") ? "text-red-500" : "text-green-600"}`}>{eloMsg}</p>}
+                    <SaveMessage message={eloMessage} className="self-center" />
                 </div>
                 <p className="text-xs text-gray-400">Resets all ELO ratings to 1000 and replays every completed tournament in chronological order (plus the friendly matches recorded before that feature was removed).</p>
             </div>

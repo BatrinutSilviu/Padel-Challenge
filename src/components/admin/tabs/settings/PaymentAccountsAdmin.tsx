@@ -1,13 +1,12 @@
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { getQueryKey } from "@trpc/react-query";
-import { trpc } from "../../trpc";
-import { PAYMENT_TYPE_LABELS, accountTitle, accountValue, type PaymentAccount } from "../PaymentAccounts";
+import { trpc } from "../../../../trpc";
+import { field } from "../../formStyles";
+import { PAYMENT_TYPE_LABELS, accountTitle, accountValue, type PaymentAccount } from "../../../PaymentAccounts";
 
 // Admin: the accounts players can pay into. Each tournament shows the ones picked for
 // it (in its time, place, price & prizes card), or every active one.
-
-const field = "border border-gray-300 rounded-lg px-3 py-2 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-[#FF4200] bg-white w-full";
 
 type Draft = { type: string; bankName: string; accountHolder: string; iban: string; paymentHandle: string; notes: string };
 const EMPTY: Draft = { type: "bank", bankName: "", accountHolder: "", iban: "", paymentHandle: "", notes: "" };

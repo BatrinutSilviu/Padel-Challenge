@@ -2,8 +2,8 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { getQueryKey } from "@trpc/react-query";
-import { trpc } from "../../trpc";
-import { divisionLabel } from "../../lib/divisions";
+import { trpc } from "../../../../trpc";
+import { divisionLabel } from "../../../../lib/divisions";
 
 // Players asking to link their new account to a profile an admin created. Approving
 // links the profile (and its history) to the account at once; rejecting lets them pick

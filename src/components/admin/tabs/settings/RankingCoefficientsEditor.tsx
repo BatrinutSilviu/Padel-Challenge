@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { getQueryKey } from "@trpc/react-query";
-import { trpc } from "../../trpc";
-import { divisionLabel } from "../../lib/divisions";
-import { TOURNAMENT_TYPE_LABELS, type TournamentType } from "../../lib/tournaments";
-import { tierLabel } from "../../lib/league";
+import { trpc } from "../../../../trpc";
+import { divisionLabel } from "../../../../lib/divisions";
+import { TOURNAMENT_TYPE_LABELS, type TournamentType } from "../../../../lib/tournaments";
+import { tierLabel } from "../../../../lib/league";
+import { SaveMessage } from "./SaveMessage";
+import { useFlashMessage } from "./useFlashMessage";
 
 const TYPE_ORDER = ["AMERICANO", "TEAM_AMERICANO", "KING_OF_THE_COURT", "AMERICANO_CHAMPIONS", "CHALLENGER", "MASTERS"];
 
@@ -14,7 +16,7 @@ export function RankingCoefficientsEditor() {
     const qc = useQueryClient();
     const { data } = trpc.ranking.coefficients.useQuery();
     const [values, setValues] = useState<Record<string, string>>({});
-    const [msg, setMsg] = useState("");
+    const { message, flash, fail } = useFlashMessage(4000);
 
     const rows: { key: string; label: string; group: string; current: number; def: number }[] = data ? [
         ...TYPE_ORDER.map(t => ({ key: `type:${t}`, label: TOURNAMENT_TYPE_LABELS[t as TournamentType] ?? t, group: "Tournament type", current: data.current.type[t], def: data.defaults.type[t] })),
@@ -33,10 +35,9 @@ export function RankingCoefficientsEditor() {
             qc.invalidateQueries({ queryKey: getQueryKey(trpc.ranking.coefficients) });
             qc.invalidateQueries({ queryKey: getQueryKey(trpc.player) });
             qc.invalidateQueries({ queryKey: getQueryKey(trpc.division) });
-            setMsg("Saved — everyone's ranking points are updated.");
-            setTimeout(() => setMsg(""), 4000);
+            flash("Saved — everyone's ranking points are updated.");
         },
-        onError: e => setMsg(`Error: ${e.message}`),
+        onError: fail,
     });
 
     const changed = rows.filter(r => values[r.key] !== undefined && Number(values[r.key]) !== r.current);
@@ -94,7 +95,7 @@ export function RankingCoefficientsEditor() {
                 >
                     Reset to defaults
                 </button>
-                {msg && <p className={`text-sm ${msg.startsWith("Error") ? "text-red-500" : "text-green-600"}`}>{msg}</p>}
+                <SaveMessage message={message} />
             </div>
             <p className="text-xs text-gray-400">An orange box differs from the default (hover to see it).</p>
         </div>

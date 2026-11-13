@@ -3,12 +3,13 @@ import { useQueryClient } from "@tanstack/react-query";
 import { getQueryKey } from "@trpc/react-query";
 import { trpc } from "../../trpc";
 import { FeeInputs } from "./FeeInputs";
+import { field as baseField } from "./formStyles";
 import { accountTitle } from "../PaymentAccounts";
 import { MAX_PRIZES, USUAL_LOCATIONS, prizeList, timeRangeLabel } from "../../lib/tournaments";
 import { detailsError, detailsInput, detailsText, newPrize, type DetailsText, type PrizeText, type StoredDetails } from "../../lib/tournamentDetails";
 
-// 16px on phones: iOS zooms the page into any smaller input on focus.
-const field = "border border-gray-300 rounded-lg px-3 py-2 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-[#FF4200] bg-white w-full disabled:opacity-50";
+// These inputs are also shown read-only (disabled) once a tournament is under way.
+const field = `${baseField} disabled:opacity-50`;
 
 export function TimeInputs({ value, onChange, disabled }: {
     value: DetailsText;

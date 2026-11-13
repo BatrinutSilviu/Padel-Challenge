@@ -3,6 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { trpc } from "../../trpc";
 import { divisionLabel } from "../../lib/divisions";
 import { TOURNAMENT_TYPE_LABELS, capacityOptions, challengerFormatOf, type TournamentType } from "../../lib/tournaments";
+import { field } from "./formStyles";
 
 // The admin's card for changing a tournament's setup after it's been created — the same
 // choices as the create form (backend tournament.updateSettings):
@@ -29,7 +30,6 @@ type SettingsTournament = {
     rounds?: { matches: { team1Score: number; team2Score: number }[] }[];
 };
 
-const field = "border border-gray-300 rounded-lg px-3 py-2 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-[#FF4200] bg-white w-full";
 const chip = (active: boolean) => `px-3 py-2 rounded-lg text-sm font-medium border transition-colors ${
     active ? "bg-[#FF4200] text-white border-[#FF4200]" : "border-gray-300 text-gray-600 hover:border-[#FF4200]"
 }`;
