@@ -151,10 +151,12 @@ export function TournamentChat({ tournamentId, tournamentName }: { tournamentId:
     return (
         <section id="chat" className="bg-white rounded-2xl border border-[#E5E5EA] shadow-sm overflow-hidden scroll-mt-20">
             <div className="px-4 sm:px-5 py-3 border-b border-[#F5F5F7] flex items-baseline justify-between gap-3">
-                <p className="text-sm font-black text-[#1A1A2E]">💬 Tournament chat</p>
-                <p className="text-xs text-[#8E8E93] text-right">
-                    {!data.open ? "Closed" : closes ? `Open until ${dayLabel(closes).toLowerCase()} ${timeLabel(closes)}` : "Players & organisers"}
-                </p>
+                <p className="text-sm font-black text-[#1A1A2E] whitespace-nowrap">💬 Tournament chat</p>
+                {(!data.open || closes) && (
+                    <p className="text-xs text-[#8E8E93] text-right">
+                        {!data.open ? "Closed" : `Open until ${dayLabel(closes!).toLowerCase()} ${timeLabel(closes!)}`}
+                    </p>
+                )}
             </div>
 
             <div

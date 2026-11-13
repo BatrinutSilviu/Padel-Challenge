@@ -4,7 +4,8 @@ import { BrowserRouter } from "react-router-dom";
 import "./index.css";
 import App from "./App";
 import { QueryClient, QueryClientProvider, MutationCache, QueryCache } from '@tanstack/react-query';
-import { trpc, trpcClient } from './trpc';
+import { isConnectionError, trpc, trpcClient } from './trpc';
+import { ConnectionBanner } from './components/ConnectionBanner';
 import { AuthProvider } from './contexts/AuthContext';
 import { Toaster } from './components/ui/sonner';
 
@@ -43,6 +44,18 @@ const queryClient = new QueryClient({
         queries: {
             retry: (failureCount, error) => (error as any)?.data?.code !== 'UNAUTHORIZED' && failureCount < 3,
         },
+        // Offline, changes wait (the button keeps saying "Saving…") and go out once the
+        // connection is back — React Query's "online" network mode. When the proxy answers
+        // 502/503/504 the backend never saw the request (it's restarting for a deploy), so
+        // it's safe to send again; any other failure is shown, not repeated, so nothing is
+        // ever done twice.
+        mutations: {
+            retry: (failureCount, error) => {
+                const status = (error as any)?.meta?.response?.status;
+                return isConnectionError(error) && [502, 503, 504].includes(status) && failureCount < 4;
+            },
+            retryDelay: attempt => Math.min(1000 * 2 ** attempt, 8000),
+        },
     },
     queryCache: new QueryCache({
         onError(error, query) {
@@ -68,6 +81,7 @@ createRoot(document.getElementById('root')!).render(
             <trpc.Provider client={trpcClient} queryClient={queryClient}>
                 <QueryClientProvider client={queryClient}>
                     <AuthProvider>
+                        <ConnectionBanner />
                         <App />
                         <Toaster />
                     </AuthProvider>

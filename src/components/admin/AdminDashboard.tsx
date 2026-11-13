@@ -276,7 +276,7 @@ function TournamentsTab() {
                                 <TournamentNameEditor id={t.id} name={t.name} />
                                 <span className="text-xs text-gray-400 block">{divisionLabel(t.division)} · {tournamentWhen(t)} · {TOURNAMENT_TYPE_LABELS[t.type as TournamentType] ?? t.type}</span>
                             </div>
-                            <div className="flex items-center gap-2 self-start sm:self-auto shrink-0">
+                            <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto sm:shrink-0">
                                 <StatusBadge status={t.status} />
                                 <Link
                                     to={`/admin/tournament/${t.id}`}

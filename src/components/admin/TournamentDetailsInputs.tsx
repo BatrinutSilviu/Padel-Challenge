@@ -16,14 +16,14 @@ export function TimeInputs({ value, onChange, disabled }: {
     disabled?: boolean;
 }) {
     const time = (key: "startTime" | "endTime", label: string) => (
-        <label className="flex-1 sm:flex-none">
+        <label className="flex-1 min-w-0 sm:flex-none">
             <span className="block text-xs font-medium text-gray-500 mb-1">{label}</span>
             <input
                 type="time"
                 value={value[key]}
                 onChange={e => onChange({ ...value, [key]: e.target.value })}
                 disabled={disabled}
-                className={`${field} sm:w-32`}
+                className={`${field} min-w-0 !px-2 sm:!px-3 sm:w-32`}
             />
         </label>
     );
