@@ -9,6 +9,9 @@ import { AdminScoreEntry } from "./components/admin/scoreEntry/AdminScoreEntry";
 import { BadgesPage } from "./components/BadgesPage";
 import { LoginPage } from "./components/auth/LoginPage";
 import { SignupPage } from "./components/auth/SignupPage";
+import { ConfirmEmailPage } from "./components/auth/ConfirmEmailPage";
+import { ForgotPasswordPage } from "./components/auth/ForgotPasswordPage";
+import { ResetPasswordPage } from "./components/auth/ResetPasswordPage";
 import { ChooseProfilePage } from "./components/auth/AccountStatus";
 import { RequireAuth } from "./components/auth/RequireAuth";
 import { LatestLiveBoard, MastersLiveBoard } from "./components/masters/MastersLiveBoard";
@@ -31,6 +34,9 @@ export default function App() {
             <Route path="/privacy" element={<PrivacyPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/signup" element={<SignupPage />} />
+            <Route path="/confirm-email" element={<ConfirmEmailPage />} />
+            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
             <Route path="/admin" element={<AdminPage />} />
             <Route path="/admin/tournament/:id" element={<AdminScoreEntry />} />
             <Route path="/admin/league/:id" element={<AdminLeaguePage />} />

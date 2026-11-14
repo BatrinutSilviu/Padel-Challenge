@@ -8,16 +8,19 @@ import { ProfileStep } from "./ProfileStep";
 import { identityInput, type Identity } from "./identity";
 import { PrivacyConsent } from "../PrivacyPage";
 import { GoogleSignInButton, type GoogleSignup } from "./GoogleSignInButton";
+import { CheckInbox } from "./emailLinks";
+import { safeRedirect } from "./authHelpers";
 
 // Creating an account: pick (or create) your player profile, then either an email and
 // password, or — arriving here from "Continue with Google" without an account — just
 // confirm. Claiming an existing profile creates the account straight away, but an admin
-// has to approve the claim before it plays as that player.
+// has to approve the claim before it plays as that player. An email-and-password account
+// first has to open the link we email it; that link then logs it in and goes on to `redirect`.
 export function SignupPage() {
     const navigate = useNavigate();
     const location = useLocation();
     const [searchParams] = useSearchParams();
-    const redirect = searchParams.get("redirect");
+    const redirect = safeRedirect(searchParams.get("redirect"));
     const { login } = useAuth();
     const google = (location.state as { google?: GoogleSignup } | null)?.google ?? null;
 
@@ -27,6 +30,8 @@ export function SignupPage() {
     const [confirmPassword, setConfirmPassword] = useState("");
     const [error, setError] = useState("");
     const [acceptPrivacy, setAcceptPrivacy] = useState(false);
+    // Signed up with email and password: waiting for the confirmation link to be opened.
+    const [awaitingEmail, setAwaitingEmail] = useState<string | null>(null);
 
     function onCreated(data: { token: string; pendingApproval: boolean }) {
         login(data.token);
@@ -34,7 +39,7 @@ export function SignupPage() {
         navigate(redirect ?? "/");
     }
 
-    const signup = trpc.auth.signup.useMutation({ onSuccess: onCreated, onError: (e) => setError(e.message) });
+    const signup = trpc.auth.signup.useMutation({ onSuccess: (data) => setAwaitingEmail(data.email), onError: (e) => setError(e.message) });
     const googleSignup = trpc.auth.googleSignup.useMutation({ onSuccess: onCreated, onError: (e) => setError(e.message) });
     const pending = signup.isPending || googleSignup.isPending;
 
@@ -50,7 +55,7 @@ export function SignupPage() {
         if (google) {
             googleSignup.mutate({ signupToken: google.signupToken, player: identityInput(identity), acceptPrivacy: true });
         } else {
-            signup.mutate({ email, password, player: identityInput(identity), acceptPrivacy: true });
+            signup.mutate({ email, password, player: identityInput(identity), acceptPrivacy: true, redirect: redirect ?? undefined });
         }
     }
 
@@ -67,7 +72,7 @@ export function SignupPage() {
             <div className="flex items-center justify-center min-h-[calc(100vh-64px)] px-4 py-8">
                 <div className="bg-white rounded-2xl border border-[#E5E5EA] p-8 w-full max-w-md space-y-5 shadow-sm">
                     <div>
-                        <h1 className="text-xl font-black text-[#1A1A2E]">Create an account</h1>
+                        <h1 className="text-xl font-black text-[#1A1A2E]">{awaitingEmail ? "Check your inbox" : "Create an account"}</h1>
                         {google && (
                             <p className="text-sm text-gray-500 mt-1">
                                 Signing up with Google as <span className="font-semibold text-gray-700">{google.email}</span>
@@ -77,7 +82,9 @@ export function SignupPage() {
 
                     {!google && !identity && <GoogleSignInButton redirect={redirect} />}
 
-                    {!identity ? (
+                    {awaitingEmail ? (
+                        <CheckInbox email={awaitingEmail} redirect={redirect} />
+                    ) : !identity ? (
                         <ProfileStep initialName={google?.name ?? ""} onChoose={setIdentity} />
                     ) : (
                         <form onSubmit={handleSubmit} className="space-y-5">

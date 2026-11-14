@@ -5,6 +5,8 @@ import { NavBar } from "../NavBar";
 import { trpc } from "../../trpc";
 import { useAuth } from "../../contexts/useAuth";
 import { GoogleSignInButton } from "./GoogleSignInButton";
+import { ResendConfirmationButton } from "./emailLinks";
+import { errorReason, safeRedirect } from "./authHelpers";
 
 export function LoginPage() {
     const navigate = useNavigate();
@@ -14,19 +16,25 @@ export function LoginPage() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
+    // The password was right but the email isn't confirmed yet: offer to send the link again.
+    const [unconfirmed, setUnconfirmed] = useState(false);
 
     const userLogin = trpc.auth.userLogin.useMutation({
         onSuccess: (data) => {
             login(data.token);
             toast.success("Welcome back!");
-            navigate(searchParams.get("redirect") ?? "/");
+            navigate(safeRedirect(searchParams.get("redirect")) ?? "/");
         },
-        onError: (e) => setError(e.message || "Invalid email or password"),
+        onError: (e) => {
+            setUnconfirmed(errorReason(e) === "EMAIL_NOT_VERIFIED");
+            setError(e.message || "Invalid email or password");
+        },
     });
 
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
         setError("");
+        setUnconfirmed(false);
         userLogin.mutate({ email, password });
     }
 
@@ -52,7 +60,15 @@ export function LoginPage() {
                         />
                     </div>
                     <div className="space-y-1">
-                        <label className="text-sm font-medium text-gray-700">Password</label>
+                        <div className="flex items-baseline justify-between">
+                            <label className="text-sm font-medium text-gray-700">Password</label>
+                            <Link
+                                to={email ? `/forgot-password?email=${encodeURIComponent(email)}` : "/forgot-password"}
+                                className="text-xs font-semibold text-[#FF4200] hover:underline"
+                            >
+                                Forgot password?
+                            </Link>
+                        </div>
                         <input
                             type="password"
                             value={password}
@@ -62,6 +78,7 @@ export function LoginPage() {
                         />
                     </div>
                     {error && <p className="text-sm text-red-500">{error}</p>}
+                    {unconfirmed && <ResendConfirmationButton email={email} redirect={safeRedirect(searchParams.get("redirect"))} />}
                     <button
                         type="submit"
                         disabled={userLogin.isPending}
