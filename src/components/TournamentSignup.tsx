@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { trpc } from "../trpc";
 import { useAuth } from "../contexts/useAuth";
-import { isTeamBasedType, type TournamentData } from "../lib/tournaments";
+import { bySignupTime, isTeamBasedType, signedUpAt, type TournamentData } from "../lib/tournaments";
 import { HowItWorks, PrizeList } from "./TournamentDetails";
 import { AccountStatusNotice } from "./auth/AccountStatus";
 import { toast } from "sonner";
@@ -49,8 +49,9 @@ export function TournamentSignup({ tournament }: { tournament: TournamentData })
     });
     const leave = trpc.tournament.leave.useMutation({ onSuccess: refresh, onError: e => setError(e.message) });
 
-    const confirmed = tournament.participants.filter(p => p.confirmed);
-    const waiting = tournament.participants.filter(p => !p.confirmed);
+    // First-come-first-served: both lists in sign-up order, oldest first.
+    const confirmed = tournament.participants.filter(p => p.confirmed).sort(bySignupTime);
+    const waiting = tournament.participants.filter(p => !p.confirmed).sort(bySignupTime);
     const taken = confirmed.length;
     const capacity = tournament.maxPlayers;
     const spotsLeft = capacity === null ? null : Math.max(0, capacity - taken);
@@ -325,9 +326,10 @@ function PlayerList({ title, players, playerId, nameOf, openSpots }: {
                                         <span className="text-xs font-bold text-[#FF4200] bg-[#FF4200]/10 px-2 py-0.5 rounded-full shrink-0">You</span>
                                     )}
                                 </div>
-                                {p.partnerId && nameOf.has(p.partnerId) && (
-                                    <p className="text-xs text-[#8E8E93] truncate">with {nameOf.get(p.partnerId)}</p>
-                                )}
+                                <p className="text-xs text-[#8E8E93] truncate">
+                                    {p.partnerId && nameOf.has(p.partnerId) && <>with {nameOf.get(p.partnerId)} · </>}
+                                    <span className="tabular-nums" title="Signed up">{signedUpAt(p.registeredAt)}</span>
+                                </p>
                             </div>
                         </li>
                     ))}

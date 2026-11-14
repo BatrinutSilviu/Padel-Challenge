@@ -110,6 +110,16 @@ export function tournamentWhen(
     return [date, timeRangeLabel(t), t.location].filter(Boolean).join(" · ");
 }
 
+// Sign-up sheets list players first-come-first-served.
+export function bySignupTime(a: { registeredAt: string | Date }, b: { registeredAt: string | Date }): number {
+    return new Date(a.registeredAt).getTime() - new Date(b.registeredAt).getTime();
+}
+
+// When a player signed up, e.g. "14 Nov, 18:32" (the viewer's local time).
+export function signedUpAt(registeredAt: string | Date): string {
+    return new Date(registeredAt).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+}
+
 // Clubs we usually play at, offered as suggestions when typing a location.
 export const USUAL_LOCATIONS = ["X3 Padel", "Active Arena"];
 

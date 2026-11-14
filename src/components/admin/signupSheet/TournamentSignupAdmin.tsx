@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { NavBar } from "../../NavBar";
 import { trpc } from "../../../trpc";
 import { divisionLabel } from "../../../lib/divisions";
-import { capacityOptions, challengerFormatOf, playerCountError, tournamentTypeLabel, tournamentWhen, type TournamentData } from "../../../lib/tournaments";
+import { bySignupTime, capacityOptions, challengerFormatOf, signedUpAt, playerCountError, tournamentTypeLabel, tournamentWhen, type TournamentData } from "../../../lib/tournaments";
 import { PlayerPicker } from "../../PlayerPicker";
 import { mastersFormatOf } from "../../../lib/masters";
 import { MastersFormatPicker } from "../MastersFormatPicker";
@@ -24,8 +24,10 @@ export function TournamentSignupAdmin({ tournament }: { tournament: TournamentDa
 
     const allPlayersQuery = trpc.division.allPlayers.useQuery();
     const allocation = useTeamAllocation(tournament);
-    const { registered, byPlayerId, teamBased, numTeams, teamSlots, teamsComplete } = allocation;
-    const waiting = tournament.participants.filter(p => !p.confirmed);
+    const { byPlayerId, teamBased, numTeams, teamSlots, teamsComplete } = allocation;
+    // Both lists in sign-up order, oldest first.
+    const registered = [...allocation.registered].sort(bySignupTime);
+    const waiting = tournament.participants.filter(p => !p.confirmed).sort(bySignupTime);
     const allSignedUpIds = tournament.participants.map(p => p.playerId);
 
     function refresh() {
@@ -66,11 +68,10 @@ export function TournamentSignupAdmin({ tournament }: { tournament: TournamentDa
         return (
             <div className="flex-1 min-w-0">
                 <p className="text-sm text-gray-800 truncate">{p.player.name}</p>
-                {partner && (
-                    <p className="text-xs text-gray-400 truncate">
-                        with {partner.player.name}{!partner.confirmed && p.confirmed && " (waiting)"}
-                    </p>
-                )}
+                <p className="text-xs text-gray-400 truncate">
+                    {partner && <>with {partner.player.name}{!partner.confirmed && p.confirmed && " (waiting)"} · </>}
+                    <span className="tabular-nums" title="Signed up">{signedUpAt(p.registeredAt)}</span>
+                </p>
             </div>
         );
     };
