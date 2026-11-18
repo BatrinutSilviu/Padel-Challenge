@@ -7,6 +7,7 @@ import { RankingBreakdown } from "./RankingPointsInfo";
 import { useRankingSystem } from "../lib/ranking";
 import { formatCoefficient } from "../lib/levels";
 import { RecommendedLevel } from "./RecommendedLevel";
+import { PlayerStats } from "./player/PlayerStats";
 import { divisionLabel } from "../lib/divisions";
 
 export function PlayerPage() {
@@ -32,6 +33,7 @@ export function PlayerPage() {
         : allPlayers ? allPlayers.filter(p => scoreOf(p) > score).length + 1 : null;
 
     const initials = player.name.split(" ").map(w => w[0]).slice(0, 2).join("").toUpperCase();
+    const partnerName = (id: string) => allPlayers?.find(p => p.id === id)?.name;
 
     return (
         <div className="min-h-screen bg-canvas">
@@ -96,6 +98,8 @@ export function PlayerPage() {
                     </p>
                 </div>
 
+                <PlayerStats playerId={player.id} awards={isPoints ? player.rankingAwards : null} />
+
                 {player.badges.length > 0 && (
                     <section>
                         <h2 className="font-display text-sm font-semibold uppercase tracking-[0.12em] text-muted mb-3">Achievements</h2>
@@ -141,6 +145,9 @@ export function PlayerPage() {
                                             <Link to={`/tournament/${p.tournament.id}`} className="text-[#FF4200] hover:underline font-bold">
                                                 {p.tournament.name}
                                             </Link>
+                                            {p.partnerId && partnerName(p.partnerId) && (
+                                                <span className="block text-xs text-muted">with {partnerName(p.partnerId)}</span>
+                                            )}
                                         </td>
                                         <td className="px-4 py-3 text-muted hidden sm:table-cell">
                                             {new Date(p.tournament.date).toLocaleDateString()}

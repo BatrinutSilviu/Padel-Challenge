@@ -37,6 +37,17 @@ export function RankingSystemSettings() {
         onError: failElo,
     });
 
+    const { message: movesMessage, flash: flashMoves, fail: failMoves } = useFlashMessage(12000);
+    const applyMoves = trpc.player.recalculateDivisions.useMutation({
+        onSuccess: r => {
+            qc.invalidateQueries();
+            flashMoves(r.promoted.length + r.relegated.length === 0
+                ? "Nobody to move."
+                : `Moved up: ${r.promoted.map(m => m.name).join(", ") || "nobody"}. Moved down: ${r.relegated.map(m => m.name).join(", ") || "nobody"}.`);
+        },
+        onError: failMoves,
+    });
+
     function choose(next: RankingSystem) {
         if (next === system || setSystem.isPending) return;
         const label = OPTIONS.find(o => o.system === next)!.title;
@@ -89,7 +100,25 @@ export function RankingSystemSettings() {
                     </button>
                     <SaveMessage message={eloMessage} className="self-center" />
                 </div>
-                <p className="text-xs text-gray-400">Resets all ELO ratings to 1000 and replays every completed tournament in chronological order (plus the friendly matches recorded before that feature was removed).</p>
+                <p className="text-xs text-gray-400">Resets all ELO ratings to 1000 and replays every completed tournament in chronological order (plus the friendly matches recorded before that feature was removed). The level coefficients are replayed too.</p>
+
+                <div className="flex flex-col sm:flex-row gap-3 items-start pt-2 border-t border-gray-100">
+                    <button
+                        onClick={() => {
+                            if (!confirm("Apply promotion and relegation now? The players marked ▲/▼ move a level up or down.")) return;
+                            applyMoves.mutate();
+                        }}
+                        disabled={applyMoves.isPending}
+                        className="px-4 py-2 rounded-lg text-sm font-medium border border-gray-300 text-ink hover:border-gray-400 disabled:opacity-50 transition-colors"
+                    >
+                        {applyMoves.isPending ? "Moving…" : "Apply promotion & relegation"}
+                    </button>
+                    <SaveMessage message={movesMessage} className="self-center" />
+                </div>
+                <p className="text-xs text-gray-400">
+                    In each level, the top and bottom 10% by level coefficient (plus 0.12 for every podium in the last 12 months; only players with 10+ rated matches)
+                    are marked ▲/▼ on the site. They move only when you apply it here — e.g. once a month.
+                </p>
             </div>
             {/* Levels apply whichever system ranks players — they decide who may sign up. */}
             <LevelsPointsEditor />

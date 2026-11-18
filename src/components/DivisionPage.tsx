@@ -17,7 +17,7 @@ export function DivisionPage() {
 
     const standings = trpc.division.standings.useQuery({ division });
     const tournaments = trpc.tournament.list.useQuery({ division });
-    const { scoreOf, name: rankingName } = useRankingSystem();
+    const { scoreOf } = useRankingSystem();
     const describe = useDivisionDescriptions();
 
     if (isNaN(division) || division < 1 || division > 7) {
@@ -72,8 +72,8 @@ export function DivisionPage() {
                         })()}
                     </div>
                     <div className="text-xs text-muted mt-2 space-y-0.5">
-                        <p>▲ Recommended to move up a level — the top 15% by {rankingName} of this level's players.</p>
-                        <p>▼ Recommended to move down a level — the bottom 15% by {rankingName} of this level's players.</p>
+                        <p>▲ Recommended to move up a level — the top 10% of this level by level coefficient (+0.12 per podium in the last 12 months).</p>
+                        <p>▼ Recommended to move down a level — the bottom 10%. Only players with 10+ rated matches move; the moves are applied periodically.</p>
                     </div>
                 </section>
 

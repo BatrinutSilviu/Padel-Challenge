@@ -1,7 +1,7 @@
 import { divisionLabel } from "../lib/divisions";
 
 // Where the ranking says a player should play next, when it isn't their current level:
-// ▲ Level 3 (top 15% of their level) or ▼ Level 5 (bottom 15%). The backend works it out
+// ▲ Level 3 (top 10% of their level by coefficient) or ▼ Level 5 (bottom 10%). The backend works it out
 // once (lib/divisionMoves) and every page shows the same thing.
 export function RecommendedLevel({ division, recommended, compact = false }: {
     division: number;

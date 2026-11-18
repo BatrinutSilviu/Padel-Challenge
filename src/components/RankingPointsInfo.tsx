@@ -156,6 +156,7 @@ export function RankingBreakdown({ awards, byLevel, total, currentDivision }: {
                                     <p className="text-sm font-semibold text-ink truncate">{a.name}</p>
                                     <p className="text-xs text-muted">
                                         {new Date(a.date).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+                                        {" · expires "}{new Date(new Date(a.date).getTime() + 365 * 86_400_000).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
                                         {" · "}#{a.place} of {a.kind === "LEAGUE" ? `group ${a.groupName} (${a.fieldSize / 2} teams)` : `${a.fieldSize} players`}
                                         {" · "}{a.kind === "LEAGUE" ? tierLabel(a.tierLevel!) : `${divisionLabel(a.division!)} · ${POINTS_FORMAT_LABELS[a.format] ?? a.format}`}
                                     </p>
