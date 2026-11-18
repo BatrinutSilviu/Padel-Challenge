@@ -77,9 +77,6 @@ export function PlayerPage() {
                             <Stat label="Tournaments" value={completedResults.length} />
                         )}
                         {completedResults.length > 0 && (
-                            <Stat label="Avg Points" value={Math.round(completedResults.reduce((s, p) => s + p.totalPoints, 0) / completedResults.length)} />
-                        )}
-                        {completedResults.length > 0 && (
                             <Stat label="Total Pts" value={completedResults.reduce((s, p) => s + p.totalPoints, 0)} />
                         )}
                         {completedResults.length > 0 && (

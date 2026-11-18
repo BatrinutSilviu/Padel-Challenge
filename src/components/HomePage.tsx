@@ -280,12 +280,6 @@ function PlayersTab() {
                                         </div>
 
                                         <div className="flex items-center gap-3 shrink-0">
-                                            {player.avgPoints > 0 && (
-                                                <div className="text-right hidden sm:block">
-                                                    <span className="text-sm font-bold text-[#8E8E93]">{player.avgPoints}</span>
-                                                    <span className="text-xs text-[#8E8E93] ml-1">avg</span>
-                                                </div>
-                                            )}
                                             <div className="text-right">
                                                 <span className="text-sm font-black text-[#FF4200]">{scoreOf(player)}</span>
                                                 <span className="text-xs text-[#8E8E93] ml-1">{unit}</span>

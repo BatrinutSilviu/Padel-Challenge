@@ -57,10 +57,6 @@ export function DivisionPage() {
                                 scoreOf(b) - scoreOf(a) || a.name.localeCompare(b.name);
                             const sorted = (standings.data ?? []).slice().sort(byPoints);
                             return sorted.map((player, i) => {
-                                const total = player.participations.reduce((s, p) => s + p.totalPoints, 0);
-                                const avg = player.participations.length > 0
-                                    ? Math.round(total / player.participations.length)
-                                    : 0;
                                 const prev = sorted[i - 1];
                                 const rank = prev && scoreOf(prev) === scoreOf(player) ? sorted.findIndex(p => scoreOf(p) === scoreOf(player)) + 1 : i + 1;
                                 return (
@@ -69,7 +65,6 @@ export function DivisionPage() {
                                         player={player}
                                         rank={rank}
                                         division={division}
-                                        avg={avg}
                                     />
                                 );
                             });
@@ -99,11 +94,10 @@ export function DivisionPage() {
 
 type PlayerEntry = RouterOutputs["division"]["standings"][number];
 
-function PlayerRow({ player, rank, division, avg }: {
+function PlayerRow({ player, rank, division }: {
     player: PlayerEntry;
     rank: number;
     division: number;
-    avg: number;
 }) {
     const [expanded, setExpanded] = useState(false);
     const { scoreOf, unit } = useRankingSystem();
@@ -152,10 +146,6 @@ function PlayerRow({ player, rank, division, avg }: {
                     <div className="hidden sm:flex gap-1 flex-wrap">
                         {player.participations.map(p => <RankBadge key={p.id} rank={p.finalRank} />)}
                     </div>
-                    <div className="hidden sm:block text-right">
-                        <span className="text-sm font-bold text-[#8E8E93]">{avg}</span>
-                        <span className="text-xs text-[#8E8E93] ml-1">avg</span>
-                    </div>
                     {player.level.coefficient !== null && (
                         <div className="text-right" title={`Level coefficient${player.level.provisional ? " (provisional — still settling)" : ""}`}>
                             <span className="text-sm font-bold text-[#333366] tabular-nums">{formatCoefficient(player.level.coefficient)}{player.level.provisional && "*"}</span>
@@ -189,8 +179,6 @@ function PlayerRow({ player, rank, division, avg }: {
                                     Div {division + 1}
                                 </span>
                             )}
-                            <span className="text-sm font-bold text-[#8E8E93]">{avg}</span>
-                            <span className="text-xs text-[#8E8E93]">avg</span>
                         </div>
                     </div>
                     <Link
