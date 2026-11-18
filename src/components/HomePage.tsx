@@ -12,6 +12,7 @@ import { BADGE_META, BadgeType } from "../lib/badges";
 import { RankingPointsInfo } from "./RankingPointsInfo";
 import { TournamentCard } from "./TournamentCard";
 import { SupportContact } from "./SupportContact";
+import { RecommendedLevel } from "./RecommendedLevel";
 import { useRankingSystem } from "../lib/ranking";
 
 type Tab = "divisions" | "players" | "tournaments";
@@ -197,7 +198,7 @@ function PlayersTab() {
     const groups = [1, 2, 3, 4, 5, 6].map(d => ({
         division: d,
         players: filtered
-            .filter(p => p.highestDivisionPlayed === d)
+            .filter(p => p.division === d)
             .sort((a, b) => scoreOf(b) - scoreOf(a)),
     })).filter(g => g.players.length > 0);
 
@@ -285,6 +286,7 @@ function PlayersTab() {
                                                 {(player.badges as BadgeType[]).map(badge => (
                                                     <span key={badge} title={BADGE_META[badge].description} className="text-sm shrink-0">{BADGE_META[badge].emoji}</span>
                                                 ))}
+                                                <RecommendedLevel division={player.division} recommended={player.recommendedDivision} />
                                             </div>
                                             <span className="text-xs text-muted">Overall #{overallRank}</span>
                                         </div>

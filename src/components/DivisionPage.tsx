@@ -3,11 +3,12 @@ import { useParams, Link } from "react-router-dom";
 import { trpc } from "../trpc";
 import type { RouterOutputs } from "../backendRouter";
 import { NavBar } from "./NavBar";
-import { DIVISION_NAMES, DIVISION_BADGES, useDivisionDescriptions } from "../lib/divisions";
+import { DIVISION_NAMES, useDivisionDescriptions } from "../lib/divisions";
 import { BADGE_META, BadgeType } from "../lib/badges";
 import { StatusBadge } from "./HomePage";
 import { TournamentCard } from "./TournamentCard";
 import { formatCoefficient } from "../lib/levels";
+import { RecommendedLevel } from "./RecommendedLevel";
 import { useRankingSystem } from "../lib/ranking";
 
 export function DivisionPage() {
@@ -71,8 +72,8 @@ export function DivisionPage() {
                         })()}
                     </div>
                     <div className="text-xs text-muted mt-2 space-y-0.5">
-                        <p>▲ Promotion eligible — top 15% by {rankingName} in this division.</p>
-                        <p>▼ Relegation eligible — bottom 15% by {rankingName} in this division.</p>
+                        <p>▲ Recommended to move up a level — the top 15% by {rankingName} of this level's players.</p>
+                        <p>▼ Recommended to move down a level — the bottom 15% by {rankingName} of this level's players.</p>
                     </div>
                 </section>
 
@@ -123,22 +124,7 @@ function PlayerRow({ player, rank, division }: {
                     {player.badges.length > 1 && (
                         <span className="sm:hidden text-[11px] font-bold text-muted shrink-0">+{player.badges.length - 1}</span>
                     )}
-                    {player.promotionEligible && (
-                        <>
-                            <span title="Eligible for promotion" className="text-sm shrink-0 text-emerald-500 font-bold">▲</span>
-                            <span className={`hidden sm:inline text-xs font-bold px-2 py-0.5 rounded-full shrink-0 ${DIVISION_BADGES[division - 1].className}`}>
-                                Div {division - 1}
-                            </span>
-                        </>
-                    )}
-                    {player.relegationEligible && (
-                        <>
-                            <span title="Eligible for relegation" className="text-sm shrink-0 text-red-500 font-bold">▼</span>
-                            <span className={`hidden sm:inline text-xs font-bold px-2 py-0.5 rounded-full shrink-0 ${DIVISION_BADGES[division + 1].className}`}>
-                                Div {division + 1}
-                            </span>
-                        </>
-                    )}
+                    <RecommendedLevel division={division} recommended={player.recommendedDivision} />
                 </div>
 
                 <div className="flex items-center gap-3 shrink-0">
@@ -168,16 +154,7 @@ function PlayerRow({ player, rank, division }: {
                             {player.participations.map(p => <RankBadge key={p.id} rank={p.finalRank} />)}
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
-                            {player.promotionEligible && (
-                                <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${DIVISION_BADGES[division - 1].className}`}>
-                                    Div {division - 1}
-                                </span>
-                            )}
-                            {player.relegationEligible && (
-                                <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${DIVISION_BADGES[division + 1].className}`}>
-                                    Div {division + 1}
-                                </span>
-                            )}
+                            <RecommendedLevel division={division} recommended={player.recommendedDivision} />
                         </div>
                     </div>
                     <Link

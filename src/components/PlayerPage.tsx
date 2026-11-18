@@ -6,6 +6,7 @@ import { BADGE_META, BadgeType } from "../lib/badges";
 import { RankingBreakdown } from "./RankingPointsInfo";
 import { useRankingSystem } from "../lib/ranking";
 import { formatCoefficient } from "../lib/levels";
+import { RecommendedLevel } from "./RecommendedLevel";
 import { divisionLabel } from "../lib/divisions";
 
 export function PlayerPage() {
@@ -59,6 +60,7 @@ export function PlayerPage() {
                                 <span className="text-sm text-muted font-medium">
                                     {DIVISION_NAMES[player.division] ?? `Division ${player.division}`}
                                 </span>
+                                <RecommendedLevel division={player.division} recommended={player.recommendedDivision} />
                                 <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
                                     player.gender === "FEMALE" ? "bg-pink-100 text-pink-700" : "bg-sky-50 text-sky-600"
                                 }`}>
