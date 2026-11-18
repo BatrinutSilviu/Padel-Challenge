@@ -2,7 +2,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { trpc } from "../trpc";
 import type { RouterOutputs } from "../backendRouter";
 import { NavBar } from "./NavBar";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "../contexts/useAuth";
 import { AccountStatusNotice } from "./auth/AccountStatus";
 
@@ -41,6 +41,14 @@ export function HomePage() {
     const [searchParams, setSearchParams] = useSearchParams();
     const tab = (searchParams.get("tab") as Tab) ?? "divisions";
     const setTab = (t: Tab) => setSearchParams({ tab: t });
+
+    // The players list takes a moment to work out on the server: start fetching it as soon
+    // as the home page is up, so the Players tab is usually ready when it's opened.
+    const utils = trpc.useUtils();
+    useEffect(() => {
+        const id = setTimeout(() => { void utils.player.list.prefetch(); }, 500);
+        return () => clearTimeout(id);
+    }, [utils]);
 
     return (
         <div className="min-h-screen bg-canvas">
