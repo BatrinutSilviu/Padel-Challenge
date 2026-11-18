@@ -12,6 +12,7 @@ import { MastersView } from "./masters/MastersView";
 import { TournamentSignup } from "./TournamentSignup";
 import { SupportContact } from "./SupportContact";
 import { PayTo } from "./PaymentAccounts";
+import { CalendarIcon, PeopleIcon, PinIcon } from "./ui/icons";
 import { ChatJumpLink, TournamentChat } from "./TournamentChat";
 
 export function TournamentPage() {
@@ -60,7 +61,7 @@ export function TournamentPage() {
                             )}
                             <div className="mt-2 grid gap-1 text-sm text-ink-2">
                                 <p className="flex items-start gap-2">
-                                    <span aria-hidden className="w-4 text-center">📅</span>
+                                    <CalendarIcon className="w-4 h-4 text-muted mt-0.5" />
                                     <span>
                                         <span className="font-semibold">{tournamentWhen({ date: tournament.date }, "long")}</span>
                                         {timeRangeLabel(tournament) && (
@@ -71,10 +72,10 @@ export function TournamentPage() {
                                     </span>
                                 </p>
                                 {tournament.location && (
-                                    <p className="flex items-center gap-2"><span aria-hidden className="w-4 text-center">📍</span>{tournament.location}</p>
+                                    <p className="flex items-center gap-2"><PinIcon className="w-4 h-4 text-muted mt-0.5" />{tournament.location}</p>
                                 )}
                                 <p className="flex items-center gap-2">
-                                    <span aria-hidden className="w-4 text-center">👥</span>
+                                    <PeopleIcon className="w-4 h-4 text-muted mt-0.5" />
                                     {tournament.status === "UPCOMING"
                                         ? `${tournament.participants.filter(p => p.confirmed).length}${tournament.maxPlayers !== null ? ` / ${tournament.maxPlayers}` : ""} confirmed`
                                         : `${tournament.participants.length} players`}
@@ -85,6 +86,9 @@ export function TournamentPage() {
                         <StatusBadge status={tournament.status} />
                     </div>
                 </div>
+
+                {/* High up, so the players see it: for the ones signed up it's the main way to talk. */}
+                <TournamentChat tournamentId={tournament.id} tournamentName={tournament.name} />
 
                 {/* The sign-up sheet shows these itself, next to the fees. */}
                 {tournament.status !== "UPCOMING" && (
@@ -189,7 +193,6 @@ export function TournamentPage() {
                 {tournament.status !== "UPCOMING" && (
                     <PayTo accounts={tournament.payTo} entryFee={tournament.entryFee} advanceFee={tournament.advanceFee} tournamentName={tournament.name} />
                 )}
-                <TournamentChat tournamentId={tournament.id} tournamentName={tournament.name} />
                 <SupportContact context={tournament.name} />
             </main>
         </div>

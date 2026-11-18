@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { trpc } from "../trpc";
+import { ChatIcon } from "./ui/icons";
 import { useAuth } from "../contexts/useAuth";
 
 // The tournament's chat (backend chat router): open from when the tournament is created
@@ -39,7 +40,7 @@ export function ChatJumpLink({ tournamentId }: { tournamentId: string }) {
     const unread = unreadCount === data.messages.length && data.hasMore ? `${unreadCount}+` : unreadCount;
     return (
         <a href="#chat" className="inline-flex items-center gap-1.5 text-sm font-bold text-[#9FD2DD] hover:text-[#FF4200]">
-            <span aria-hidden>💬</span> Chat
+            <ChatIcon className="w-4 h-4" /> Chat
             {unreadCount > 0 && (
                 <span className="min-w-[1.25rem] h-5 px-1.5 rounded-full bg-[#FF4200] text-white text-[11px] font-bold inline-flex items-center justify-center">{unread}</span>
             )}
@@ -129,7 +130,7 @@ export function TournamentChat({ tournamentId, tournamentName }: { tournamentId:
         if (!data.open) return null;
         return (
             <section id="chat" className="bg-surface rounded-2xl border border-line p-4 sm:p-5 shadow-sm">
-                <p className="text-sm font-bold text-ink">💬 Tournament chat</p>
+                <p className="flex items-center gap-2 text-sm font-bold text-ink"><ChatIcon className="w-4 h-4 text-[#9FD2DD]" /> Tournament chat</p>
                 <p className="text-sm text-muted mt-0.5">
                     {token
                         ? "For the players signed up — sign up to join the conversation."
@@ -148,7 +149,7 @@ export function TournamentChat({ tournamentId, tournamentName }: { tournamentId:
     return (
         <section id="chat" className="bg-surface rounded-2xl border border-line shadow-sm overflow-hidden scroll-mt-20">
             <div className="px-4 sm:px-5 py-3 border-b border-canvas flex items-baseline justify-between gap-3">
-                <p className="text-sm font-bold text-ink whitespace-nowrap">💬 Tournament chat</p>
+                <p className="flex items-center gap-2 font-display text-base font-semibold uppercase tracking-wider text-ink whitespace-nowrap"><ChatIcon className="w-4 h-4 text-[#9FD2DD]" /> Tournament chat</p>
                 {(!data.open || closes) && (
                     <p className="text-xs text-muted text-right">
                         {!data.open ? "Closed" : `Open until ${dayLabel(closes!).toLowerCase()} ${timeLabel(closes!)}`}
@@ -159,7 +160,7 @@ export function TournamentChat({ tournamentId, tournamentName }: { tournamentId:
             <div
                 ref={listRef}
                 onScroll={e => { const el = e.currentTarget; nearBottom.current = el.scrollHeight - el.scrollTop - el.clientHeight < 60; }}
-                className="max-h-[60vh] sm:max-h-96 overflow-y-auto px-3 sm:px-4 py-3 space-y-1.5 bg-canvas/60"
+                className="max-h-[45vh] sm:max-h-96 overflow-y-auto px-3 sm:px-4 py-3 space-y-1.5 bg-canvas/60"
             >
                 {hasEarlier && (
                     <div className="text-center pb-1">
