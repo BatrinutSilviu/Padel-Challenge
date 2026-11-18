@@ -85,10 +85,13 @@ export function LineChart({ points, color, format, title }: {
             <p className="min-h-[1.25rem] text-xs text-ink-2 mt-1" aria-live="polite">
                 {h ? <><b className="text-ink tabular-nums">{format(h.y)}</b> · {h.label}</> : <span className="text-muted">Hover or tap the chart for the values</span>}
             </p>
-            <table className="sr-only">
-                <caption>{title}</caption>
-                <tbody>{points.map((p, i) => <tr key={i}><td>{p.label}</td><td>{format(p.y)}</td></tr>)}</tbody>
-            </table>
+            {/* A table ignores the 1px box sr-only gives it, so the wrapper is the hidden one. */}
+            <div className="sr-only">
+                <table>
+                    <caption>{title}</caption>
+                    <tbody>{points.map((p, i) => <tr key={i}><td>{p.label}</td><td>{format(p.y)}</td></tr>)}</tbody>
+                </table>
+            </div>
         </div>
     );
 }
