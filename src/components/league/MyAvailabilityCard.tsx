@@ -23,7 +23,7 @@ export function MyAvailabilityCard() {
                         Add {what} so the other teams can arrange your matches with you.
                     </p>
                 </div>
-                <Link to="/league/availability" className="shrink-0 text-center text-sm font-bold px-5 py-3 rounded-xl bg-surface text-[#FF4200] hover:bg-white/90">
+                <Link to="/league/availability" className="shrink-0 text-center text-sm font-bold px-5 py-3 rounded-xl bg-surface text-[#FF4200] hover:bg-gray-100">
                     Add my contact & availability
                 </Link>
             </section>

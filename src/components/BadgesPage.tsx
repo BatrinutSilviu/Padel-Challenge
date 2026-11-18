@@ -67,7 +67,7 @@ export function BadgesPage() {
                                                 <Link
                                                     key={p.id}
                                                     to={`/player/${p.id}`}
-                                                    className="inline-flex items-center text-sm font-bold px-3 py-1.5 rounded-xl bg-white/70 hover:underline min-h-[36px]"
+                                                    className="inline-flex items-center text-sm font-bold px-3 py-1.5 rounded-lg bg-surface/80 ring-1 ring-white/10 hover:underline min-h-[36px]"
                                                 >
                                                     {p.name}
                                                 </Link>
