@@ -109,7 +109,7 @@ export function TournamentSignup({ tournament }: { tournament: TournamentData })
                 {(level || tournament.womenOnly) && (
                     <p className="text-xs text-muted mt-2">
                         {tournament.womenOnly && <span className="font-bold text-pink-600">Women only · </span>}
-                        {level && <>Open to players with a level coefficient of <b className="text-ink">{level.allowedMin}–{level.allowedMax}</b>. New players without a coefficient yet can join any level.</>}
+                        {level && <>Recommended for a level coefficient of <b className="text-ink">{level.allowedMin}–{level.allowedMax}</b>.</>}
                     </p>
                 )}
 

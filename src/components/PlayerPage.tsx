@@ -88,9 +88,9 @@ export function PlayerPage() {
 
                     <p className="text-xs text-muted mt-3">
                         {player.level.coefficient === null
-                            ? "No level coefficient yet — it's set by the first rated match. Until then the player can sign up for any level."
+                            ? "No level coefficient yet — it's set by the first rated match."
                             : <>
-                                Can sign up for: <b className="text-ink">{player.level.eligibleDivisions.length > 0 ? player.level.eligibleDivisions.map(divisionLabel).join(", ") : "no level (an admin can add them)"}</b>
+                                Coefficient fits: <b className="text-ink">{player.level.eligibleDivisions.length > 0 ? player.level.eligibleDivisions.map(divisionLabel).join(", ") : "no level's range"}</b>
                                 {player.level.provisional && ` · * provisional: only ${player.level.ratedMatches} rated matches so far, so it still moves fast`}
                             </>}
                     </p>

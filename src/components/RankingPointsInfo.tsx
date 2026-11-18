@@ -46,7 +46,7 @@ export function RankingPointsInfo() {
                                 <p className="font-bold uppercase tracking-wide text-[10px] text-muted mb-1">Levels</p>
                                 <table className="w-full text-xs tabular-nums min-w-[320px]">
                                     <thead className="text-muted">
-                                        <tr><th className="text-left font-semibold">Level</th><th className="text-right font-semibold">Coefficient</th><th className="text-right font-semibold">Can sign up</th><th className="text-right font-semibold">Points ×</th></tr>
+                                        <tr><th className="text-left font-semibold">Level</th><th className="text-right font-semibold">Coefficient</th><th className="text-right font-semibold">Recommended</th><th className="text-right font-semibold">Points ×</th></tr>
                                     </thead>
                                     <tbody>
                                         {levels.map(l => (
@@ -82,7 +82,7 @@ export function RankingPointsInfo() {
                             <p className="text-xs text-muted">
                                 The <b>level coefficient</b> (0–10) measures skill from match results: beating stronger opponents
                                 raises it more, losing to weaker ones lowers it more. In Americano formats it counts the share of
-                                games won. You can sign up for a level when your coefficient is in its range.
+                                games won. Each level has a recommended coefficient range; for now it's a guide, not a requirement to sign up.
                             </p>
                         </>
                     )}

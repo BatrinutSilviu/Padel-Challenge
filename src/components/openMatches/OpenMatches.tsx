@@ -102,7 +102,7 @@ function OpenMatchCard({ match: m, loggedIn, isAdmin }: { match: OpenMatch; logg
                             ) : (
                                 <span className="text-[11px] font-semibold px-1.5 py-0.5 rounded bg-gray-100 text-gray-700">Custom range</span>
                             )}
-                            <span className="text-xs text-muted">coefficient {fmt(m.minCoefficient)}–{fmt(m.maxCoefficient)}</span>
+                            {m.division === null && <span className="text-xs text-muted">coefficient {fmt(m.minCoefficient)}–{fmt(m.maxCoefficient)}</span>}
                             {m.started && <span className="text-[11px] font-semibold px-1.5 py-0.5 rounded bg-[#FF4200]/15 text-[#FF4200]">Playing now</span>}
                         </div>
                         <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-ink-2">
@@ -266,12 +266,12 @@ function CreateOpenMatch({ onDone }: { onDone: () => void }) {
                     <select value={chosenLevel} onChange={e => setLevel(e.target.value)} className={input}>
                         {levels.map(l => (
                             <option key={l.division} value={String(l.division)}>
-                                {divisionLabel(l.division)} — coefficient {fmt(l.allowedMin)}–{fmt(l.allowedMax)}
+                                {divisionLabel(l.division)} players
                             </option>
                         ))}
                         <option value="custom">Custom coefficient range…</option>
                     </select>
-                    {picked && <span className="block text-xs text-muted">Players with a coefficient in {fmt(picked.allowedMin)}–{fmt(picked.allowedMax)} can join; players without one yet, if it's their level.</span>}
+                    {picked && <span className="block text-xs text-muted">{divisionLabel(picked.division)} players can join. With a custom range, players whose coefficient is in it can join.</span>}
                 </label>
                 {chosenLevel === "custom" && (
                     <div className="grid grid-cols-2 gap-3 sm:col-span-2">
