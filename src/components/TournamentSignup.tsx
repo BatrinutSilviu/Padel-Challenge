@@ -274,6 +274,9 @@ export function TournamentSignup({ tournament }: { tournament: TournamentData })
                                         Total price {tournament.entryFee} lei / person · the other {tournament.entryFee - tournament.advanceFee} lei are paid on the day
                                     </p>
                                 )}
+                                <p className="text-sm text-muted">
+                                    The advance isn't refunded if you drop out
+                                </p>
                             </>
                         ) : (
                             <p className="text-base text-ink">

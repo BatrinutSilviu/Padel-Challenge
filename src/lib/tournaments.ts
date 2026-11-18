@@ -42,11 +42,19 @@ type FormatInfo = {
     challengerFormat?: string | null;
     groupCount?: number | null;
     teamsPerGroup?: number | null;
+    advanceFee?: number | null;
 };
 
 // How a tournament is played, for players: a few short points per format, following
 // the schedule generators and ranking rules in the backend's tournament router.
 export function tournamentFormatNotes(t: FormatInfo): string[] {
+    const notes = formatNotes(t);
+    // The advance holds a spot that someone else could have had, so it stays paid.
+    if (t.advanceFee != null) notes.push("The advance isn't refunded if you drop out after paying it");
+    return notes;
+}
+
+function formatNotes(t: FormatInfo): string[] {
     const americanoScoring = `Every match is played to ${t.pointsPerGame} points in total (e.g. ${Math.ceil(t.pointsPerGame / 2) + 2}–${Math.floor(t.pointsPerGame / 2) - 2}), and every point your side wins counts towards your score`;
     switch (t.type) {
         case "AMERICANO":
