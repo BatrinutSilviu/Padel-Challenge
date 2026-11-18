@@ -14,7 +14,7 @@ import { compactField } from "../../formStyles";
 import { TeamSlotsInput, type TeamSlot } from "./TeamSlotsInput";
 
 // The formats an admin can create here (the retired Girls division's Americano is gone).
-const CREATABLE_TYPES = ["AMERICANO", "AMERICANO_CHAMPIONS", "CHALLENGER", "TEAM_AMERICANO", "KING_OF_THE_COURT", "MASTERS"] as const;
+const CREATABLE_TYPES = ["AMERICANO", "CHALLENGER", "TEAM_AMERICANO", "KING_OF_THE_COURT", "MASTERS"] as const;
 type CreatableType = typeof CREATABLE_TYPES[number];
 
 export function CreateTournamentForm({ onCreated, onImport }: { onCreated: () => void; onImport: () => void }) {

@@ -4,7 +4,6 @@ import { NavBar } from "./NavBar";
 import { BADGE_META, BadgeType } from "../lib/badges";
 
 const BADGE_ORDER: BadgeType[] = [
-    'AMERICANO_CHAMPION',
     'CHALLENGER_CHAMPION',
     'DIVISION_LEADER',
     'QUEEN_OF_COURT',

@@ -5,11 +5,10 @@ import type { RouterOutputs } from "../backendRouter";
 // A tournament as the tournament page loads it (tournament.getById), with its rounds and players.
 export type TournamentData = NonNullable<RouterOutputs["tournament"]["getById"]>;
 
-export type TournamentType = "AMERICANO" | "AMERICANO_CHAMPIONS" | "AMERICANO_GIRLS" | "CHALLENGER" | "TEAM_AMERICANO" | "KING_OF_THE_COURT" | "MASTERS";
+export type TournamentType = "AMERICANO" | "AMERICANO_GIRLS" | "CHALLENGER" | "TEAM_AMERICANO" | "KING_OF_THE_COURT" | "MASTERS";
 
 export const TOURNAMENT_TYPE_LABELS: Record<TournamentType, string> = {
     AMERICANO: "Americano",
-    AMERICANO_CHAMPIONS: "Americano Champions",
     AMERICANO_GIRLS: "Americano Fete",
     CHALLENGER: "Challenger",
     TEAM_AMERICANO: "Team Americano",
@@ -24,7 +23,6 @@ export function tournamentTypeLabel(type: string): string {
 // One line per format, for players picking a tournament and admins picking a type.
 export const TOURNAMENT_TYPE_DESCRIPTIONS: Record<TournamentType, string> = {
     AMERICANO: "Sign up on your own — you play with a different partner every round and collect the points you win.",
-    AMERICANO_CHAMPIONS: "An Americano with higher stakes: same rules, more ranking points, and the winner earns the Americano Champion badge.",
     AMERICANO_GIRLS: "An Americano for the girls' division: a different partner every round, points add up.",
     CHALLENGER: "Fixed teams of 2: a group stage, then knockout matches for every place.",
     TEAM_AMERICANO: "Fixed teams of 2 play every other team once; the points you win add up.",
@@ -53,15 +51,11 @@ export function tournamentFormatNotes(t: FormatInfo): string[] {
     switch (t.type) {
         case "AMERICANO":
         case "AMERICANO_GIRLS":
-        case "AMERICANO_CHAMPIONS":
             return [
                 "Sign up on your own — no partner needed",
                 "Every round you play with a different partner, so you partner every other player once and face everyone along the way",
                 americanoScoring,
                 "Most points wins; on equal points, the player with more match wins ranks higher",
-                ...(t.type === "AMERICANO_CHAMPIONS"
-                    ? ["The winner earns the Americano Champion badge; the results don't count towards division standings"]
-                    : []),
             ];
         case "TEAM_AMERICANO":
             return [
@@ -158,7 +152,6 @@ export function isTeamBasedType(type: string): boolean {
 // playerCountError() in the backend's tournament router.
 export const CAPACITY_OPTIONS: Record<TournamentType, number[]> = {
     AMERICANO: [8, 12, 16],
-    AMERICANO_CHAMPIONS: [8, 12, 16],
     AMERICANO_GIRLS: [8, 12, 16],
     CHALLENGER: [8, 16],
     TEAM_AMERICANO: [8, 10, 12, 14, 16],

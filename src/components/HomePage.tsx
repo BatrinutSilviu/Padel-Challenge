@@ -329,7 +329,7 @@ function TournamentsTab() {
                 <div className="flex flex-col gap-2">
                     <span className="font-display text-sm font-semibold uppercase tracking-[0.12em] text-muted">Type</span>
                     <div className="flex flex-wrap gap-1.5">
-                        {(["ALL", "AMERICANO", "AMERICANO_CHAMPIONS", "CHALLENGER", "TEAM_AMERICANO", "MASTERS"] as const).map(type => (
+                        {(["ALL", "AMERICANO", "CHALLENGER", "TEAM_AMERICANO", "MASTERS"] as const).map(type => (
                             <FilterChip key={type} active={typeFilter === type} onClick={() => setTypeFilter(type)}>
                                 {type === "ALL" ? "All" : TOURNAMENT_TYPE_LABELS[type]}
                             </FilterChip>

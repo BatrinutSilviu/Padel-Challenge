@@ -73,7 +73,6 @@ export function DivisionPage() {
                     <div className="text-xs text-muted mt-2 space-y-0.5">
                         <p>▲ Promotion eligible — top 15% by {rankingName} in this division.</p>
                         <p>▼ Relegation eligible — bottom 15% by {rankingName} in this division.</p>
-                        <p>Americano Champions results are not counted in standings.</p>
                     </div>
                 </section>
 

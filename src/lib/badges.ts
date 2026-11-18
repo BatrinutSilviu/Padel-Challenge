@@ -1,5 +1,4 @@
 export type BadgeType =
-  | 'AMERICANO_CHAMPION'
   | 'QUEEN_OF_COURT'
   | 'DIVISION_LEADER'
   | 'ON_FIRE'
@@ -13,7 +12,6 @@ export type BadgeType =
   | 'AMERICANO_50';
 
 export const BADGE_META: Record<BadgeType, { emoji: string; label: string; description: string; className: string }> = {
-  AMERICANO_CHAMPION:  { emoji: '👑', label: 'Americano Champion',  description: 'Won an Americano Champions tournament', className: 'bg-amber-50 text-amber-700 border-amber-200' },
   QUEEN_OF_COURT:      { emoji: '👸', label: 'Queen of the Court',  description: 'Top ranked female player',       className: 'bg-pink-50 text-pink-700 border-pink-200'   },
   DIVISION_LEADER:     { emoji: '🏆', label: 'Division Leader',     description: 'Top ranked player in their division',          className: 'bg-yellow-50 text-yellow-700 border-yellow-200' },
   ON_FIRE:             { emoji: '🔥', label: 'On Fire',             description: '3 consecutive top-3 finishes',           className: 'bg-orange-50 text-orange-700 border-orange-200' },

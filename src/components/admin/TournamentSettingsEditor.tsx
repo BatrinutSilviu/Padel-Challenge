@@ -13,8 +13,8 @@ import { field } from "./formStyles";
 //  - points per game, until the first score is entered;
 //  - King of the Court's number of rounds, until it's completed.
 
-const TYPES: TournamentType[] = ["AMERICANO", "AMERICANO_CHAMPIONS", "TEAM_AMERICANO", "CHALLENGER", "KING_OF_THE_COURT", "MASTERS"];
-const POINTS_TYPES = ["AMERICANO", "AMERICANO_CHAMPIONS", "TEAM_AMERICANO", "AMERICANO_GIRLS"];
+const TYPES: TournamentType[] = ["AMERICANO", "TEAM_AMERICANO", "CHALLENGER", "KING_OF_THE_COURT", "MASTERS"];
+const POINTS_TYPES = ["AMERICANO", "TEAM_AMERICANO", "AMERICANO_GIRLS"];
 
 type SettingsTournament = {
     id: string;
@@ -141,7 +141,7 @@ export function TournamentSettingsEditor({ tournament: t }: { tournament: Settin
                                 {value.type !== t.type && (
                                     <p className="text-xs text-amber-600 mt-1.5">
                                         Check the spots and the format's options in the sign-up settings after saving.
-                                        {["AMERICANO", "AMERICANO_CHAMPIONS"].includes(value.type) && " Partners players signed up with are unlinked."}
+                                        {value.type === "AMERICANO" && " Partners players signed up with are unlinked."}
                                     </p>
                                 )}
                             </>

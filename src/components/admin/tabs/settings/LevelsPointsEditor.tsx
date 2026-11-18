@@ -80,6 +80,8 @@ export function LevelsPointsEditor() {
         for (const [format, text] of Object.entries(tables)) {
             const values = text.split(/[,\s]+/).filter(Boolean).map(Number);
             if (values.length === 0 || values.some(v => isNaN(v) || v < 0)) return `${POINTS_FORMAT_LABELS[format] ?? format}: enter points separated by commas.`;
+            const max = data!.teamFormats.includes(format) ? 8 : 16;
+            if (values.length > max) return `${POINTS_FORMAT_LABELS[format] ?? format}: at most ${max} places (${data!.teamFormats.includes(format) ? "teams" : "players"}).`;
             out[format] = values;
         }
         return out as Rules["tables"];
@@ -159,7 +161,7 @@ export function LevelsPointsEditor() {
             <section className="space-y-3 pt-4 border-t border-gray-100">
                 <div>
                     <h3 className="text-sm font-semibold text-gray-800">Points per place</h3>
-                    <p className="text-xs text-gray-500">1st, 2nd, 3rd, … separated by commas. Team formats count teams. Larger fields stretch the table between its first and last value.</p>
+                    <p className="text-xs text-gray-500">1st, 2nd, 3rd, … separated by commas. Team formats count teams. At most 16 places for individual formats and 8 for team formats; later places get no points.</p>
                 </div>
                 <div className="space-y-2">
                     {Object.keys(data.tables).map(format => (

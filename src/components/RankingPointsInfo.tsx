@@ -33,7 +33,8 @@ export function RankingPointsInfo() {
                         Every format has a fixed <b>table of points per place</b>. The points are multiplied by the
                         <b> level's multiplier</b>, so the harder the level, the more a place is worth. In team formats
                         both players get their team's points. Players or teams sharing a place share those places' points.
-                        In a bigger field than the table, the points are spread out between the first and the last place.
+                        Points go to the first 16 players of an individual format and the first 8 teams of a team format.
+                        A plain Americano is worth the least, then Team Americano, the Challengers and, at the top, the Masters.
                     </p>
                     <p>
                         Your total counts the points from your current level and above in full. Points from lower levels

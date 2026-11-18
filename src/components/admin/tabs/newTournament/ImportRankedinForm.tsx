@@ -6,7 +6,7 @@ import type { RouterOutputs } from "../../../../backendRouter";
 import { ChoiceButton } from "../../formControls";
 
 // Rankedin only has Americanos to import.
-const IMPORTABLE_TYPES = ["AMERICANO", "AMERICANO_CHAMPIONS"] as const;
+const IMPORTABLE_TYPES = ["AMERICANO"] as const;
 
 // What happens to a Rankedin player with no exact match here: linked to one of ours, or
 // created (the admin has to pick their gender first).
