@@ -13,9 +13,10 @@ import { RankingPointsInfo } from "./RankingPointsInfo";
 import { TournamentCard } from "./TournamentCard";
 import { SupportContact } from "./SupportContact";
 import { RecommendedLevel } from "./RecommendedLevel";
+import { OpenMatches } from "./openMatches/OpenMatches";
 import { useRankingSystem } from "../lib/ranking";
 
-type Tab = "divisions" | "players" | "tournaments";
+type Tab = "divisions" | "matches" | "players" | "tournaments";
 
 // Partner invitations waiting for the logged-in player: someone signed up and picked them as
 // their partner; they join that tournament when they accept it on its page.
@@ -56,7 +57,7 @@ export function HomePage() {
             <NavBar />
             <main className="max-w-5xl mx-auto px-3 sm:px-4 py-6 sm:py-8 pb-24 sm:pb-8">
                 <div role="tablist" className="flex border-b border-line mb-6 -mx-3 px-3 sm:mx-0 sm:px-0 overflow-x-auto">
-                    {(["divisions", "players", "tournaments"] as Tab[]).map(t => (
+                    {(["divisions", "matches", "players", "tournaments"] as Tab[]).map(t => (
                         <button
                             key={t}
                             role="tab"
@@ -82,6 +83,7 @@ export function HomePage() {
                         <OpenSignups />
                     </>
                 )}
+                {tab === "matches" && <OpenMatches />}
                 {tab === "players" && <PlayersTab />}
                 {tab === "tournaments" && <TournamentsTab />}
 
