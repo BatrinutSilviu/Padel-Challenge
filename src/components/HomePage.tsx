@@ -67,8 +67,8 @@ export function HomePage() {
 
                 {tab === "divisions" && (
                     <>
-                        <OpenSignups />
                         <DivisionsTab />
+                        <OpenSignups />
                     </>
                 )}
                 {tab === "players" && <PlayersTab />}
@@ -88,7 +88,7 @@ export function HomePage() {
 
 type MySignup = RouterOutputs["tournament"]["mySignups"][number];
 
-// Tournaments taking sign-ups, on the home tab under the tab bar (the Tournaments tab
+// Tournaments taking sign-ups, on the home tab under the divisions (the Tournaments tab
 // lists them too); for a logged-in player, the ones they're already on say so.
 function OpenSignups() {
     const { token } = useAuth();
@@ -100,7 +100,7 @@ function OpenSignups() {
     return (
         <>
         {openForSignup.length > 0 && (
-            <section className="space-y-2 mb-6">
+            <section className="space-y-2 mt-8">
                 <h2 className="text-xs font-bold uppercase tracking-widest text-[#8E8E93]">Open for sign-up</h2>
                 {openForSignup.map(t => {
                     const left = spotsLeft(t);
