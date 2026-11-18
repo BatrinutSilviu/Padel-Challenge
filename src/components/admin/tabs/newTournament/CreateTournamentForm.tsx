@@ -159,7 +159,7 @@ export function CreateTournamentForm({ onCreated, onImport }: { onCreated: () =>
     }
 
     return (
-        <form onSubmit={handleSubmit} className="bg-white rounded-xl border border-gray-200 p-5 sm:p-6 space-y-5 max-w-2xl">
+        <form onSubmit={handleSubmit} className="bg-surface rounded-xl border border-gray-200 p-5 sm:p-6 space-y-5 max-w-2xl">
             <div className="flex flex-wrap items-center justify-between gap-2">
                 <h2 className="text-lg font-semibold text-gray-800">Create Tournament</h2>
                 <button
@@ -257,7 +257,7 @@ export function CreateTournamentForm({ onCreated, onImport }: { onCreated: () =>
                                 setTotalRounds(clamped);
                                 setTotalRoundsInput(String(clamped));
                             }}
-                            className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF4200] bg-white w-16"
+                            className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF4200] bg-surface w-16"
                         />
                     </div>
                 </Field>
@@ -346,7 +346,7 @@ export function CreateTournamentForm({ onCreated, onImport }: { onCreated: () =>
                     )}
 
                     <div className="space-y-1">
-                        <div className="sticky top-[50px] z-20 -mx-5 sm:-mx-6 px-5 sm:px-6 py-2 bg-white border-b border-gray-100 flex items-center justify-between">
+                        <div className="sticky top-[50px] z-20 -mx-5 sm:-mx-6 px-5 sm:px-6 py-2 bg-surface border-b border-gray-100 flex items-center justify-between">
                             <span className="text-sm font-medium text-gray-700">
                                 {signupMode ? "Add players now (optional)" : "Players"}
                             </span>
@@ -464,7 +464,7 @@ function PlayerSearch({ value, onChange }: { value: string; onChange: (value: st
                 value={value}
                 onChange={e => onChange(e.target.value)}
                 placeholder="Search across all divisions…"
-                className="w-full border border-gray-300 rounded-lg pl-9 pr-8 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF4200] focus:border-transparent bg-white placeholder-gray-400"
+                className="w-full border border-gray-300 rounded-lg pl-9 pr-8 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF4200] focus:border-transparent bg-surface placeholder-gray-400"
             />
             {value && (
                 <button
@@ -490,7 +490,7 @@ function PlayerButton({ player, selected, otherDivision, onClick }: {
 }) {
     return (
         <button type="button" onClick={onClick}
-            className={`text-left px-3 py-2.5 rounded-lg text-sm border transition-colors ${selected ? "bg-[#FF4200]/10 border-[#FF4200] text-[#333366] font-medium" : "border-gray-200 text-gray-700 hover:border-[#FF4200]/50"}`}>
+            className={`text-left px-3 py-2.5 rounded-lg text-sm border transition-colors ${selected ? "bg-[#FF4200]/10 border-[#FF4200] text-[#9FD2DD] font-medium" : "border-gray-200 text-gray-700 hover:border-[#FF4200]/50"}`}>
             {selected && <span className="mr-1">✓</span>}
             {player.name}
             {otherDivision && <span className="ml-1.5 text-xs font-normal text-gray-400">({divisionLabel(player.division)})</span>}

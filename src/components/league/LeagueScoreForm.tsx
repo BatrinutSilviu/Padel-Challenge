@@ -74,7 +74,7 @@ export function LeagueScoreForm({
                                 value={cells[col][team]}
                                 onChange={e => change(col, team, e.target.value)}
                                 disabled={pending}
-                                className={`w-full text-center border rounded-lg px-1 py-2.5 text-base font-semibold bg-white focus:outline-none focus:ring-2 focus:ring-[#FF4200] ${cellClass(col, team)}`}
+                                className={`w-full text-center border rounded-lg px-1 py-2.5 text-base font-semibold bg-surface focus:outline-none focus:ring-2 focus:ring-[#FF4200] ${cellClass(col, team)}`}
                             />
                         ))}
                     </div>

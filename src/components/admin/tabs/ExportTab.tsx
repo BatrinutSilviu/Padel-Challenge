@@ -27,7 +27,7 @@ export function ExportTab() {
 
     return (
         <div className="space-y-6 max-w-2xl">
-            <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-4">
+            <div className="bg-surface rounded-xl border border-gray-200 p-5 space-y-4">
                 <h2 className="text-base font-semibold text-gray-800">Export Participants</h2>
                 <p className="text-sm text-gray-500">
                     Download every player who took part in a tournament within the selected date range, split by gender.

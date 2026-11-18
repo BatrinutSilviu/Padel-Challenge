@@ -35,7 +35,7 @@ export function TournamentsTab() {
                         {signups.map(t => {
                             const waiting = waitingFor(t.id);
                             return (
-                            <div key={t.id} className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white rounded-lg border px-4 py-3 ${waiting.length > 0 ? "border-amber-300 ring-1 ring-amber-200" : "border-sky-200"}`}>
+                            <div key={t.id} className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-surface rounded-lg border px-4 py-3 ${waiting.length > 0 ? "border-amber-300 ring-1 ring-amber-200" : "border-sky-200"}`}>
                                 <div className="min-w-0">
                                     <TournamentNameEditor id={t.id} name={t.name} />
                                     <span className="text-xs text-gray-400 block">
@@ -56,7 +56,7 @@ export function TournamentsTab() {
                                 <div className="flex items-center gap-2 self-start sm:self-auto shrink-0">
                                     <Link
                                         to={`/admin/tournament/${t.id}`}
-                                        className={`inline-flex items-center gap-1.5 text-sm font-medium text-white px-4 py-2 rounded-lg transition-colors ${waiting.length > 0 ? "bg-amber-500 hover:bg-amber-600" : "bg-sky-600 hover:bg-sky-700"}`}
+                                        className={`inline-flex items-center gap-1.5 text-sm font-medium text-white px-4 py-2 rounded-lg transition-colors ${waiting.length > 0 ? "bg-amber-500 hover:bg-[#d97706]" : "bg-[#0284c7] hover:bg-[#0369a1]"}`}
                                     >
                                         {waiting.length > 0 ? "Confirm sign-ups" : "Manage sign-ups"}
                                     </Link>
@@ -75,7 +75,7 @@ export function TournamentsTab() {
                 {!isPending && active.length === 0 && <p className="text-gray-500">No active tournaments.</p>}
                 <div className="space-y-2">
                     {active.map(t => (
-                        <div key={t.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white rounded-lg border border-yellow-200 px-4 py-3">
+                        <div key={t.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-surface rounded-lg border border-yellow-200 px-4 py-3">
                             <div className="min-w-0">
                                 <TournamentNameEditor id={t.id} name={t.name} />
                                 <span className="text-xs text-gray-400 block"><Summary tournament={t} /></span>
@@ -99,7 +99,7 @@ export function TournamentsTab() {
                 <h2 className="text-lg font-semibold text-gray-700 mb-3">Other Tournaments</h2>
                 <div className="space-y-2">
                     {others.map(t => (
-                        <div key={t.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-white rounded-lg border border-gray-200 px-4 py-3">
+                        <div key={t.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-surface rounded-lg border border-gray-200 px-4 py-3">
                             <div className="min-w-0">
                                 <TournamentNameEditor id={t.id} name={t.name} />
                                 <span className="text-xs text-gray-400 block"><Summary tournament={t} /></span>
@@ -163,7 +163,7 @@ function TournamentNameEditor({ id, name }: { id: string; name: string }) {
                     if (e.key === "Enter") { e.preventDefault(); save(); }
                     if (e.key === "Escape") { setValue(name); setEditing(false); }
                 }}
-                className="font-medium text-gray-800 bg-white border border-[#FF4200] rounded px-1.5 py-0.5 -my-0.5 w-full max-w-xs focus:outline-none"
+                className="font-medium text-gray-800 bg-surface border border-[#FF4200] rounded px-1.5 py-0.5 -my-0.5 w-full max-w-xs focus:outline-none"
             />
         );
     }

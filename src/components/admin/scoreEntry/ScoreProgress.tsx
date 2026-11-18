@@ -16,7 +16,7 @@ export function ScoreProgress({ challenger, masters, kotc, scoredIds, scoredCoun
     isCompleted: boolean;
 }) {
     return challenger ? (
-        <div className="bg-white rounded-xl border border-gray-200 px-4 sm:px-5 py-4 space-y-3">
+        <div className="bg-surface rounded-xl border border-gray-200 px-4 sm:px-5 py-4 space-y-3">
             <ProgressRow
                 label="Group stage"
                 scored={[...challenger.groupRounds.A, ...challenger.groupRounds.B].flatMap(r => r.matches).filter(m => scoredIds.has(m.id)).length}
@@ -34,7 +34,7 @@ export function ScoreProgress({ challenger, masters, kotc, scoredIds, scoredCoun
             )}
         </div>
     ) : masters ? (
-        <div className="bg-white rounded-xl border border-gray-200 px-4 sm:px-5 py-4 space-y-3">
+        <div className="bg-surface rounded-xl border border-gray-200 px-4 sm:px-5 py-4 space-y-3">
             <ProgressRow
                 label="Group stage"
                 scored={masters.groupMatches.filter(m => scoredIds.has(m.id)).length}
@@ -52,7 +52,7 @@ export function ScoreProgress({ challenger, masters, kotc, scoredIds, scoredCoun
             )}
         </div>
     ) : kotc ? (
-        <div className="bg-white rounded-xl border border-gray-200 px-4 sm:px-5 py-4 space-y-3">
+        <div className="bg-surface rounded-xl border border-gray-200 px-4 sm:px-5 py-4 space-y-3">
             <ProgressRow
                 label={`Round ${kotc.current?.roundNumber ?? 1}`}
                 scored={kotc.current?.matches.filter(m => scoredIds.has(m.id)).length ?? 0}
@@ -68,7 +68,7 @@ export function ScoreProgress({ challenger, masters, kotc, scoredIds, scoredCoun
             )}
         </div>
     ) : (
-        <div className="bg-white rounded-xl border border-gray-200 px-4 sm:px-5 py-4 space-y-2">
+        <div className="bg-surface rounded-xl border border-gray-200 px-4 sm:px-5 py-4 space-y-2">
             <div className="flex items-center justify-between text-sm">
                 <span className="text-gray-600 font-medium">Scores entered</span>
                 <span className={`font-semibold ${allScored ? "text-[#FF4200]" : "text-gray-700"}`}>

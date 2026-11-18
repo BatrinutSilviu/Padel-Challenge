@@ -207,7 +207,7 @@ export function AmericanoMatchScoreRow({
         if (status === 'saving') return "border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed";
         if (status === 'unlock-pending') return "border-amber-400 bg-amber-50 text-gray-700 cursor-pointer";
         if (status === 'locked') return "border-gray-200 bg-gray-50 text-gray-500 cursor-pointer";
-        if (status === 'confirming') return "border-blue-400 text-gray-800 bg-white";
+        if (status === 'confirming') return "border-blue-400 text-gray-800 bg-surface";
         return isValid && wins ? "border-[#FF4200] text-[#FF4200]" : "border-gray-300 text-gray-700";
     }
 
@@ -338,7 +338,7 @@ export function AmericanoMatchScoreRow({
                     style={{ top: viewportRect?.top ?? 0, height: viewportRect?.height ?? '100dvh' }}
                 >
                     <div className="absolute inset-0 bg-black/50" onClick={() => { if (status !== 'saving') setMobileSheetOpen(false); }} />
-                    <div className="absolute left-0 right-0 bottom-0 max-h-full bg-white rounded-t-2xl flex flex-col">
+                    <div className="absolute left-0 right-0 bottom-0 max-h-full bg-surface rounded-t-2xl flex flex-col">
                         {/* Scrollable content — shrinks when keyboard appears */}
                         <div className="overflow-y-auto flex-1 px-5 pt-4 pb-3">
                             <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-4" />

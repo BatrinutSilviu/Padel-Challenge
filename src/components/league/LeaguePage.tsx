@@ -17,17 +17,17 @@ export function LeaguePage() {
     const { id } = useParams<{ id: string }>();
     const { data: league, isPending, error } = trpc.league.getById.useQuery({ id: id! });
 
-    if (isPending) return <Shell><p className="text-[#8E8E93]">Loading…</p></Shell>;
+    if (isPending) return <Shell><p className="text-muted">Loading…</p></Shell>;
     if (error || !league) return <Shell><p className="text-red-600">League not found.</p></Shell>;
     return <Shell><LeagueView league={league} /></Shell>;
 }
 
 function Shell({ children }: { children: React.ReactNode }) {
     return (
-        <div className="min-h-screen bg-[#F5F5F7]">
+        <div className="min-h-screen bg-canvas">
             <NavBar />
             <main className="max-w-5xl mx-auto px-3 sm:px-4 py-6 sm:py-8 pb-24 sm:pb-8 space-y-5">
-                <Link to="/league" className="text-[#8E8E93] hover:text-[#FF4200] transition-colors text-sm font-semibold">← Leagues</Link>
+                <Link to="/league" className="text-muted hover:text-[#FF4200] transition-colors text-sm font-semibold">← Leagues</Link>
                 {children}
             </main>
         </div>
@@ -45,12 +45,12 @@ function LeagueView({ league }: { league: League }) {
 
     return (
         <>
-            <div className="bg-white rounded-2xl border border-[#E5E5EA] p-5 sm:p-6 shadow-sm">
+            <div className="bg-surface rounded-2xl border border-line p-5 sm:p-6 shadow-sm">
                 <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                        <p className="text-xs font-bold uppercase tracking-widest text-[#FF4200]">Act!ve Padel League</p>
-                        <h1 className="text-2xl font-black text-[#1A1A2E] tracking-tight">{league.name}</h1>
-                        <p className="text-sm text-[#8E8E93] font-medium mt-1">
+                        <p className="font-display text-sm font-semibold uppercase tracking-[0.12em] text-[#FF4200]">Act!ve Padel League</p>
+                        <h1 className="text-2xl font-bold text-ink tracking-tight">{league.name}</h1>
+                        <p className="text-sm text-muted font-medium mt-1">
                             {weeks > 0 ? `${weeks} weeks · ${formatSeasonRange(league.startDate, weeks)}` : `Starts ${new Date(league.startDate).toLocaleDateString("en-GB", { day: "numeric", month: "long", timeZone: "UTC" })}`}
                             {" · "}{league.teams.length} teams
                         </p>
@@ -59,7 +59,7 @@ function LeagueView({ league }: { league: League }) {
                         {STATUS_LABEL[league.status]}
                     </span>
                 </div>
-                <p className="text-xs text-[#8E8E93] mt-3">
+                <p className="text-xs text-muted mt-3">
                     Everyone plays everyone in their group, one match a week, at a time and place the two teams agree on.
                     Best of 3 sets, tiebreak at 6-6, star point at deuce.
                 </p>
@@ -68,18 +68,18 @@ function LeagueView({ league }: { league: League }) {
             {myTeam && league.status !== "COMPLETED" && <MyAvailabilityCard />}
             {myTeam && league.status === "IN_PROGRESS" && <MyMatches league={league} team={myTeam} teams={teams} />}
             {!token && league.status === "IN_PROGRESS" && (
-                <p className="text-sm text-[#8E8E93]">
+                <p className="text-sm text-muted">
                     Playing in this league? <Link to={`/login?redirect=/league/${league.id}`} className="text-[#FF4200] font-semibold hover:underline">Log in</Link> to report scores and see your opponents' contact details.
                 </p>
             )}
 
             {league.tiers.length > 1 && (
-                <div className="flex gap-1 bg-white border border-[#E5E5EA] rounded-2xl p-1 w-full sm:w-fit shadow-sm overflow-x-auto">
+                <div className="flex gap-1 bg-surface border border-line rounded-2xl p-1 w-full sm:w-fit shadow-sm overflow-x-auto">
                     {league.tiers.map(t => (
                         <button
                             key={t.id}
                             onClick={() => setTierId(t.id)}
-                            className={`flex-1 sm:flex-none px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all ${t.id === tier?.id ? "bg-[#FF4200] text-white shadow-sm" : "text-[#8E8E93] hover:text-[#1A1A2E]"}`}
+                            className={`flex-1 sm:flex-none px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all ${t.id === tier?.id ? "bg-[#FF4200] text-white shadow-sm" : "text-muted hover:text-ink"}`}
                         >
                             {tierLabel(t.level)}
                         </button>
@@ -91,8 +91,8 @@ function LeagueView({ league }: { league: League }) {
 
             {playoffs.length > 0 && (
                 <section className="space-y-2">
-                    <h2 className="text-xs font-bold uppercase tracking-widest text-[#8E8E93]">Playoffs</h2>
-                    <div className="bg-white rounded-2xl border border-[#E5E5EA] overflow-hidden shadow-sm">
+                    <h2 className="font-display text-sm font-semibold uppercase tracking-[0.12em] text-muted">Playoffs</h2>
+                    <div className="bg-surface rounded-2xl border border-line overflow-hidden shadow-sm">
                         {playoffs.map(m => <LeagueMatchLine key={m.id} match={m} teams={teams} myTeamId={league.myTeamId} />)}
                     </div>
                 </section>
@@ -107,16 +107,16 @@ function MyMatches({ league, team, teams }: { league: League; team: LeagueTeam; 
     return (
         <section className="bg-[#333366] rounded-2xl p-4 sm:p-5 shadow-sm space-y-3">
             <div className="min-w-0">
-                <p className="text-xs font-bold uppercase tracking-widest text-white/60">Your team</p>
-                <p className="font-black text-white truncate">{teamName(team)}</p>
+                <p className="font-display text-sm font-semibold uppercase tracking-[0.12em] text-white/60">Your team</p>
+                <p className="font-bold text-white truncate">{teamName(team)}</p>
             </div>
             {open.length === 0 ? (
                 <p className="text-sm text-white/70">All your matches are played. 🎉</p>
             ) : (
-                <div className="bg-white rounded-xl overflow-hidden">
+                <div className="bg-surface rounded-xl overflow-hidden">
                     {open.map(m => (
                         <div key={m.id}>
-                            <p className="px-4 pt-2.5 text-[10px] font-bold uppercase tracking-wide text-[#8E8E93]">
+                            <p className="px-4 pt-2.5 text-[10px] font-bold uppercase tracking-wide text-muted">
                                 {m.week ? `Week ${m.week} · ${formatWeekRange(league.startDate, m.week)}` : "Playoff"}
                             </p>
                             <LeagueMatchLine match={m} teams={teams} />
@@ -135,20 +135,20 @@ function TierView({ league, tier, teams, weeks }: { league: League; tier: League
     const [week, setWeek] = useState(() => currentWeek(league.startDate, weeks));
 
     if (league.status === "DRAFT") {
-        return <p className="text-[#8E8E93]">The groups haven't been drawn yet.</p>;
+        return <p className="text-muted">The groups haven't been drawn yet.</p>;
     }
 
     return (
         <div className="space-y-5">
             {(prizes.some(Boolean) || rules.length > 0) && (
-                <div className="bg-white rounded-2xl border border-[#E5E5EA] px-4 py-3 shadow-sm space-y-1.5 text-sm">
+                <div className="bg-surface rounded-2xl border border-line px-4 py-3 shadow-sm space-y-1.5 text-sm">
                     {prizes.some(Boolean) && (
                         <p className="flex flex-wrap gap-x-4 gap-y-1">
-                            <span className="font-bold text-[#1A1A2E]">Prizes in every group:</span>
+                            <span className="font-bold text-ink">Prizes in every group:</span>
                             {prizes.map((p, i) => p && <span key={i}>{["🥇", "🥈", "🥉"][i]} {p}</span>)}
                         </p>
                     )}
-                    {rules.length > 0 && <p className="text-[#8E8E93]">{rules.join(" · ")}</p>}
+                    {rules.length > 0 && <p className="text-muted">{rules.join(" · ")}</p>}
                 </div>
             )}
 
@@ -170,10 +170,10 @@ function GroupCard({
     const matches: LeagueMatch[] = league.matches.filter(m => m.groupId === group.id && m.week === week);
     const prizes = [tier.prize1, tier.prize2, tier.prize3];
     return (
-        <section className="bg-white rounded-2xl border border-[#E5E5EA] overflow-hidden shadow-sm">
-            <div className="px-4 py-3 border-b border-[#F5F5F7] flex items-center justify-between">
-                <h2 className="font-black text-[#1A1A2E]">
-                    {league.tiers.length > 1 && <span className="text-[#8E8E93] font-bold">{tierLabel(tier.level)} · </span>}
+        <section className="bg-surface rounded-2xl border border-line overflow-hidden shadow-sm">
+            <div className="px-4 py-3 border-b border-canvas flex items-center justify-between">
+                <h2 className="font-bold text-ink">
+                    {league.tiers.length > 1 && <span className="text-muted font-bold">{tierLabel(tier.level)} · </span>}
                     Group {group.name}
                 </h2>
             </div>
@@ -184,11 +184,11 @@ function GroupCard({
                 myTeamId={league.myTeamId}
                 showMedals={league.status === "COMPLETED" || prizes.some(Boolean)}
             />
-            <div className="border-t border-[#E5E5EA] bg-[#FAFAFB]">
+            <div className="border-t border-line bg-[#FAFAFB]">
                 <WeekPicker week={week} weeks={weeks} startDate={league.startDate} onWeek={onWeek} />
-                <div className="bg-white">
+                <div className="bg-surface">
                     {matches.length === 0
-                        ? <p className="px-4 py-3 text-sm text-[#8E8E93]">No matches this week.</p>
+                        ? <p className="px-4 py-3 text-sm text-muted">No matches this week.</p>
                         : matches.map(m => <LeagueMatchLine key={m.id} match={m} teams={teams} myTeamId={league.myTeamId} />)}
                 </div>
             </div>
@@ -203,19 +203,19 @@ export function WeekPicker({ week, weeks, startDate, onWeek }: { week: number; w
                 onClick={() => onWeek(week - 1)}
                 disabled={week <= 1}
                 aria-label="Previous week"
-                className="w-9 h-9 rounded-lg text-[#8E8E93] hover:bg-white hover:text-[#FF4200] disabled:opacity-30"
+                className="w-9 h-9 rounded-lg text-muted hover:bg-surface hover:text-[#FF4200] disabled:opacity-30"
             >
                 ‹
             </button>
             <div className="text-center">
-                <p className="text-sm font-bold text-[#1A1A2E]">Week {week} of {weeks}</p>
-                <p className="text-xs text-[#8E8E93]">{formatWeekRange(startDate, week)}</p>
+                <p className="text-sm font-bold text-ink">Week {week} of {weeks}</p>
+                <p className="text-xs text-muted">{formatWeekRange(startDate, week)}</p>
             </div>
             <button
                 onClick={() => onWeek(week + 1)}
                 disabled={week >= weeks}
                 aria-label="Next week"
-                className="w-9 h-9 rounded-lg text-[#8E8E93] hover:bg-white hover:text-[#FF4200] disabled:opacity-30"
+                className="w-9 h-9 rounded-lg text-muted hover:bg-surface hover:text-[#FF4200] disabled:opacity-30"
             >
                 ›
             </button>

@@ -1,62 +1,45 @@
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/useAuth";
+import { CogIcon, HomeIcon, StarIcon, TrophyIcon } from "./ui/icons";
 
 export function NavBar() {
     const isAdmin = !!localStorage.getItem("admin_token");
     const { token, logout } = useAuth();
+    const { pathname } = useLocation();
+    const isLeague = pathname.startsWith("/league");
+    const isBadges = pathname.startsWith("/badges");
+    const isAdminPage = pathname.startsWith("/admin");
+    const isHome = !isLeague && !isBadges && !isAdminPage;
 
     return (
         <>
-            <header className="bg-[#333366] text-white sticky top-0 z-40 border-b-2 border-[#FF4200]">
-                <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between gap-2">
-                    <Link to="/" className="flex items-center gap-2.5 hover:opacity-90 transition-opacity shrink-0">
-                        <img src="/active.png" alt="Act!ve" className="h-6 w-auto" />
-                        <div className="flex items-center gap-2.5 translate-y-1">
-                            <div className="w-px h-5 bg-white/20 rounded-full" />
-                            <span className="text-2xl font-black tracking-tighter leading-none">
-                                <span className="text-white">Padel</span><span className="text-[#FF4200]">.</span>
-                            </span>
-                        </div>
+            <header className="bg-canvas/95 backdrop-blur text-ink sticky top-0 z-40 border-b border-line">
+                <div className="max-w-5xl mx-auto px-4 h-14 sm:h-16 flex items-center justify-between gap-2">
+                    <Link to="/" className="flex items-center gap-3 hover:opacity-90 transition-opacity shrink-0">
+                        <img src="/active.png" alt="Act!ve" className="h-5 sm:h-6 w-auto" />
+                        <span className="font-display text-xl sm:text-2xl font-bold uppercase tracking-wider leading-none text-[#FF4200]">Padel</span>
                     </Link>
-                    <div className="hidden sm:flex items-center gap-1 sm:gap-2">
-                        <Link
-                            to="/league"
-                            className="text-sm font-semibold px-3 py-2 rounded-lg bg-white/10 text-white hover:bg-white/20 transition-colors whitespace-nowrap"
-                        >
-                            🏆 League
-                        </Link>
-                        <Link
-                            to="/badges"
-                            className="text-sm font-semibold px-3 py-2 rounded-lg bg-white/10 text-white hover:bg-white/20 transition-colors whitespace-nowrap"
-                        >
-                            🏅 Badges
-                        </Link>
-                        {isAdmin && (
-                            <Link
-                                to="/admin"
-                                className="text-sm font-semibold px-3 py-2 rounded-lg border border-[#9FD2DD]/50 text-[#9FD2DD] hover:bg-white/10 hover:text-white transition-colors whitespace-nowrap"
-                            >
-                                Admin
-                            </Link>
-                        )}
+                    <nav className="hidden sm:flex items-center gap-6 font-display text-[15px] font-semibold uppercase tracking-wider">
+                        <NavLink to="/" active={isHome}>Home</NavLink>
+                        <NavLink to="/league" active={isLeague}>League</NavLink>
+                        <NavLink to="/badges" active={isBadges}>Badges</NavLink>
+                        {isAdmin && <NavLink to="/admin" active={isAdminPage}>Admin</NavLink>}
                         {token ? (
-                            <>
-                                <button
-                                    onClick={logout}
-                                    className="text-sm font-semibold px-3 py-2 rounded-lg text-white/70 hover:text-white transition-colors whitespace-nowrap"
-                                >
-                                    Log out
-                                </button>
-                            </>
+                            <button
+                                onClick={logout}
+                                className="font-display uppercase tracking-wider text-muted hover:text-ink transition-colors"
+                            >
+                                Log out
+                            </button>
                         ) : (
                             <Link
                                 to="/login"
-                                className="text-sm font-semibold px-3 py-2 rounded-lg border border-white/30 text-white hover:bg-white/10 transition-colors whitespace-nowrap"
+                                className="font-sans normal-case tracking-normal text-sm font-semibold px-4 py-2 rounded-md border border-gray-300 text-ink hover:border-gray-400 transition-colors"
                             >
                                 Log in
                             </Link>
                         )}
-                    </div>
+                    </nav>
                 </div>
             </header>
             <MobileBottomNav isAdmin={isAdmin} />
@@ -72,20 +55,20 @@ function MobileBottomNav({ isAdmin }: { isAdmin: boolean }) {
     const isAdminPage = pathname.startsWith("/admin");
 
     return (
-        <nav className="sm:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-[#E5E5EA]">
+        <nav className="sm:hidden fixed bottom-0 left-0 right-0 z-50 bg-surface/95 backdrop-blur border-t border-line pb-[env(safe-area-inset-bottom)]">
             <div className="flex">
                 <BottomTab to="/" label="Home" active={isHome}>
-                    <HomeIcon />
+                    <HomeIcon className="w-5 h-5" />
                 </BottomTab>
                 <BottomTab to="/league" label="League" active={isLeague}>
-                    <TrophyIcon />
+                    <TrophyIcon className="w-5 h-5" />
                 </BottomTab>
                 <BottomTab to="/badges" label="Badges" active={isBadges}>
-                    <StarIcon />
+                    <StarIcon className="w-5 h-5" />
                 </BottomTab>
                 {isAdmin && (
                     <BottomTab to="/admin" label="Admin" active={isAdminPage}>
-                        <CogIcon />
+                        <CogIcon className="w-5 h-5" />
                     </BottomTab>
                 )}
             </div>
@@ -93,49 +76,24 @@ function MobileBottomNav({ isAdmin }: { isAdmin: boolean }) {
     );
 }
 
-function BottomTab({ to, label, active, children }: { to: string; label: string; active: boolean; children: React.ReactNode }) {
+function NavLink({ to, active, children }: { to: string; active: boolean; children: React.ReactNode }) {
     return (
-        <Link
-            to={to}
-            className={`flex-1 flex flex-col items-center justify-center py-2.5 gap-0.5 transition-colors ${
-                active ? "text-[#FF4200]" : "text-[#8E8E93]"
-            }`}
-        >
+        <Link to={to} className={`transition-colors ${active ? "text-ink" : "text-muted hover:text-ink"}`}>
             {children}
-            <span className="text-[10px] font-bold">{label}</span>
         </Link>
     );
 }
 
-function HomeIcon() {
+function BottomTab({ to, label, active, children }: { to: string; label: string; active: boolean; children: React.ReactNode }) {
     return (
-        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-            <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
-        </svg>
-    );
-}
-
-
-function TrophyIcon() {
-    return (
-        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-            <path d="M5 2h10v2h2.5a.5.5 0 01.5.5V6a4 4 0 01-3.6 3.98A5 5 0 0111 12.9V15h3v2H6v-2h3v-2.1a5 5 0 01-3.4-2.92A4 4 0 012 6V4.5a.5.5 0 01.5-.5H5V2zm0 4H4a2 2 0 001 1.73V6zm10 0v1.73A2 2 0 0016 6h-1z" />
-        </svg>
-    );
-}
-
-function StarIcon() {
-    return (
-        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-        </svg>
-    );
-}
-
-function CogIcon() {
-    return (
-        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-            <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
-        </svg>
+        <Link
+            to={to}
+            className={`flex-1 flex flex-col items-center justify-center py-2.5 gap-1 transition-colors ${
+                active ? "text-[#FF4200] shadow-[inset_0_2px_0_#FF4200]" : "text-muted"
+            }`}
+        >
+            {children}
+            <span className="text-[11px] font-semibold">{label}</span>
+        </Link>
     );
 }

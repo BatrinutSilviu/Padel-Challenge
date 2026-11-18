@@ -35,7 +35,7 @@ export function ChallengerScoreEntry({
             {hasGroupB && <GroupBlock title="Group B" rounds={progress.groupRounds.B} onSaveStart={onSaveStart} onSaveEnd={onSaveEnd} onSaved={onSaved} />}
 
             {progress.placement.length > 0 && (
-                <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                <div className="bg-surface rounded-xl border border-gray-200 overflow-hidden">
                     <div className={`px-4 sm:px-5 py-3 border-b ${ACCENTS.MAIN}`}>
                         <span className="font-semibold">Placement Matches</span>
                     </div>
@@ -75,7 +75,7 @@ export function GroupBlock({
     onSaved: OnSaved;
 }) {
     return (
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div className="bg-surface rounded-xl border border-gray-200 overflow-hidden">
             <div className="px-4 sm:px-5 py-3 bg-gray-50 border-b border-gray-200">
                 <span className="font-semibold text-gray-700">{title}</span>
             </div>
@@ -122,7 +122,7 @@ function BracketBlock({
     ];
 
     return (
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div className="bg-surface rounded-xl border border-gray-200 overflow-hidden">
             <div className={`px-4 sm:px-5 py-3 border-b ${ACCENTS[section.key]}`}>
                 <span className="font-semibold">{section.title}</span>
             </div>

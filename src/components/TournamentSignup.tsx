@@ -84,12 +84,12 @@ export function TournamentSignup({ tournament }: { tournament: TournamentData })
 
     return (
         // No overflow-hidden: it would clip the partner picker's dropdown.
-        <section className="bg-white rounded-2xl border border-[#E5E5EA] shadow-sm">
-            <div className="px-5 sm:px-6 py-5 border-b border-[#F5F5F7]">
+        <section className="bg-surface rounded-2xl border border-line shadow-sm">
+            <div className="px-5 sm:px-6 py-5 border-b border-canvas">
                 <div className="flex items-start justify-between gap-4">
                     <div>
-                        <h2 className="text-lg font-black text-[#1A1A2E]">Sign-up</h2>
-                        <p className="text-sm text-[#8E8E93] font-medium mt-0.5">
+                        <h2 className="text-lg font-bold text-ink">Sign-up</h2>
+                        <p className="text-sm text-muted font-medium mt-0.5">
                             {!tournament.registrationOpen
                                 ? "Sign-up is closed — the draw is being finalised."
                                 : spotsLeft === null
@@ -99,7 +99,7 @@ export function TournamentSignup({ tournament }: { tournament: TournamentData })
                                 : `${spotsLeft} spot${spotsLeft !== 1 ? "s" : ""} left`}
                         </p>
                     </div>
-                    <span className={`text-sm font-black px-3 py-1.5 rounded-full whitespace-nowrap ${
+                    <span className={`text-sm font-bold px-3 py-1.5 rounded-full whitespace-nowrap ${
                         isFull ? "bg-[#FF4200] text-white" : "bg-[#FF4200]/10 text-[#FF4200]"
                     }`}>
                         {taken}{capacity !== null && ` / ${capacity}`}
@@ -107,14 +107,14 @@ export function TournamentSignup({ tournament }: { tournament: TournamentData })
                 </div>
 
                 {(level || tournament.womenOnly) && (
-                    <p className="text-xs text-[#8E8E93] mt-2">
+                    <p className="text-xs text-muted mt-2">
                         {tournament.womenOnly && <span className="font-bold text-pink-600">Women only · </span>}
-                        {level && <>Open to players with a level coefficient of <b className="text-[#1A1A2E]">{level.allowedMin}–{level.allowedMax}</b>. New players without a coefficient yet can join any level.</>}
+                        {level && <>Open to players with a level coefficient of <b className="text-ink">{level.allowedMin}–{level.allowedMax}</b>. New players without a coefficient yet can join any level.</>}
                     </p>
                 )}
 
                 {capacity !== null && (
-                    <div className="w-full bg-[#F5F5F7] rounded-full h-2 mt-4">
+                    <div className="w-full bg-canvas rounded-full h-2 mt-4">
                         <div
                             className="h-2 rounded-full bg-[#FF4200] transition-all"
                             style={{ width: `${Math.min(100, (taken / capacity) * 100)}%` }}
@@ -147,11 +147,11 @@ export function TournamentSignup({ tournament }: { tournament: TournamentData })
                                     <span>
                                         You're on the waiting list{myPartnerName && ` with ${myPartnerName}`}
                                         {payNow !== null && (
-                                            <span className="block text-sm font-black text-[#1A1A2E] mt-1">
+                                            <span className="block text-sm font-bold text-ink mt-1">
                                                 Pay the {payNow} lei {tournament.advanceFee !== null ? "advance" : "entry fee"} to confirm your spot
                                             </span>
                                         )}
-                                        <span className="block text-xs font-medium text-[#8E8E93] mt-0.5">
+                                        <span className="block text-xs font-medium text-muted mt-0.5">
                                             {tournament.advanceFee !== null && tournament.entryFee !== null && tournament.entryFee > tournament.advanceFee
                                                 ? `The other ${tournament.entryFee - tournament.advanceFee} lei of the ${tournament.entryFee} lei total are paid on the day. `
                                                 : ""}
@@ -166,7 +166,7 @@ export function TournamentSignup({ tournament }: { tournament: TournamentData })
                                     leave.mutate({ id: tournament.id });
                                 }}
                                 disabled={busy}
-                                className="text-sm font-bold px-4 py-2.5 rounded-xl border border-[#E5E5EA] text-[#8E8E93] hover:border-red-300 hover:text-red-500 disabled:opacity-50 transition-colors self-start"
+                                className="text-sm font-bold px-4 py-2.5 rounded-xl border border-line text-muted hover:border-red-300 hover:text-red-500 disabled:opacity-50 transition-colors self-start"
                             >
                                 {leave.isPending ? "Withdrawing…" : "Withdraw"}
                             </button>
@@ -187,19 +187,19 @@ export function TournamentSignup({ tournament }: { tournament: TournamentData })
                             )}
                             {teamBased && tournament.registrationOpen && (
                                 <div>
-                                    <p className="text-xs font-bold uppercase tracking-widest text-[#8E8E93] mb-1.5">
+                                    <p className="font-display text-sm font-semibold uppercase tracking-[0.12em] text-muted mb-1.5">
                                         Team partner <span className="normal-case tracking-normal font-medium">(optional)</span>
                                     </p>
                                     <div className="flex sm:max-w-sm">
                                         {partnerName ? (
-                                            <div className="flex-1 min-w-0 flex items-center gap-2 px-3 py-2.5 rounded-lg border border-gray-300 text-sm bg-white">
+                                            <div className="flex-1 min-w-0 flex items-center gap-2 px-3 py-2.5 rounded-lg border border-gray-300 text-sm bg-surface">
                                                 <span className="truncate text-gray-800">{cleanPlayerName(partnerName)}</span>
-                                                <span className="text-xs text-[#8E8E93] shrink-0">new player</span>
+                                                <span className="text-xs text-muted shrink-0">new player</span>
                                                 <button
                                                     type="button"
                                                     onClick={() => setPartnerName("")}
                                                     aria-label="Remove partner"
-                                                    className="ml-auto -my-2 -mr-2 p-2 text-[#8E8E93] hover:text-red-500 shrink-0"
+                                                    className="ml-auto -my-2 -mr-2 p-2 text-muted hover:text-red-500 shrink-0"
                                                 >
                                                     ✕
                                                 </button>
@@ -217,7 +217,7 @@ export function TournamentSignup({ tournament }: { tournament: TournamentData })
                                         )}
                                     </div>
                                     {partnerNameError && <p className="text-xs text-red-500 mt-1.5">{partnerNameError}</p>}
-                                    <p className="text-xs text-[#8E8E93] mt-1.5">
+                                    <p className="text-xs text-muted mt-1.5">
                                         {!hasPartner && "Can't find them? Type their full name to add them as a new player. "}
                                         {partnerId
                                             ? "They get an invitation and join the waiting list with you when they accept — each spot is confirmed once it's paid."
@@ -260,24 +260,24 @@ export function TournamentSignup({ tournament }: { tournament: TournamentData })
                 {error && <p className="text-sm text-red-500 mt-3">{error}</p>}
             </div>
 
-            <div className="px-5 sm:px-6 py-4 border-b border-[#F5F5F7] space-y-4">
+            <div className="px-5 sm:px-6 py-4 border-b border-canvas space-y-4">
                 {/* The advance is what players pay to get in; the total comes second. */}
                 {(tournament.entryFee !== null || tournament.advanceFee !== null) && (
                     <div className="space-y-0.5">
                         {tournament.advanceFee !== null ? (
                             <>
-                                <p className="text-base text-[#1A1A2E]">
-                                    <span className="font-black">Advance: {tournament.advanceFee} lei</span> / person — pay it to confirm your spot
+                                <p className="text-base text-ink">
+                                    <span className="font-bold">Advance: {tournament.advanceFee} lei</span> / person — pay it to confirm your spot
                                 </p>
                                 {tournament.entryFee !== null && (
-                                    <p className="text-sm text-[#8E8E93]">
+                                    <p className="text-sm text-muted">
                                         Total price {tournament.entryFee} lei / person · the other {tournament.entryFee - tournament.advanceFee} lei are paid on the day
                                     </p>
                                 )}
                             </>
                         ) : (
-                            <p className="text-base text-[#1A1A2E]">
-                                <span className="font-black">Price: {tournament.entryFee} lei</span> / person — pay it to confirm your spot
+                            <p className="text-base text-ink">
+                                <span className="font-bold">Price: {tournament.entryFee} lei</span> / person — pay it to confirm your spot
                             </p>
                         )}
                     </div>
@@ -294,7 +294,7 @@ export function TournamentSignup({ tournament }: { tournament: TournamentData })
             </div>
 
             {tournament.participants.length === 0 ? (
-                <p className="px-5 sm:px-6 py-6 text-sm text-[#8E8E93]">Nobody has signed up yet — be the first.</p>
+                <p className="px-5 sm:px-6 py-6 text-sm text-muted">Nobody has signed up yet — be the first.</p>
             ) : (
                 <>
                     <PlayerList title="Confirmed" players={confirmed} playerId={playerId} nameOf={nameOf} openSpots={spotsLeft} />
@@ -316,20 +316,20 @@ function PlayerList({ title, players, playerId, nameOf, openSpots }: {
     openSpots?: number | null;
 }) {
     return (
-        <div className="border-b border-[#F5F5F7] last:border-b-0">
-            <p className="px-5 sm:px-6 pt-4 pb-1 text-xs font-bold uppercase tracking-widest text-[#8E8E93]">
-                {title} <span className="text-[#C7C7CC]">· {players.length}</span>
+        <div className="border-b border-canvas last:border-b-0">
+            <p className="px-5 sm:px-6 pt-4 pb-1 font-display text-sm font-semibold uppercase tracking-[0.12em] text-muted">
+                {title} <span className="text-faint">· {players.length}</span>
             </p>
             {players.length > 0 && (
-                <ol className="divide-y divide-[#F5F5F7]">
+                <ol className="divide-y divide-canvas">
                     {players.map((p, i) => (
                         <li key={p.id} className="px-5 sm:px-6 py-3 flex items-center gap-3">
-                            <span className="text-xs font-black text-[#C7C7CC] w-5 shrink-0 tabular-nums">{i + 1}</span>
+                            <span className="text-xs font-bold text-faint w-5 shrink-0 tabular-nums">{i + 1}</span>
                             <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 min-w-0">
                                     <Link
                                         to={`/player/${p.player.id}`}
-                                        className="font-semibold text-[#1A1A2E] hover:text-[#FF4200] transition-colors truncate"
+                                        className="font-semibold text-ink hover:text-[#FF4200] transition-colors truncate"
                                     >
                                         {p.player.name}
                                     </Link>
@@ -337,7 +337,7 @@ function PlayerList({ title, players, playerId, nameOf, openSpots }: {
                                         <span className="text-xs font-bold text-[#FF4200] bg-[#FF4200]/10 px-2 py-0.5 rounded-full shrink-0">You</span>
                                     )}
                                 </div>
-                                <p className="text-xs text-[#8E8E93] truncate">
+                                <p className="text-xs text-muted truncate">
                                     {p.partnerId && nameOf.has(p.partnerId) && <>with {nameOf.get(p.partnerId)} · </>}
                                     <span className="tabular-nums" title="Signed up">{signedUpAt(p.registeredAt)}</span>
                                 </p>
@@ -347,12 +347,12 @@ function PlayerList({ title, players, playerId, nameOf, openSpots }: {
                 </ol>
             )}
             {openSpots != null && openSpots > 0 && (
-                <p className="px-5 sm:px-6 py-3 text-sm font-semibold text-[#FF4200] border-t border-dashed border-[#F5F5F7]">
+                <p className="px-5 sm:px-6 py-3 text-sm font-semibold text-[#FF4200] border-t border-dashed border-canvas">
                     {openSpots} empty spot{openSpots !== 1 ? "s" : ""}
                 </p>
             )}
             {players.length === 0 && openSpots == null && (
-                <p className="px-5 sm:px-6 py-3 text-sm text-[#8E8E93]">Nobody is confirmed yet.</p>
+                <p className="px-5 sm:px-6 py-3 text-sm text-muted">Nobody is confirmed yet.</p>
             )}
         </div>
     );
@@ -382,17 +382,17 @@ function TeamUp({ tournament, me, nameOf, onChange, onError }: {
     const split = trpc.tournament.leaveTeam.useMutation(opts);
     const busy = ask.isPending || answer.isPending || cancel.isPending || split.isPending;
 
-    const box = "rounded-xl border border-[#E5E5EA] bg-[#F5F5F7]/60 p-3 sm:p-4 space-y-2.5";
+    const box = "rounded-xl border border-line bg-canvas/60 p-3 sm:p-4 space-y-2.5";
     const button = "text-sm font-bold px-4 py-2.5 rounded-xl disabled:opacity-50 transition-colors";
 
     if (me.partnerId) {
         return (
             <div className={box}>
-                <p className="text-sm text-[#3A3A4E]">Your partner: <span className="font-bold text-[#1A1A2E]">{nameOf.get(me.partnerId)}</span></p>
+                <p className="text-sm text-ink-2">Your partner: <span className="font-bold text-ink">{nameOf.get(me.partnerId)}</span></p>
                 <button
                     onClick={() => { if (confirm(`Leave the team with ${nameOf.get(me.partnerId!)}? You both stay signed up, without a partner.`)) split.mutate({ id: tournament.id }); }}
                     disabled={busy}
-                    className={`${button} border border-[#E5E5EA] bg-white text-[#8E8E93] hover:border-red-300 hover:text-red-500`}
+                    className={`${button} border border-line bg-surface text-muted hover:border-red-300 hover:text-red-500`}
                 >
                     Leave team
                 </button>
@@ -403,13 +403,13 @@ function TeamUp({ tournament, me, nameOf, onChange, onError }: {
         if (me.partnerRequestId) {
             return (
                 <div className={`${box} flex flex-col sm:flex-row sm:items-center gap-2`}>
-                    <p className="text-sm text-[#3A3A4E] flex-1">⏳ Invitation sent to <span className="font-bold text-[#1A1A2E]">{nameOf.get(me.partnerRequestId) ?? "your partner"}</span> — they join the list with you when they accept</p>
+                    <p className="text-sm text-ink-2 flex-1">⏳ Invitation sent to <span className="font-bold text-ink">{nameOf.get(me.partnerRequestId) ?? "your partner"}</span> — they join the list with you when they accept</p>
                     <button onClick={() => cancel.mutate({ id: tournament.id })} disabled={busy}
-                        className={`${button} self-start border border-[#E5E5EA] bg-white text-[#8E8E93]`}>Cancel invitation</button>
+                        className={`${button} self-start border border-line bg-surface text-muted`}>Cancel invitation</button>
                 </div>
             );
         }
-        return <p className="text-xs text-[#8E8E93]">Once your spot is confirmed you can team up with someone else on the list.</p>;
+        return <p className="text-xs text-muted">Once your spot is confirmed you can team up with someone else on the list.</p>;
     }
 
     const incoming = tournament.participants.filter(p => p.partnerRequestId === me.playerId && !p.partnerId);
@@ -420,33 +420,33 @@ function TeamUp({ tournament, me, nameOf, onChange, onError }: {
 
     return (
         <div className={box}>
-            <p className="text-xs font-bold uppercase tracking-widest text-[#8E8E93]">Team partner</p>
+            <p className="font-display text-sm font-semibold uppercase tracking-[0.12em] text-muted">Team partner</p>
             {incoming.map(p => (
-                <div key={p.playerId} className="flex flex-col sm:flex-row sm:items-center gap-2 bg-white rounded-lg border border-[#FF4200]/30 px-3 py-2.5">
-                    <p className="text-sm text-[#1A1A2E] flex-1 min-w-0"><span className="font-bold">{p.player.name}</span> wants to team up with you</p>
+                <div key={p.playerId} className="flex flex-col sm:flex-row sm:items-center gap-2 bg-surface rounded-lg border border-[#FF4200]/30 px-3 py-2.5">
+                    <p className="text-sm text-ink flex-1 min-w-0"><span className="font-bold">{p.player.name}</span> wants to team up with you</p>
                     <div className="flex gap-2 shrink-0">
                         <button onClick={() => answer.mutate({ id: tournament.id, fromPlayerId: p.playerId, accept: true })} disabled={busy}
                             className={`${button} flex-1 sm:flex-none bg-[#FF4200] text-white hover:bg-[#CC3500]`}>Accept</button>
                         <button onClick={() => answer.mutate({ id: tournament.id, fromPlayerId: p.playerId, accept: false })} disabled={busy}
-                            className={`${button} flex-1 sm:flex-none border border-[#E5E5EA] bg-white text-[#8E8E93]`}>Decline</button>
+                            className={`${button} flex-1 sm:flex-none border border-line bg-surface text-muted`}>Decline</button>
                     </div>
                 </div>
             ))}
             {asked ? (
                 <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                    <p className="text-sm text-[#3A3A4E] flex-1">⏳ Waiting for <span className="font-bold text-[#1A1A2E]">{asked}</span> to accept</p>
+                    <p className="text-sm text-ink-2 flex-1">⏳ Waiting for <span className="font-bold text-ink">{asked}</span> to accept</p>
                     <button onClick={() => cancel.mutate({ id: tournament.id })} disabled={busy}
-                        className={`${button} self-start border border-[#E5E5EA] bg-white text-[#8E8E93]`}>Cancel request</button>
+                        className={`${button} self-start border border-line bg-surface text-muted`}>Cancel request</button>
                 </div>
             ) : candidates.length === 0 ? (
-                incoming.length === 0 && <p className="text-sm text-[#8E8E93]">Nobody else confirmed is free to team up with yet. Without a partner you'll be paired up with someone.</p>
+                incoming.length === 0 && <p className="text-sm text-muted">Nobody else confirmed is free to team up with yet. Without a partner you'll be paired up with someone.</p>
             ) : (
                 <div className="flex flex-col sm:flex-row gap-2">
                     <select
                         value={pick}
                         onChange={e => setPick(e.target.value)}
                         aria-label="Player to team up with"
-                        className="flex-1 min-w-0 border border-gray-300 rounded-lg px-3 py-2.5 text-base sm:text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#FF4200]"
+                        className="flex-1 min-w-0 border border-gray-300 rounded-lg px-3 py-2.5 text-base sm:text-sm bg-surface focus:outline-none focus:ring-2 focus:ring-[#FF4200]"
                     >
                         <option value="">Team up with…</option>
                         {candidates.map(p => <option key={p.playerId} value={p.playerId}>{p.player.name}</option>)}
@@ -456,7 +456,7 @@ function TeamUp({ tournament, me, nameOf, onChange, onError }: {
                 </div>
             )}
             {!asked && candidates.length > 0 && (
-                <p className="text-xs text-[#8E8E93]">They have to accept. No partner? You'll be paired up with someone.</p>
+                <p className="text-xs text-muted">They have to accept. No partner? You'll be paired up with someone.</p>
             )}
         </div>
     );
@@ -478,12 +478,12 @@ function Invitations({ tournamentId, invitations, onChange, onError }: {
         <div className="space-y-2">
             {invitations.map(p => (
                 <div key={p.playerId} className="flex flex-col sm:flex-row sm:items-center gap-2 rounded-xl border border-[#FF4200]/40 bg-[#FF4200]/5 px-3 py-3">
-                    <p className="text-sm text-[#1A1A2E] flex-1 min-w-0"><span className="font-bold">{p.player.name}</span> invited you to play together</p>
+                    <p className="text-sm text-ink flex-1 min-w-0"><span className="font-bold">{p.player.name}</span> invited you to play together</p>
                     <div className="flex gap-2 shrink-0">
                         <button onClick={() => answer.mutate({ id: tournamentId, fromPlayerId: p.playerId, accept: true })} disabled={answer.isPending}
                             className="flex-1 sm:flex-none text-sm font-bold px-4 py-2.5 rounded-xl bg-[#FF4200] text-white hover:bg-[#CC3500] disabled:opacity-50">Accept & sign up</button>
                         <button onClick={() => answer.mutate({ id: tournamentId, fromPlayerId: p.playerId, accept: false })} disabled={answer.isPending}
-                            className="flex-1 sm:flex-none text-sm font-bold px-4 py-2.5 rounded-xl border border-[#E5E5EA] bg-white text-[#8E8E93] disabled:opacity-50">Decline</button>
+                            className="flex-1 sm:flex-none text-sm font-bold px-4 py-2.5 rounded-xl border border-line bg-surface text-muted disabled:opacity-50">Decline</button>
                     </div>
                 </div>
             ))}

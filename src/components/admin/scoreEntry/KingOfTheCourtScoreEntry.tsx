@@ -26,7 +26,7 @@ export function KingOfTheCourtScoreEntry({
             {rounds.map(round => {
                 const matches = sortMatchesByCourt(round.matches);
                 return (
-                    <div key={round.id} className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                    <div key={round.id} className="bg-surface rounded-xl border border-gray-200 overflow-hidden">
                         <div className="px-4 sm:px-5 py-3 bg-gray-50 border-b border-gray-200">
                             <span className="font-semibold text-gray-700">Round {round.roundNumber}</span>
                         </div>

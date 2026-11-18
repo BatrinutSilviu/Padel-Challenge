@@ -29,24 +29,24 @@ export function TeamFinalStandings({ participants, partnerOf }: { participants: 
 
     return (
         <section>
-            <h2 className="text-xs font-bold uppercase tracking-widest text-[#8E8E93] mb-3">Final Standings</h2>
-            <div className="bg-white rounded-2xl border border-[#E5E5EA] overflow-hidden overflow-x-auto shadow-sm">
+            <h2 className="font-display text-sm font-semibold uppercase tracking-[0.12em] text-muted mb-3">Final Standings</h2>
+            <div className="bg-surface rounded-2xl border border-line overflow-hidden overflow-x-auto shadow-sm">
                 <table className="w-full text-sm min-w-[280px]">
-                    <thead className="border-b border-[#F5F5F7]">
+                    <thead className="border-b border-canvas">
                         <tr>
-                            <th className="text-left px-4 py-3 text-xs font-bold uppercase tracking-widest text-[#8E8E93] w-12">Rank</th>
-                            <th className="text-left px-4 py-3 text-xs font-bold uppercase tracking-widest text-[#8E8E93]">Team</th>
+                            <th className="text-left px-4 py-3 font-display text-sm font-semibold uppercase tracking-[0.12em] text-muted w-12">Rank</th>
+                            <th className="text-left px-4 py-3 font-display text-sm font-semibold uppercase tracking-[0.12em] text-muted">Team</th>
                         </tr>
                     </thead>
                     <tbody>
                         {rows.map(({ rank, players }) => (
-                            <tr key={players[0].id} className="border-b border-[#F5F5F7] last:border-0 hover:bg-[#F5F5F7] transition-colors">
+                            <tr key={players[0].id} className="border-b border-canvas last:border-0 hover:bg-canvas transition-colors">
                                 <td className="px-4 py-3 align-top">
                                     <RankMedal rank={rank} />
                                 </td>
                                 <td className="px-4 py-3">
                                     {players.map(p => (
-                                        <Link key={p.id} to={`/player/${p.player.id}`} className="font-semibold text-[#1A1A2E] hover:text-[#FF4200] transition-colors block">
+                                        <Link key={p.id} to={`/player/${p.player.id}`} className="font-semibold text-ink hover:text-[#FF4200] transition-colors block">
                                             {p.player.name}
                                         </Link>
                                     ))}
@@ -61,8 +61,8 @@ export function TeamFinalStandings({ participants, partnerOf }: { participants: 
 }
 
 function RankMedal({ rank }: { rank: number }) {
-    if (rank === 1) return <span className="text-yellow-500 font-black text-lg">🥇</span>;
-    if (rank === 2) return <span className="text-gray-400 font-black text-lg">🥈</span>;
-    if (rank === 3) return <span className="text-amber-600 font-black text-lg">🥉</span>;
-    return <span className="text-[#8E8E93] font-bold">#{rank}</span>;
+    if (rank === 1) return <span className="text-yellow-500 font-bold text-lg">🥇</span>;
+    if (rank === 2) return <span className="text-gray-400 font-bold text-lg">🥈</span>;
+    if (rank === 3) return <span className="text-amber-600 font-bold text-lg">🥉</span>;
+    return <span className="text-muted font-bold">#{rank}</span>;
 }

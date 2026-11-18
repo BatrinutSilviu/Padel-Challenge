@@ -24,7 +24,7 @@ export function LeagueStandings({
         <div className="overflow-x-auto">
             <table className="w-full text-sm min-w-[340px]">
                 <thead>
-                    <tr className="text-[10px] font-bold uppercase tracking-wider text-[#8E8E93] border-b border-[#F5F5F7]">
+                    <tr className="text-[10px] font-bold uppercase tracking-wider text-muted border-b border-canvas">
                         <th className="text-left pl-3 pr-1 py-2 w-8">#</th>
                         <th className="text-left px-2 py-2">Team</th>
                         <th className="text-center px-1 py-2 w-7" title="Played">P</th>
@@ -43,12 +43,12 @@ export function LeagueStandings({
                         const mine = r.teamId === myTeamId;
                         const gameDiff = r.gamesWon - r.gamesLost;
                         return (
-                            <tr key={r.teamId} className={`border-b border-[#F5F5F7] last:border-0 ${mine ? "bg-[#FF4200]/5" : ""}`}>
-                                <td className={`pl-2.5 pr-1 py-2.5 border-l-[3px] ${info.rowClass} font-bold text-[#8E8E93] tabular-nums`}>
+                            <tr key={r.teamId} className={`border-b border-canvas last:border-0 ${mine ? "bg-[#FF4200]/5" : ""}`}>
+                                <td className={`pl-2.5 pr-1 py-2.5 border-l-[3px] ${info.rowClass} font-bold text-muted tabular-nums`}>
                                     {showMedals && r.position <= 3 && !r.eliminated ? MEDALS[r.position - 1] : r.position}
                                 </td>
                                 <td className="px-2 py-2.5 min-w-0">
-                                    <span className={`font-semibold ${r.eliminated ? "line-through text-[#8E8E93]" : "text-[#1A1A2E]"}`}>
+                                    <span className={`font-semibold ${r.eliminated ? "line-through text-muted" : "text-ink"}`}>
                                         {team ? teamName(team) : "?"}
                                     </span>
                                     {mine && <span className="ml-1.5 text-[10px] font-bold uppercase text-[#FF4200]">You</span>}
@@ -59,11 +59,11 @@ export function LeagueStandings({
                                     {/* On a phone the extra controls go under the name instead of in a column. */}
                                     {extra && <div className="sm:hidden mt-1.5">{extra(r)}</div>}
                                 </td>
-                                <td className="text-center px-1 py-2.5 tabular-nums text-[#8E8E93]">{r.played}</td>
-                                <td className="text-center px-1 py-2.5 tabular-nums text-[#8E8E93]">{r.won}</td>
-                                <td className="text-center px-1 py-2.5 tabular-nums text-[#8E8E93] hidden sm:table-cell">{r.setsWon}-{r.setsLost}</td>
-                                <td className="text-center px-1 py-2.5 tabular-nums text-[#8E8E93] hidden sm:table-cell">{gameDiff > 0 ? `+${gameDiff}` : gameDiff}</td>
-                                <td className="text-center px-2 py-2.5 tabular-nums font-black text-[#1A1A2E]">{r.points}</td>
+                                <td className="text-center px-1 py-2.5 tabular-nums text-muted">{r.played}</td>
+                                <td className="text-center px-1 py-2.5 tabular-nums text-muted">{r.won}</td>
+                                <td className="text-center px-1 py-2.5 tabular-nums text-muted hidden sm:table-cell">{r.setsWon}-{r.setsLost}</td>
+                                <td className="text-center px-1 py-2.5 tabular-nums text-muted hidden sm:table-cell">{gameDiff > 0 ? `+${gameDiff}` : gameDiff}</td>
+                                <td className="text-center px-2 py-2.5 tabular-nums font-bold text-ink">{r.points}</td>
                                 {extra && <td className="px-2 py-2.5 text-right whitespace-nowrap hidden sm:table-cell">{extra(r)}</td>}
                             </tr>
                         );
@@ -76,7 +76,7 @@ export function LeagueStandings({
 
 export function OutcomeLegend() {
     return (
-        <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-[#8E8E93]">
+        <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted">
             {(["PROMOTED", "PLAYOFF_UP", "PLAYOFF_DOWN", "RELEGATED"] as const).map(o => (
                 <span key={o} className="flex items-center gap-1.5">
                     <span className={`w-1 h-3.5 rounded-full border-l-[3px] ${OUTCOME_INFO[o].rowClass}`} />

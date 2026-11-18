@@ -38,7 +38,7 @@ export function ChatJumpLink({ tournamentId }: { tournamentId: string }) {
     // Only the newest page is known here: "30+" when all of it is new and there's more.
     const unread = unreadCount === data.messages.length && data.hasMore ? `${unreadCount}+` : unreadCount;
     return (
-        <a href="#chat" className="inline-flex items-center gap-1.5 text-sm font-bold text-[#333366] hover:text-[#FF4200]">
+        <a href="#chat" className="inline-flex items-center gap-1.5 text-sm font-bold text-[#9FD2DD] hover:text-[#FF4200]">
             <span aria-hidden>💬</span> Chat
             {unreadCount > 0 && (
                 <span className="min-w-[1.25rem] h-5 px-1.5 rounded-full bg-[#FF4200] text-white text-[11px] font-bold inline-flex items-center justify-center">{unread}</span>
@@ -128,9 +128,9 @@ export function TournamentChat({ tournamentId, tournamentName }: { tournamentId:
         // Nothing to join once it's closed.
         if (!data.open) return null;
         return (
-            <section id="chat" className="bg-white rounded-2xl border border-[#E5E5EA] p-4 sm:p-5 shadow-sm">
-                <p className="text-sm font-black text-[#1A1A2E]">💬 Tournament chat</p>
-                <p className="text-sm text-[#8E8E93] mt-0.5">
+            <section id="chat" className="bg-surface rounded-2xl border border-line p-4 sm:p-5 shadow-sm">
+                <p className="text-sm font-bold text-ink">💬 Tournament chat</p>
+                <p className="text-sm text-muted mt-0.5">
                     {token
                         ? "For the players signed up — sign up to join the conversation."
                         : <>For the players signed up. <Link to={`/login?redirect=${encodeURIComponent(`/tournament/${tournamentId}`)}`} className="text-[#FF4200] font-semibold">Log in</Link> and sign up to join it.</>}
@@ -146,11 +146,11 @@ export function TournamentChat({ tournamentId, tournamentName }: { tournamentId:
     };
 
     return (
-        <section id="chat" className="bg-white rounded-2xl border border-[#E5E5EA] shadow-sm overflow-hidden scroll-mt-20">
-            <div className="px-4 sm:px-5 py-3 border-b border-[#F5F5F7] flex items-baseline justify-between gap-3">
-                <p className="text-sm font-black text-[#1A1A2E] whitespace-nowrap">💬 Tournament chat</p>
+        <section id="chat" className="bg-surface rounded-2xl border border-line shadow-sm overflow-hidden scroll-mt-20">
+            <div className="px-4 sm:px-5 py-3 border-b border-canvas flex items-baseline justify-between gap-3">
+                <p className="text-sm font-bold text-ink whitespace-nowrap">💬 Tournament chat</p>
                 {(!data.open || closes) && (
-                    <p className="text-xs text-[#8E8E93] text-right">
+                    <p className="text-xs text-muted text-right">
                         {!data.open ? "Closed" : `Open until ${dayLabel(closes!).toLowerCase()} ${timeLabel(closes!)}`}
                     </p>
                 )}
@@ -159,7 +159,7 @@ export function TournamentChat({ tournamentId, tournamentName }: { tournamentId:
             <div
                 ref={listRef}
                 onScroll={e => { const el = e.currentTarget; nearBottom.current = el.scrollHeight - el.scrollTop - el.clientHeight < 60; }}
-                className="max-h-[60vh] sm:max-h-96 overflow-y-auto px-3 sm:px-4 py-3 space-y-1.5 bg-[#F5F5F7]/60"
+                className="max-h-[60vh] sm:max-h-96 overflow-y-auto px-3 sm:px-4 py-3 space-y-1.5 bg-canvas/60"
             >
                 {hasEarlier && (
                     <div className="text-center pb-1">
@@ -167,14 +167,14 @@ export function TournamentChat({ tournamentId, tournamentName }: { tournamentId:
                             type="button"
                             onClick={loadOlder}
                             disabled={loadingOlder}
-                            className="text-xs font-bold px-3 py-1.5 rounded-full bg-white border border-[#E5E5EA] text-[#333366] hover:border-[#FF4200] hover:text-[#FF4200] disabled:opacity-50"
+                            className="text-xs font-bold px-3 py-1.5 rounded-full bg-surface border border-line text-[#9FD2DD] hover:border-[#FF4200] hover:text-[#FF4200] disabled:opacity-50"
                         >
                             {loadingOlder ? "Loading…" : "↑ Show earlier messages"}
                         </button>
                     </div>
                 )}
                 {messages.length === 0 && (
-                    <p className="text-center text-sm text-[#8E8E93] py-6">
+                    <p className="text-center text-sm text-muted py-6">
                         {data.open ? "No messages yet — say hi, find a partner, ask about the event." : "No messages."}
                     </p>
                 )}
@@ -188,12 +188,12 @@ export function TournamentChat({ tournamentId, tournamentName }: { tournamentId:
                     const canDelete = isAdmin || (data.open && !m.fromAdmin && !!playerId && m.player?.id === playerId);
                     return (
                         <div key={m.id}>
-                            {newDay && <p className="text-center text-[11px] font-bold text-[#8E8E93] uppercase tracking-wide py-1.5">{dayLabel(at)}</p>}
+                            {newDay && <p className="text-center text-[11px] font-bold text-muted uppercase tracking-wide py-1.5">{dayLabel(at)}</p>}
                             <div className={`flex ${mine ? "justify-end" : "justify-start"} ${sameAuthor ? "" : "pt-1"}`}>
                                 <div className={`group max-w-[85%] rounded-2xl px-3 py-1.5 ${
                                     mine ? "bg-[#FF4200] text-white rounded-br-md"
                                     : m.fromAdmin ? "bg-[#333366] text-white rounded-bl-md"
-                                    : "bg-white border border-[#E5E5EA] text-[#1A1A2E] rounded-bl-md"
+                                    : "bg-surface border border-line text-ink rounded-bl-md"
                                 }`}>
                                     {!sameAuthor && (
                                         <p className={`text-[11px] font-bold truncate ${mine ? "text-white/85 text-right" : m.fromAdmin ? "text-[#9FD2DD]" : "text-[#FF4200]"}`}>
@@ -202,11 +202,11 @@ export function TournamentChat({ tournamentId, tournamentName }: { tournamentId:
                                                 : m.player
                                                 ? <Link to={`/player/${m.player.id}`} className="hover:underline">{m.player.name}</Link>
                                                 : "Act!ve"}
-                                            {m.fromAdmin && <span className="font-black"> · organiser</span>}
+                                            {m.fromAdmin && <span className="font-bold"> · organiser</span>}
                                         </p>
                                     )}
                                     <p className="text-sm whitespace-pre-wrap [overflow-wrap:anywhere]">{m.body}</p>
-                                    <p className={`text-[10px] text-right mt-0.5 ${mine || m.fromAdmin ? "text-white/70" : "text-[#8E8E93]"}`}>
+                                    <p className={`text-[10px] text-right mt-0.5 ${mine || m.fromAdmin ? "text-white/70" : "text-muted"}`}>
                                         {timeLabel(at)}
                                         {canDelete && (
                                             <button
@@ -226,7 +226,7 @@ export function TournamentChat({ tournamentId, tournamentName }: { tournamentId:
             </div>
 
             {data.open ? (
-                <div className="px-3 sm:px-4 py-3 border-t border-[#F5F5F7]">
+                <div className="px-3 sm:px-4 py-3 border-t border-canvas">
                     <div className="flex items-end gap-2">
                         <textarea
                             value={text}
@@ -239,7 +239,7 @@ export function TournamentChat({ tournamentId, tournamentName }: { tournamentId:
                             maxLength={MAX_LENGTH}
                             placeholder={isAdmin ? "Write as Act!ve…" : `Message ${tournamentName}…`}
                             aria-label="Message"
-                            className="flex-1 min-w-0 resize-none max-h-32 border border-gray-300 rounded-xl px-3 py-2.5 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-[#FF4200] bg-white field-sizing-content"
+                            className="flex-1 min-w-0 resize-none max-h-32 border border-gray-300 rounded-xl px-3 py-2.5 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-[#FF4200] bg-surface field-sizing-content"
                         />
                         <button
                             type="button"
@@ -253,7 +253,7 @@ export function TournamentChat({ tournamentId, tournamentName }: { tournamentId:
                     {error && <p className="text-xs text-red-500 mt-1.5">{error}</p>}
                 </div>
             ) : (
-                <p className="px-4 py-3 border-t border-[#F5F5F7] text-xs text-[#8E8E93]">The chat closed a day after the tournament ended.</p>
+                <p className="px-4 py-3 border-t border-canvas text-xs text-muted">The chat closed a day after the tournament ended.</p>
             )}
         </section>
     );

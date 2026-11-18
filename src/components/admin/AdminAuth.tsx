@@ -22,7 +22,7 @@ export function LoginPage({ onLogin }: { onLogin: (token: string) => void }) {
             <div className="flex items-center justify-center min-h-[calc(100vh-64px)]">
                 <form
                     onSubmit={handleSubmit}
-                    className="bg-white rounded-xl border border-gray-200 p-8 w-full max-w-sm space-y-4 shadow-sm"
+                    className="bg-surface rounded-xl border border-gray-200 p-8 w-full max-w-sm space-y-4 shadow-sm"
                 >
                     <h1 className="text-xl font-bold text-gray-800">Admin Login</h1>
                     <div className="space-y-1">
@@ -69,7 +69,7 @@ export function SessionExpiredModal({ onLogin }: { onLogin: (token: string) => v
             <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
             <form
                 onSubmit={handleSubmit}
-                className="relative bg-white rounded-xl border border-gray-200 p-8 w-full max-w-sm space-y-4 shadow-xl"
+                className="relative bg-surface rounded-xl border border-gray-200 p-8 w-full max-w-sm space-y-4 shadow-xl"
             >
                 <div>
                     <h2 className="text-lg font-bold text-gray-800">Session expired</h2>

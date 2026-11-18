@@ -23,7 +23,7 @@ export function ChallengerBracket({
 }) {
     if (!knockoutStarted) {
         return (
-            <div className="bg-white rounded-2xl border border-[#E5E5EA] p-5 shadow-sm text-sm text-[#8E8E93]">
+            <div className="bg-surface rounded-2xl border border-line p-5 shadow-sm text-sm text-muted">
                 {format === "PLACEMENT" ? "Placement matches not started yet." : "Knockout stage not started yet."}
                 <div className="mt-2 space-y-1 text-xs">
                     {format === "PLACEMENT" ? (
@@ -64,7 +64,7 @@ function BracketSection({ section }: { section: ChallengerBracketSection }) {
     const sf2 = semifinals[1];
 
     return (
-        <div className="bg-white rounded-2xl border border-[#E5E5EA] overflow-hidden shadow-sm">
+        <div className="bg-surface rounded-2xl border border-line overflow-hidden shadow-sm">
             <div className={`px-4 py-2.5 border-b ${ACCENTS[section.key]}`}>
                 <span className="font-bold text-sm">{title}</span>
             </div>
@@ -73,7 +73,7 @@ function BracketSection({ section }: { section: ChallengerBracketSection }) {
                     // Elimination tree: the two semifinals feed into the Final
                     <div className="flex flex-col md:flex-row md:items-stretch gap-6 md:gap-0">
                         <div className="flex-1 md:pr-4">
-                            <p className="text-xs font-bold uppercase tracking-widest text-[#8E8E93] mb-3">Semifinals</p>
+                            <p className="font-display text-sm font-semibold uppercase tracking-[0.12em] text-muted mb-3">Semifinals</p>
                             <div className="flex flex-col gap-8">
                                 <div className="relative">
                                     {sf1 ? <BracketMatchCard match={sf1} /> : <BracketMatchCard placeholder="TBD" />}
@@ -86,7 +86,7 @@ function BracketSection({ section }: { section: ChallengerBracketSection }) {
                             </div>
                         </div>
                         <div className="flex-1 flex flex-col justify-center">
-                            <p className="text-xs font-bold uppercase tracking-widest text-[#FF4200] mb-3">Final</p>
+                            <p className="font-display text-sm font-semibold uppercase tracking-[0.12em] text-[#FF4200] mb-3">Final</p>
                             {final ? (
                                 <BracketMatchCard match={final} />
                             ) : (
@@ -96,7 +96,7 @@ function BracketSection({ section }: { section: ChallengerBracketSection }) {
                     </div>
                 ) : (
                     <div>
-                        <p className="text-xs font-bold uppercase tracking-widest text-[#FF4200] mb-3">Final</p>
+                        <p className="font-display text-sm font-semibold uppercase tracking-[0.12em] text-[#FF4200] mb-3">Final</p>
                         {final ? (
                             <BracketMatchCard match={final} />
                         ) : (
@@ -106,8 +106,8 @@ function BracketSection({ section }: { section: ChallengerBracketSection }) {
                 )}
 
                 {/* 3rd place is a consolation match, not part of the elimination tree */}
-                <div className="mt-6 pt-5 border-t border-dashed border-[#E5E5EA]">
-                    <p className="text-xs font-bold uppercase tracking-widest text-[#8E8E93] mb-3">3rd Place Match</p>
+                <div className="mt-6 pt-5 border-t border-dashed border-line">
+                    <p className="font-display text-sm font-semibold uppercase tracking-[0.12em] text-muted mb-3">3rd Place Match</p>
                     {thirdPlace ? (
                         <BracketMatchCard match={thirdPlace} />
                     ) : hasSemifinals ? (
@@ -123,14 +123,14 @@ function BracketSection({ section }: { section: ChallengerBracketSection }) {
 
 function PlacementSection({ matches }: { matches: ChallengerMatch[] }) {
     return (
-        <div className="bg-white rounded-2xl border border-[#E5E5EA] overflow-hidden shadow-sm">
+        <div className="bg-surface rounded-2xl border border-line overflow-hidden shadow-sm">
             <div className={`px-4 py-2.5 border-b ${ACCENTS.MAIN}`}>
                 <span className="font-bold text-sm">Placement Matches</span>
             </div>
             <div className="p-4 sm:p-6 space-y-5">
                 {matches.map((match, i) => (
-                    <div key={match.id} className={i > 0 ? "pt-5 border-t border-dashed border-[#E5E5EA]" : ""}>
-                        <p className={`text-xs font-bold uppercase tracking-widest mb-3 ${i === 0 ? "text-[#FF4200]" : "text-[#8E8E93]"}`}>
+                    <div key={match.id} className={i > 0 ? "pt-5 border-t border-dashed border-line" : ""}>
+                        <p className={`font-display text-sm font-semibold uppercase tracking-[0.12em] mb-3 ${i === 0 ? "text-[#FF4200]" : "text-muted"}`}>
                             {placementMatchTitle(match.bracketPosition ?? i + 1)}
                             <span className="ml-2 font-semibold normal-case tracking-normal">A #{match.bracketPosition ?? i + 1} vs B #{match.bracketPosition ?? i + 1}</span>
                         </p>
@@ -155,9 +155,9 @@ export function BracketMatchCard({
 }) {
     if (!match) {
         return (
-            <div className="border border-dashed border-[#E5E5EA] rounded-xl px-3 py-4 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2">
+            <div className="border border-dashed border-line rounded-xl px-3 py-4 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2">
                 <div className="text-right text-xs text-[#B0B0B8] truncate">{placeholderLeft ?? placeholder ?? "TBD"}</div>
-                <div className="text-[#E5E5EA] font-black text-sm">vs</div>
+                <div className="text-line font-bold text-sm">vs</div>
                 <div className="text-left text-xs text-[#B0B0B8] truncate">{placeholderRight ?? placeholder ?? "TBD"}</div>
             </div>
         );
@@ -167,17 +167,17 @@ export function BracketMatchCard({
     const team2Wins = match.team2Score > match.team1Score;
 
     return (
-        <div className="border border-[#E5E5EA] rounded-xl px-3 py-4 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2">
+        <div className="border border-line rounded-xl px-3 py-4 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2">
             <div className="text-right">
-                <Link to={`/player/${match.team1Player1.id}`} className={`text-sm font-semibold block truncate transition-colors ${team1Wins ? "text-[#FF4200]" : "text-[#1A1A2E] hover:text-[#FF4200]"}`}>{match.team1Player1.name}</Link>
-                <Link to={`/player/${match.team1Player2.id}`} className={`text-sm font-semibold block truncate transition-colors ${team1Wins ? "text-[#FF4200]" : "text-[#1A1A2E] hover:text-[#FF4200]"}`}>{match.team1Player2.name}</Link>
+                <Link to={`/player/${match.team1Player1.id}`} className={`text-sm font-semibold block truncate transition-colors ${team1Wins ? "text-[#FF4200]" : "text-ink hover:text-[#FF4200]"}`}>{match.team1Player1.name}</Link>
+                <Link to={`/player/${match.team1Player2.id}`} className={`text-sm font-semibold block truncate transition-colors ${team1Wins ? "text-[#FF4200]" : "text-ink hover:text-[#FF4200]"}`}>{match.team1Player2.name}</Link>
             </div>
-            <div className="text-center shrink-0 text-sm font-black tabular-nums text-[#1A1A2E] whitespace-nowrap">
+            <div className="text-center shrink-0 text-sm font-bold tabular-nums text-ink whitespace-nowrap">
                 {formatChallengerScore(match)}
             </div>
             <div className="text-left">
-                <Link to={`/player/${match.team2Player1.id}`} className={`text-sm font-semibold block truncate transition-colors ${team2Wins ? "text-[#FF4200]" : "text-[#1A1A2E] hover:text-[#FF4200]"}`}>{match.team2Player1.name}</Link>
-                <Link to={`/player/${match.team2Player2.id}`} className={`text-sm font-semibold block truncate transition-colors ${team2Wins ? "text-[#FF4200]" : "text-[#1A1A2E] hover:text-[#FF4200]"}`}>{match.team2Player2.name}</Link>
+                <Link to={`/player/${match.team2Player1.id}`} className={`text-sm font-semibold block truncate transition-colors ${team2Wins ? "text-[#FF4200]" : "text-ink hover:text-[#FF4200]"}`}>{match.team2Player1.name}</Link>
+                <Link to={`/player/${match.team2Player2.id}`} className={`text-sm font-semibold block truncate transition-colors ${team2Wins ? "text-[#FF4200]" : "text-ink hover:text-[#FF4200]"}`}>{match.team2Player2.name}</Link>
             </div>
         </div>
     );

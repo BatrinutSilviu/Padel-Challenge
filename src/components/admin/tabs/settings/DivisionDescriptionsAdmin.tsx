@@ -21,7 +21,7 @@ export function DivisionDescriptionsAdmin() {
         onError: fail,
     });
     return (
-        <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-5 space-y-3">
+        <div className="bg-surface rounded-xl border border-gray-200 p-4 sm:p-5 space-y-3">
             <div>
                 <h2 className="text-base font-semibold text-gray-800">Levels</h2>
                 <p className="text-xs text-gray-500">What each level means, shown on its division page, the home page and its tournaments. Empty a box to get the default back.</p>

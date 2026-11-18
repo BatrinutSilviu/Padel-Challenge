@@ -25,7 +25,7 @@ export function AdminLeagueLive({ league }: { league: League }) {
             <NeedsAttention league={league} teams={teams} />
 
             {league.tiers.length > 1 && (
-                <div className="flex gap-1 bg-white border border-gray-200 rounded-xl p-1 w-fit">
+                <div className="flex gap-1 bg-surface border border-gray-200 rounded-xl p-1 w-fit">
                     {league.tiers.map(t => (
                         <button key={t.id} onClick={() => setTierId(t.id)} className={`px-4 py-1.5 rounded-lg text-sm font-medium ${t.id === tier.id ? "bg-[#FF4200] text-white" : "text-gray-600 hover:text-gray-900"}`}>
                             {tierLabel(t.level)}
@@ -34,12 +34,12 @@ export function AdminLeagueLive({ league }: { league: League }) {
                 </div>
             )}
 
-            <div className="bg-white rounded-xl border border-gray-200 px-4 sm:px-5 py-3">
+            <div className="bg-surface rounded-xl border border-gray-200 px-4 sm:px-5 py-3">
                 <TierRulesEditor key={tier.id} league={league} tier={tier} />
             </div>
 
             {tier.groups.map(g => (
-                <section key={g.id} className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                <section key={g.id} className="bg-surface rounded-xl border border-gray-200 overflow-hidden">
                     <h2 className="px-4 py-3 border-b border-gray-100 font-bold text-gray-900">
                         {league.tiers.length > 1 && `${tierLabel(tier.level)} · `}Group {g.name}
                     </h2>
@@ -52,7 +52,7 @@ export function AdminLeagueLive({ league }: { league: League }) {
                     />
                     <div className="border-t border-gray-200 bg-gray-50">
                         <WeekPicker week={week} weeks={weeks} startDate={league.startDate} onWeek={setWeek} />
-                        <div className="bg-white">
+                        <div className="bg-surface">
                             {league.matches.filter(m => m.groupId === g.id && m.week === week).map(m => (
                                 <AdminMatchRow key={m.id} match={m} teams={teams} />
                             ))}
@@ -77,7 +77,7 @@ function NeedsAttention({ league, teams }: { league: League; teams: Map<string, 
         .sort((a, b) => Number(b.disputed) - Number(a.disputed));
     if (waiting.length === 0) return null;
     return (
-        <section className="bg-white rounded-xl border border-amber-200 overflow-hidden">
+        <section className="bg-surface rounded-xl border border-amber-200 overflow-hidden">
             <h2 className="px-4 py-3 border-b border-amber-100 bg-amber-50 font-semibold text-amber-800 text-sm">
                 Waiting for confirmation ({waiting.length})
             </h2>
@@ -130,7 +130,7 @@ function AdminMatchRow({ match, teams, showWeek = false, onDelete }: { match: Le
             ) : (
                 <div className="flex flex-wrap gap-1.5 text-xs">
                     {match.status === "SUBMITTED" && (
-                        <button onClick={() => confirmScore.mutate({ matchId: match.id })} className="px-2.5 py-1.5 rounded-lg bg-emerald-600 text-white font-semibold">Confirm {result}</button>
+                        <button onClick={() => confirmScore.mutate({ matchId: match.id })} className="px-2.5 py-1.5 rounded-lg bg-[#059669] text-white font-semibold">Confirm {result}</button>
                     )}
                     <button onClick={() => setEditing(true)} className="px-2.5 py-1.5 rounded-lg border border-gray-300 text-gray-700 hover:border-[#FF4200]">{match.status === "PENDING" ? "Enter score" : "Edit score"}</button>
                     {match.walkoverWinner !== 1 && <button onClick={() => walkover.mutate({ matchId: match.id, winnerSide: 1 })} className="px-2.5 py-1.5 rounded-lg border border-gray-300 text-gray-600 hover:border-[#FF4200]">W/O to top</button>}
@@ -159,7 +159,7 @@ function TeamControls({ league, team, onContacts }: { league: League; team: Leag
                 onChange={e => override.mutate({ teamId: team.id, outcome: (e.target.value || null) as "PROMOTED" | "STAYED" | "RELEGATED" | null })}
                 aria-label="Where this team goes next season"
                 title="Where this team goes next season"
-                className={`text-xs border rounded px-1 py-1 bg-white max-w-[9rem] ${team.outcomeOverride ? "border-[#FF4200] text-[#FF4200]" : "border-gray-200 text-gray-500"}`}
+                className={`text-xs border rounded px-1 py-1 bg-surface max-w-[9rem] ${team.outcomeOverride ? "border-[#FF4200] text-[#FF4200]" : "border-gray-200 text-gray-500"}`}
             >
                 <option value="">Auto: {OUTCOME_INFO[byRules].label}</option>
                 <option value="PROMOTED">▲ Promoted</option>
@@ -186,14 +186,14 @@ function ContactsModal({ team, onClose }: { team: LeagueTeam; onClose: () => voi
     const [playerId, setPlayerId] = useState(players[0].id);
     return (
         <div className="fixed inset-0 z-50 bg-black/40 flex items-end sm:items-center justify-center p-0 sm:p-4" onClick={onClose}>
-            <div className="bg-white w-full sm:max-w-lg rounded-t-2xl sm:rounded-2xl p-5 max-h-[90vh] overflow-y-auto space-y-4" onClick={e => e.stopPropagation()}>
+            <div className="bg-surface w-full sm:max-w-lg rounded-t-2xl sm:rounded-2xl p-5 max-h-[90vh] overflow-y-auto space-y-4" onClick={e => e.stopPropagation()}>
                 <div className="flex items-center justify-between">
                     <h2 className="font-bold text-gray-900">Contact details</h2>
                     <button onClick={onClose} aria-label="Close" className="w-8 h-8 rounded-full hover:bg-gray-100 text-gray-500">✕</button>
                 </div>
                 <div className="flex gap-1 bg-gray-100 rounded-lg p-1">
                     {players.map(p => (
-                        <button key={p.id} onClick={() => setPlayerId(p.id)} className={`flex-1 px-3 py-1.5 rounded-md text-sm font-medium truncate ${p.id === playerId ? "bg-white shadow-sm text-gray-900" : "text-gray-500"}`}>
+                        <button key={p.id} onClick={() => setPlayerId(p.id)} className={`flex-1 px-3 py-1.5 rounded-md text-sm font-medium truncate ${p.id === playerId ? "bg-surface shadow-sm text-gray-900" : "text-gray-500"}`}>
                             {p.name}
                         </button>
                     ))}
@@ -249,7 +249,7 @@ function Playoffs({ league, teams }: { league: League; teams: Map<string, League
     };
 
     return (
-        <section className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <section className="bg-surface rounded-xl border border-gray-200 overflow-hidden">
             <div className="px-4 sm:px-5 py-3 border-b border-gray-100">
                 <h2 className="font-bold text-gray-900">Playoffs</h2>
                 <p className="text-xs text-gray-500">
@@ -266,7 +266,7 @@ function Playoffs({ league, teams }: { league: League; teams: Map<string, League
             >
                 <div className="grid sm:grid-cols-2 gap-2">
                     {[{ v: team1Id, set: setTeam1Id }, { v: team2Id, set: setTeam2Id }].map(({ v, set }, i) => (
-                        <select key={i} value={v} onChange={e => set(e.target.value)} className="border border-gray-300 rounded-lg px-2 py-2 text-base sm:text-sm bg-white min-w-0">
+                        <select key={i} value={v} onChange={e => set(e.target.value)} className="border border-gray-300 rounded-lg px-2 py-2 text-base sm:text-sm bg-surface min-w-0">
                             <option value="">Team {i + 1}…</option>
                             {options.map(t => <option key={t.id} value={t.id} disabled={t.id === (i === 0 ? team2Id : team1Id)}>{label(t)}</option>)}
                         </select>
@@ -309,7 +309,7 @@ function SeasonEnd({ league, teams }: { league: League; teams: Map<string, Leagu
     const unplayed = league.matches.filter(m => m.status !== "CONFIRMED" && !teams.get(m.team1Id)?.eliminated && !teams.get(m.team2Id)?.eliminated).length;
 
     return (
-        <section className="bg-white rounded-xl border border-gray-200 p-4 sm:p-5 space-y-4">
+        <section className="bg-surface rounded-xl border border-gray-200 p-4 sm:p-5 space-y-4">
             <div>
                 <h2 className="font-bold text-gray-900">End of season</h2>
                 <p className="text-sm text-gray-500">{unplayed === 0 ? "All matches are played." : `${unplayed} match${unplayed > 1 ? "es" : ""} still to play or confirm.`}</p>
@@ -329,7 +329,7 @@ function SeasonEnd({ league, teams }: { league: League; teams: Map<string, Leagu
                 {league.status === "IN_PROGRESS" ? (
                     <button
                         onClick={() => { if (confirm("Complete the league? Players can no longer report scores.")) setStatus.mutate({ leagueId: league.id, status: "COMPLETED" }); }}
-                        className="px-4 py-2 rounded-lg bg-emerald-600 text-white text-sm font-semibold"
+                        className="px-4 py-2 rounded-lg bg-[#059669] text-white text-sm font-semibold"
                     >
                         Complete league
                     </button>

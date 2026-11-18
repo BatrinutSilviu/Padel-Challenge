@@ -51,7 +51,7 @@ export function PaymentAccountsAdmin() {
                         key={type}
                         type="button"
                         onClick={() => setDraft({ ...draft, type })}
-                        className={`px-3 py-2 rounded-lg text-sm font-medium border ${draft.type === type ? "bg-[#FF4200] text-white border-[#FF4200]" : "border-gray-300 text-gray-600 bg-white"}`}
+                        className={`px-3 py-2 rounded-lg text-sm font-medium border ${draft.type === type ? "bg-[#FF4200] text-white border-[#FF4200]" : "border-gray-300 text-gray-600 bg-surface"}`}
                     >
                         {label}
                     </button>
@@ -93,7 +93,7 @@ export function PaymentAccountsAdmin() {
     );
 
     return (
-        <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-5 space-y-3">
+        <div className="bg-surface rounded-xl border border-gray-200 p-4 sm:p-5 space-y-3">
             <div className="flex items-start justify-between gap-3">
                 <div>
                     <h2 className="text-base font-semibold text-gray-800">Payment accounts</h2>

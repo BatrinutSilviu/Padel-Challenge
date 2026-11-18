@@ -2,9 +2,10 @@ import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { DIVISION_BADGES, divisionLabel } from "../lib/divisions";
 import { spotsLeft, timeRangeLabel, tournamentTypeLabel } from "../lib/tournaments";
+import { ClockIcon, PinIcon } from "./ui/icons";
 
-// A tournament in a list: its name, level and type, then the date and time, the location,
-// the price and the free spots, each on its own line so they read at a glance on a phone.
+// A tournament in a list: the date block on the left; its name, level and type, the time and
+// place, then the price and the free spots.
 
 export type CardTournament = {
     id: string;
@@ -23,82 +24,81 @@ export type CardTournament = {
     _count: { participants: number }; // confirmed players
 };
 
-// "Sun 22 Nov", with the year when it isn't this year. Dates are stored as midnight UTC.
-function cardDate(value: string | Date): string {
+// The date block: "SUN" / "22" / "NOV" (and the year under it when it isn't this year).
+// Dates are stored as midnight UTC.
+function dateParts(value: string | Date) {
     const d = new Date(value);
-    const thisYear = d.getUTCFullYear() === new Date().getUTCFullYear();
-    return d.toLocaleDateString("en-GB", {
-        weekday: "short", day: "numeric", month: "short", ...(thisYear ? {} : { year: "numeric" }), timeZone: "UTC",
-    });
+    const part = (o: Intl.DateTimeFormatOptions) => d.toLocaleDateString("en-GB", { ...o, timeZone: "UTC" });
+    return {
+        dow: part({ weekday: "short" }),
+        day: part({ day: "numeric" }),
+        month: part({ month: "short" }),
+        year: d.getUTCFullYear() === new Date().getUTCFullYear() ? null : String(d.getUTCFullYear()),
+    };
 }
 
 export function TournamentCard({ tournament: t, aside, highlight }: {
     tournament: CardTournament;
     aside?: ReactNode; // status or action, top right
-    highlight?: boolean; // orange outline: open for sign-up
+    highlight?: boolean; // open for sign-up
 }) {
     const times = timeRangeLabel(t);
     const left = spotsLeft(t);
     const badge = DIVISION_BADGES[t.division];
     const upcoming = t.status === "UPCOMING";
+    const date = dateParts(t.date);
 
     return (
         <Link
             to={`/tournament/${t.id}`}
-            className={`block bg-white rounded-2xl border px-4 py-3.5 hover:shadow-sm transition-all ${
-                highlight ? "border-[#FF4200]/30 hover:border-[#FF4200]"
-                : t.status === "IN_PROGRESS" ? "border-l-[3px] border-l-[#FF4200] border-[#E5E5EA] hover:border-[#FF4200]/40"
-                : "border-[#E5E5EA] hover:border-[#FF4200]/40"
+            className={`flex gap-4 bg-surface rounded-xl border px-4 py-4 transition-colors ${
+                t.status === "IN_PROGRESS" ? "border-[#FF4200]/60 hover:border-[#FF4200]"
+                : highlight ? "border-line hover:border-[#FF4200]/60"
+                : "border-line hover:border-gray-300"
             }`}
         >
-            <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                    <p className="font-bold text-[#1A1A2E] leading-snug line-clamp-2">{t.name}</p>
-                    <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-                        <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${badge?.className ?? "bg-[#F5F5F7] text-[#8E8E93]"}`}>
-                            {divisionLabel(t.division)}
-                        </span>
-                        {t.womenOnly && <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-pink-50 text-pink-600">Women only</span>}
-                        <span className="text-xs text-[#8E8E93] font-medium">{tournamentTypeLabel(t.type)}</span>
-                    </div>
-                </div>
-                {aside && <div className="shrink-0">{aside}</div>}
+            <div className="w-12 shrink-0 flex flex-col items-center font-display uppercase leading-none border-r border-line pr-4 pt-0.5">
+                <span className="text-xs font-semibold tracking-wider text-muted">{date.dow}</span>
+                <span className="text-[32px] font-bold text-ink my-0.5">{date.day}</span>
+                <span className="text-xs font-semibold tracking-wider text-muted">{date.month}</span>
+                {date.year && <span className="text-[11px] font-semibold text-muted mt-1">{date.year}</span>}
             </div>
-            <div className="mt-2.5 grid gap-1 text-sm text-[#3A3A4E]">
-                <p className="flex items-center gap-2">
-                    <span aria-hidden className="w-4 text-center">📅</span>
-                    <span className="font-semibold">{cardDate(t.date)}</span>
-                    {times && <span className="text-[#8E8E93]">· {times}</span>}
-                </p>
-                {t.location && (
-                    <p className="flex items-center gap-2">
-                        <span aria-hidden className="w-4 text-center">📍</span>
-                        <span>{t.location}</span>
-                    </p>
-                )}
-                {upcoming && t.entryFee != null && (
-                    <p className="flex items-center gap-2">
-                        <span aria-hidden className="w-4 text-center">💳</span>
-                        <span>
-                            <span className="font-semibold">{t.entryFee} lei</span>
-                            <span className="text-[#8E8E93]"> / person{t.advanceFee != null ? ` · ${t.advanceFee} lei advance` : ""}</span>
-                        </span>
-                    </p>
-                )}
+            <div className="flex-1 min-w-0">
+                <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                        <p className="font-semibold text-ink leading-snug line-clamp-2">{t.name}</p>
+                        <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                            <span className={`text-[11px] font-semibold px-1.5 py-0.5 rounded ${badge?.className ?? "bg-canvas text-muted"}`}>
+                                {divisionLabel(t.division)}
+                            </span>
+                            {t.womenOnly && <span className="text-[11px] font-semibold px-1.5 py-0.5 rounded bg-pink-50 text-pink-600">Women only</span>}
+                            <span className="text-xs text-muted font-medium">{tournamentTypeLabel(t.type)}</span>
+                        </div>
+                    </div>
+                    {aside && <div className="shrink-0">{aside}</div>}
+                </div>
+                <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted">
+                    {times && <span className="flex items-center gap-1.5"><ClockIcon className="w-3.5 h-3.5" />{times}</span>}
+                    {t.location && <span className="flex items-center gap-1.5"><PinIcon className="w-3.5 h-3.5" />{t.location}</span>}
+                </div>
                 {upcoming && (
-                    <p className="flex items-center gap-2">
-                        <span aria-hidden className="w-4 text-center">👥</span>
-                        {left === null ? (
-                            <span>{t._count.participants} confirmed</span>
-                        ) : left === 0 ? (
-                            <span className="font-semibold text-[#8E8E93]">Full — waiting list open</span>
-                        ) : (
+                    <div className="mt-2.5 flex flex-wrap items-center justify-between gap-x-4 gap-y-1 text-sm">
+                        {t.entryFee != null ? (
                             <span>
-                                <span className="font-bold text-[#FF4200]">{left} free spot{left !== 1 ? "s" : ""}</span>
-                                <span className="text-[#8E8E93]"> of {t.maxPlayers}</span>
+                                <span className="font-semibold text-ink">{t.entryFee} lei</span>
+                                <span className="text-muted"> / person{t.advanceFee != null ? ` · ${t.advanceFee} lei advance` : ""}</span>
+                            </span>
+                        ) : <span />}
+                        {left === null ? (
+                            <span className="text-ink-2">{t._count.participants} confirmed</span>
+                        ) : left === 0 ? (
+                            <span className="font-display uppercase tracking-wide font-semibold text-muted">Full · waiting list</span>
+                        ) : (
+                            <span className="font-display uppercase tracking-wide font-semibold text-emerald-600">
+                                {left} of {t.maxPlayers} free
                             </span>
                         )}
-                    </p>
+                    </div>
                 )}
             </div>
         </Link>

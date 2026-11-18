@@ -46,7 +46,7 @@ function LeagueHeader({ league }: { league: League }) {
     const del = trpc.league.delete.useMutation({ onSuccess: () => { invalidate(); navigate("/admin?tab=league"); } });
 
     return (
-        <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-5">
+        <div className="bg-surface rounded-xl border border-gray-200 p-4 sm:p-5">
             {editing ? (
                 <form onSubmit={e => { e.preventDefault(); update.mutate({ id: league.id, name: name.trim(), startDate }); }} className="grid sm:grid-cols-[1fr_auto_auto] gap-2 items-end">
                     <input value={name} onChange={e => setName(e.target.value)} className="border border-gray-300 rounded-lg px-3 py-2 text-base sm:text-sm" />
@@ -122,7 +122,7 @@ function DraftView({ league }: { league: League }) {
                 )}
             </div>
 
-            <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-5 space-y-3">
+            <div className="bg-surface rounded-xl border border-gray-200 p-4 sm:p-5 space-y-3">
                 <h2 className="font-semibold text-gray-800">Start the league</h2>
                 <ul className="text-sm text-gray-600 space-y-0.5">
                     {league.tiers.map(t => {
@@ -187,7 +187,7 @@ function DraftTierCard({ league, tier, allPlayers, taken }: { league: League; ti
     }
 
     return (
-        <section className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <section className="bg-surface rounded-xl border border-gray-200 overflow-hidden">
             <div className="px-4 sm:px-5 py-3 border-b border-gray-100 flex flex-wrap items-center justify-between gap-2">
                 <div>
                     <h2 className="font-bold text-gray-900">{tierLabel(tier.level)}</h2>
@@ -221,7 +221,7 @@ function DraftTierCard({ league, tier, allPlayers, taken }: { league: League; ti
                                     value={tier.id}
                                     onChange={e => moveToTier(t, e.target.value)}
                                     aria-label="Move to league"
-                                    className="text-xs border border-gray-200 rounded px-1 py-1 bg-white text-gray-600"
+                                    className="text-xs border border-gray-200 rounded px-1 py-1 bg-surface text-gray-600"
                                 >
                                     {league.tiers.map(x => <option key={x.id} value={x.id}>L{x.level}</option>)}
                                 </select>

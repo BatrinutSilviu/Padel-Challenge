@@ -159,7 +159,7 @@ export function PlayerRow({ player: p, contact, onDelete }: {
                     </button>
                     <button
                         onClick={onDelete}
-                        className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-600 hover:text-white text-xs font-medium transition-colors"
+                        className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-red-50 text-red-600 hover:bg-[#dc2626] hover:text-white text-xs font-medium transition-colors"
                         title="Delete player"
                     >
                         <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">

@@ -156,8 +156,8 @@ export function MastersMatchScoreRow({
         const [a, b] = cells[col].map(n);
         const wonColumn = !isNaN(a) && !isNaN(b) && (team === 0 ? a > b : b > a)
             && (col === 2 && stage === "GROUP" ? a !== b : isValidSet(a, b));
-        if (wonColumn) return "border-[#FF4200] text-[#FF4200] bg-white";
-        return status === "confirming" ? "border-blue-400 text-gray-800 bg-white" : "border-gray-300 text-gray-700 bg-white";
+        if (wonColumn) return "border-[#FF4200] text-[#FF4200] bg-surface";
+        return status === "confirming" ? "border-blue-400 text-gray-800 bg-surface" : "border-gray-300 text-gray-700 bg-surface";
     }
 
     const teamNames = [

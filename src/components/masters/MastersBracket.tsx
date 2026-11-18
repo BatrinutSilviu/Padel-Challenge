@@ -16,7 +16,7 @@ export function MastersBracket({
 }) {
     return (
         <div
-            className="bg-white rounded-2xl border border-[#E5E5EA] shadow-sm p-4 sm:p-6 grid grid-cols-1 md:[grid-template-columns:repeat(var(--stages),minmax(0,1fr))] gap-6 md:gap-4"
+            className="bg-surface rounded-2xl border border-line shadow-sm p-4 sm:p-6 grid grid-cols-1 md:[grid-template-columns:repeat(var(--stages),minmax(0,1fr))] gap-6 md:gap-4"
             style={{ "--stages": stages.length } as CSSProperties}
         >
             {stages.map(stage => (
@@ -28,7 +28,7 @@ export function MastersBracket({
                     ))}
                     {stage.key === "FINAL" && thirdPlace && (
                         <div>
-                            <p className="text-xs font-bold uppercase tracking-widest text-[#8E8E93] mb-3">3rd Place</p>
+                            <p className="font-display text-sm font-semibold uppercase tracking-[0.12em] text-muted mb-3">3rd Place</p>
                             <Slot label={`Court ${(thirdPlace.match && courtOf.get(thirdPlace.match.id)) ?? MASTERS_THIRD_PLACE_COURT}`}>
                                 <SlotCard slot={thirdPlace} />
                             </Slot>
@@ -49,7 +49,7 @@ function SlotCard({ slot }: { slot: MastersSlot }) {
 function Stage({ title, accent, children }: { title: string; accent?: boolean; children: ReactNode }) {
     return (
         <div className="flex flex-col">
-            <p className={`text-xs font-bold uppercase tracking-widest mb-3 ${accent ? "text-[#FF4200]" : "text-[#8E8E93]"}`}>{title}</p>
+            <p className={`font-display text-sm font-semibold uppercase tracking-[0.12em] mb-3 ${accent ? "text-[#FF4200]" : "text-muted"}`}>{title}</p>
             <div className="flex-1 flex flex-col justify-around gap-4">{children}</div>
         </div>
     );
@@ -58,7 +58,7 @@ function Stage({ title, accent, children }: { title: string; accent?: boolean; c
 function Slot({ label, children }: { label: string; children: ReactNode }) {
     return (
         <div>
-            <p className="text-[10px] font-bold uppercase tracking-widest text-[#C7C7CC] mb-1">{label}</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-faint mb-1">{label}</p>
             {children}
         </div>
     );

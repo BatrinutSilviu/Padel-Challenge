@@ -23,7 +23,7 @@ export function ProfileClaimsQueue() {
     if (!claims || claims.length === 0) return null;
 
     return (
-        <section className="bg-white rounded-xl border border-amber-200 overflow-hidden">
+        <section className="bg-surface rounded-xl border border-amber-200 overflow-hidden">
             <div className="px-5 py-3 border-b border-gray-100 flex items-start justify-between gap-3">
                 <div>
                     <h2 className="text-base font-semibold text-gray-800">Profile claims</h2>
@@ -63,7 +63,7 @@ export function ProfileClaimsQueue() {
                             <button
                                 onClick={() => approve.mutate({ id: c.id })}
                                 disabled={busy}
-                                className="text-sm font-medium px-4 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50 transition-colors"
+                                className="text-sm font-medium px-4 py-2 rounded-lg bg-[#059669] text-white hover:bg-[#047857] disabled:opacity-50 transition-colors"
                             >
                                 Approve
                             </button>

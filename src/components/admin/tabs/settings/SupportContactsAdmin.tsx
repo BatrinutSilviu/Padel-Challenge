@@ -27,7 +27,7 @@ export function SupportContactsAdmin() {
     });
     const setRow = (i: number, change: Partial<ContactDraft>) => setRows(rows.map((r, j) => (j === i ? { ...r, ...change } : r)));
     return (
-        <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-5 space-y-3">
+        <div className="bg-surface rounded-xl border border-gray-200 p-4 sm:p-5 space-y-3">
             <div>
                 <h2 className="text-base font-semibold text-gray-800">Support contacts</h2>
                 <p className="text-xs text-gray-500">Shown on tournament pages so players can ask for help, in this order. A person without a phone number isn't shown.</p>

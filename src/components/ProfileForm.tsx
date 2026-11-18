@@ -113,7 +113,7 @@ function Chip({ active, onClick, children }: { active: boolean; onClick: () => v
             onClick={onClick}
             aria-pressed={active}
             className={`px-3 py-1.5 rounded-xl text-sm font-bold transition-all whitespace-nowrap ${
-                active ? "bg-[#FF4200] text-white shadow-sm" : "bg-[#F5F5F7] text-[#8E8E93] hover:text-[#1A1A2E]"
+                active ? "bg-[#FF4200] text-white shadow-sm" : "bg-canvas text-muted hover:text-ink"
             }`}
         >
             {children}
@@ -126,7 +126,7 @@ function AvailabilityEditor({ value, onChange }: { value: TimeRange[]; onChange:
     const setDay = (day: Day, ranges: TimeRange[]) => onChange([...value.filter(r => r.day !== day), ...ranges]);
 
     return (
-        <div className="divide-y divide-[#F5F5F7] border border-[#E5E5EA] rounded-xl">
+        <div className="divide-y divide-canvas border border-line rounded-xl">
             {DAYS.map(day => {
                 const ranges = value.filter(r => r.day === day);
                 const on = ranges.length > 0;
@@ -136,7 +136,7 @@ function AvailabilityEditor({ value, onChange }: { value: TimeRange[]; onChange:
                             type="button"
                             aria-pressed={on}
                             onClick={() => setDay(day, on ? [] : [{ day, from: 18 * 60, to: 22 * 60 }])}
-                            className={`w-14 shrink-0 py-1.5 rounded-lg text-sm font-bold transition-all ${on ? "bg-[#FF4200] text-white" : "bg-[#F5F5F7] text-[#8E8E93] hover:text-[#1A1A2E]"}`}
+                            className={`w-14 shrink-0 py-1.5 rounded-lg text-sm font-bold transition-all ${on ? "bg-[#FF4200] text-white" : "bg-canvas text-muted hover:text-ink"}`}
                         >
                             {DAY_LABELS[day]}
                         </button>
@@ -170,7 +170,7 @@ function AvailabilityEditor({ value, onChange }: { value: TimeRange[]; onChange:
                                 </button>
                             </div>
                         ) : (
-                            <span className="py-1.5 text-sm text-[#C7C7CC]">Can't play</span>
+                            <span className="py-1.5 text-sm text-faint">Can't play</span>
                         )}
                     </div>
                 );
@@ -186,7 +186,7 @@ function TimeSelect({ value, onChange, label }: { value: number; onChange: (m: n
             value={value}
             onChange={e => onChange(Number(e.target.value))}
             aria-label={label}
-            className="border border-gray-300 rounded-lg px-2 py-1.5 text-base sm:text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#FF4200] tabular-nums"
+            className="border border-gray-300 rounded-lg px-2 py-1.5 text-base sm:text-sm bg-surface focus:outline-none focus:ring-2 focus:ring-[#FF4200] tabular-nums"
         >
             {options.map(m => <option key={m} value={m}>{formatMinutes(m)}</option>)}
         </select>

@@ -46,7 +46,7 @@ export function RankingSystemSettings() {
 
     return (
         <>
-            <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-3">
+            <div className="bg-surface rounded-xl border border-gray-200 p-5 space-y-3">
                 <div>
                     <h2 className="text-base font-semibold text-gray-800">Ranking system</h2>
                     <p className="text-xs text-gray-400 mt-0.5">Used across the whole site: player standings, badges and who gets promoted or relegated.</p>

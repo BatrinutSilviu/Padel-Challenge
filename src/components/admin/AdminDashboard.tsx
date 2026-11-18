@@ -41,7 +41,7 @@ export function AdminDashboard({ onLogout }: { onLogout: () => void }) {
                 {/* One row on every screen: on a phone each tab is as wide as its label, Logout beside them.
                     If the tabs don't fit (a pending-claims count makes them wider) they scroll sideways. */}
                 <div className="flex items-center gap-2 sm:gap-3 sm:justify-between mb-5 sm:mb-6">
-                    <div className="flex-1 sm:flex-none min-w-0 flex gap-0.5 sm:gap-1 bg-white border border-gray-200 rounded-xl p-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                    <div className="flex-1 sm:flex-none min-w-0 flex gap-0.5 sm:gap-1 bg-surface border border-gray-200 rounded-xl p-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                         {TABS.map(t => (
                             <button
                                 key={t}
@@ -60,7 +60,7 @@ export function AdminDashboard({ onLogout }: { onLogout: () => void }) {
                                 {/* Profile claims wait at the top of the Players tab, sign-ups to confirm on the Tournaments tab. */}
                                 {(tabBadges[t] ?? 0) > 0 && (
                                     <span className={`ml-1 inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1 rounded-full text-[11px] font-bold ${
-                                        tab === t ? "bg-white text-[#FF4200]" : "bg-amber-500 text-white"
+                                        tab === t ? "bg-surface text-[#FF4200]" : "bg-amber-500 text-white"
                                     }`}>
                                         {tabBadges[t]}
                                     </span>
@@ -71,7 +71,7 @@ export function AdminDashboard({ onLogout }: { onLogout: () => void }) {
                     <button
                         onClick={onLogout}
                         aria-label="Logout"
-                        className="shrink-0 text-sm font-medium px-2.5 py-2 sm:px-3 sm:py-1.5 rounded-lg border border-gray-300 bg-white text-gray-600 hover:border-red-300 hover:text-red-500 transition-colors"
+                        className="shrink-0 text-sm font-medium px-2.5 py-2 sm:px-3 sm:py-1.5 rounded-lg border border-gray-300 bg-surface text-gray-600 hover:border-red-300 hover:text-red-500 transition-colors"
                     >
                         <svg className="w-4 h-4 sm:hidden" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />

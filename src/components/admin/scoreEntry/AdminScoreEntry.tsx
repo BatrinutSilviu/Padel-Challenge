@@ -143,7 +143,7 @@ export function AdminScoreEntry() {
                                 onClick={() => { setRecalcSuccess(false); recalculate.mutate({ id: id! }); }}
                                 disabled={recalculate.isPending || isSaving}
                                 title={isSaving ? "Waiting for scores to save…" : undefined}
-                                className="bg-amber-500 text-white rounded-lg px-4 py-2 text-sm font-semibold hover:bg-amber-600 disabled:opacity-50 transition-colors"
+                                className="bg-amber-500 text-white rounded-lg px-4 py-2 text-sm font-semibold hover:bg-[#d97706] disabled:opacity-50 transition-colors"
                             >
                                 {recalculate.isPending ? "Recalculating…" : isSaving ? "Saving scores…" : "Recalculate Results"}
                             </button>
@@ -235,7 +235,7 @@ export function AdminScoreEntry() {
                         <button
                             onClick={() => groupStage.mutation.mutate({ id: id! })}
                             disabled={groupMatchesLeft > 0 || groupStage.mutation.isPending || isSaving}
-                            className="w-full bg-amber-500 text-white rounded-xl px-5 py-4 text-base font-bold shadow-sm hover:bg-amber-600 disabled:bg-gray-200 disabled:text-gray-500 disabled:shadow-none transition-colors"
+                            className="w-full bg-amber-500 text-white rounded-xl px-5 py-4 text-base font-bold shadow-sm hover:bg-[#d97706] disabled:bg-gray-200 disabled:text-gray-500 disabled:shadow-none transition-colors"
                         >
                             {groupStage.mutation.isPending
                                 ? "Starting…"
@@ -279,7 +279,7 @@ export function AdminScoreEntry() {
                                     </button>
                                     <button
                                         onClick={() => { setConfirmComplete(false); complete.mutate({ id: id! }); }}
-                                        className="px-3 py-1.5 rounded-lg text-sm bg-amber-500 text-white hover:bg-amber-600"
+                                        className="px-3 py-1.5 rounded-lg text-sm bg-amber-500 text-white hover:bg-[#d97706]"
                                     >
                                         Complete anyway
                                     </button>
@@ -302,7 +302,7 @@ export function AdminScoreEntry() {
                                     <button
                                         onClick={() => advanceKotcRound.mutate({ id: id! })}
                                         disabled={advanceKotcRound.isPending || complete.isPending}
-                                        className="flex-1 bg-amber-500 text-white rounded-xl px-4 py-4 text-base font-semibold hover:bg-amber-600 disabled:opacity-50 transition-colors"
+                                        className="flex-1 bg-amber-500 text-white rounded-xl px-4 py-4 text-base font-semibold hover:bg-[#d97706] disabled:opacity-50 transition-colors"
                                     >
                                         {advanceKotcRound.isPending ? "Starting next round…" : "Next Round"}
                                     </button>

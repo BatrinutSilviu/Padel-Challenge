@@ -49,13 +49,13 @@ export function AddPlayerInline({
                 onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); handleSubmit(); } }}
                 placeholder="New player's name"
                 autoComplete="off"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF4200] bg-white"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF4200] bg-surface"
             />
             <div className="flex flex-wrap gap-2">
                 <select
                     value={division}
                     onChange={e => setDivision(Number(e.target.value))}
-                    className="border border-gray-300 rounded-lg px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF4200] bg-white"
+                    className="border border-gray-300 rounded-lg px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF4200] bg-surface"
                 >
                     {[1, 2, 3, 4, 5, 6].map(d => (
                         <option key={d} value={d}>{DIVISION_NAMES[d]}</option>
@@ -64,7 +64,7 @@ export function AddPlayerInline({
                 <select
                     value={gender}
                     onChange={e => setGender(e.target.value as "MALE" | "FEMALE")}
-                    className="border border-gray-300 rounded-lg px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF4200] bg-white"
+                    className="border border-gray-300 rounded-lg px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF4200] bg-surface"
                 >
                     <option value="MALE">Male</option>
                     <option value="FEMALE">Female</option>

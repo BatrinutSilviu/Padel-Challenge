@@ -12,7 +12,7 @@ export function AmericanoScoreEntry({ tournament, scoredIds, onSaveStart, onSave
     return (
         <div className="space-y-4">
             {tournament.rounds.map(round => (
-                <div key={round.id} className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                <div key={round.id} className="bg-surface rounded-xl border border-gray-200 overflow-hidden">
                     <div className="px-4 sm:px-5 py-3 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
                         <span className="font-semibold text-gray-700">Round {round.roundNumber}</span>
                         <span className="text-xs text-gray-400">

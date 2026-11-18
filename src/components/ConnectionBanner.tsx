@@ -23,7 +23,7 @@ export function ConnectionBanner() {
     return (
         <div
             role="status"
-            className={`fixed top-0 inset-x-0 z-[60] px-4 pt-[max(env(safe-area-inset-top),0.375rem)] pb-1.5 text-center text-xs sm:text-sm font-semibold text-white ${online ? "bg-emerald-600" : "bg-[#1A1A2E]"}`}
+            className={`fixed top-0 inset-x-0 z-[60] px-4 pt-[max(env(safe-area-inset-top),0.375rem)] pb-1.5 text-center text-xs sm:text-sm font-semibold text-white ${online ? "bg-[#059669]" : "bg-[#333366]"}`}
         >
             {online
                 ? "Back online"

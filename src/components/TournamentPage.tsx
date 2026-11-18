@@ -28,13 +28,13 @@ export function TournamentPage() {
     if (error || !tournament) return <div className="p-8 text-red-600">Tournament not found.</div>;
 
     return (
-        <div className="min-h-screen bg-[#F5F5F7]">
+        <div className="min-h-screen bg-canvas">
             <NavBar />
             <main className="max-w-5xl mx-auto px-3 sm:px-4 py-6 sm:py-8 pb-24 sm:pb-8 space-y-5 sm:space-y-6">
 
                 <Link
                     to="/?tab=tournaments"
-                    className="text-[#8E8E93] hover:text-[#FF4200] transition-colors flex items-center gap-1.5 text-sm font-semibold"
+                    className="text-muted hover:text-[#FF4200] transition-colors flex items-center gap-1.5 text-sm font-semibold"
                 >
                     <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
                         <path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd" />
@@ -42,29 +42,29 @@ export function TournamentPage() {
                     Tournaments
                 </Link>
 
-                <div className="bg-white rounded-2xl border border-[#E5E5EA] p-5 sm:p-6 shadow-sm">
+                <div className="bg-surface rounded-2xl border border-line p-5 sm:p-6 shadow-sm">
                     <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
-                            <h1 className="text-2xl font-black text-[#1A1A2E] tracking-tight leading-tight">{tournament.name}</h1>
+                            <h1 className="text-2xl font-bold text-ink tracking-tight leading-tight">{tournament.name}</h1>
                             <div className="flex items-center gap-1.5 mt-2 flex-wrap">
-                                <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${DIVISION_BADGES[tournament.division]?.className ?? "bg-[#F5F5F7] text-[#8E8E93]"}`}>
+                                <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${DIVISION_BADGES[tournament.division]?.className ?? "bg-canvas text-muted"}`}>
                                     {divisionLabel(tournament.division)}
                                 </span>
                                 {tournament.womenOnly && <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-pink-50 text-pink-600">Women only</span>}
-                                <span className="text-sm text-[#8E8E93] font-medium">{tournamentTypeLabel(tournament.type)}</span>
+                                <span className="text-sm text-muted font-medium">{tournamentTypeLabel(tournament.type)}</span>
                             </div>
                             {describe(tournament.division) && (
-                                <p className="text-xs text-[#8E8E93] mt-1.5">
-                                    <span className="font-semibold text-[#3A3A4E]">{divisionLabel(tournament.division)}:</span> {describe(tournament.division)}
+                                <p className="text-xs text-muted mt-1.5">
+                                    <span className="font-semibold text-ink-2">{divisionLabel(tournament.division)}:</span> {describe(tournament.division)}
                                 </p>
                             )}
-                            <div className="mt-2 grid gap-1 text-sm text-[#3A3A4E]">
+                            <div className="mt-2 grid gap-1 text-sm text-ink-2">
                                 <p className="flex items-start gap-2">
                                     <span aria-hidden className="w-4 text-center">📅</span>
                                     <span>
                                         <span className="font-semibold">{tournamentWhen({ date: tournament.date }, "long")}</span>
                                         {timeRangeLabel(tournament) && (
-                                            <span className="block sm:inline text-[#8E8E93] whitespace-nowrap">
+                                            <span className="block sm:inline text-muted whitespace-nowrap">
                                                 <span className="hidden sm:inline"> · </span>{timeRangeLabel(tournament)}
                                             </span>
                                         )}
@@ -88,7 +88,7 @@ export function TournamentPage() {
 
                 {/* The sign-up sheet shows these itself, next to the fees. */}
                 {tournament.status !== "UPCOMING" && (
-                    <div className="bg-white rounded-2xl border border-[#E5E5EA] px-5 sm:px-6 py-4 shadow-sm space-y-4">
+                    <div className="bg-surface rounded-2xl border border-line px-5 sm:px-6 py-4 shadow-sm space-y-4">
                         {hasPrizes(tournament) && <PrizeList tournament={tournament} />}
                         <HowItWorks tournament={tournament} />
                     </div>
@@ -106,31 +106,31 @@ export function TournamentPage() {
                     <>
                         {tournament.status === "COMPLETED" && tournament.participants.length > 0 && (
                             <section>
-                                <h2 className="text-xs font-bold uppercase tracking-widest text-[#8E8E93] mb-3">Final Standings</h2>
+                                <h2 className="font-display text-sm font-semibold uppercase tracking-[0.12em] text-muted mb-3">Final Standings</h2>
                                 {tournament.type === "TEAM_AMERICANO" ? (
                                     <TeamStandings tournament={tournament} />
                                 ) : (
-                                    <div className="bg-white rounded-2xl border border-[#E5E5EA] overflow-hidden overflow-x-auto shadow-sm">
+                                    <div className="bg-surface rounded-2xl border border-line overflow-hidden overflow-x-auto shadow-sm">
                                         <table className="w-full text-sm min-w-[280px]">
-                                            <thead className="border-b border-[#F5F5F7]">
+                                            <thead className="border-b border-canvas">
                                                 <tr>
-                                                    <th className="text-left px-4 py-3 text-xs font-bold uppercase tracking-widest text-[#8E8E93] w-12">Rank</th>
-                                                    <th className="text-left px-4 py-3 text-xs font-bold uppercase tracking-widest text-[#8E8E93]">Player</th>
-                                                    <th className="text-right px-4 py-3 text-xs font-bold uppercase tracking-widest text-[#8E8E93]">Points</th>
+                                                    <th className="text-left px-4 py-3 font-display text-sm font-semibold uppercase tracking-[0.12em] text-muted w-12">Rank</th>
+                                                    <th className="text-left px-4 py-3 font-display text-sm font-semibold uppercase tracking-[0.12em] text-muted">Player</th>
+                                                    <th className="text-right px-4 py-3 font-display text-sm font-semibold uppercase tracking-[0.12em] text-muted">Points</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
                                                 {tournament.participants.map(p => (
-                                                    <tr key={p.id} className="border-b border-[#F5F5F7] last:border-0 hover:bg-[#F5F5F7] transition-colors">
+                                                    <tr key={p.id} className="border-b border-canvas last:border-0 hover:bg-canvas transition-colors">
                                                         <td className="px-4 py-3">
                                                             <RankMedal rank={p.finalRank ?? 0} />
                                                         </td>
                                                         <td className="px-4 py-3">
-                                                            <Link to={`/player/${p.player.id}`} className="font-semibold text-[#1A1A2E] hover:text-[#FF4200] transition-colors">
+                                                            <Link to={`/player/${p.player.id}`} className="font-semibold text-ink hover:text-[#FF4200] transition-colors">
                                                                 {p.player.name}
                                                             </Link>
                                                         </td>
-                                                        <td className="px-4 py-3 text-right font-black text-[#1A1A2E]">{p.totalPoints}</td>
+                                                        <td className="px-4 py-3 text-right font-bold text-ink">{p.totalPoints}</td>
                                                     </tr>
                                                 ))}
                                             </tbody>
@@ -141,38 +141,38 @@ export function TournamentPage() {
                         )}
 
                         <section>
-                            <h2 className="text-xs font-bold uppercase tracking-widest text-[#8E8E93] mb-3">Rounds</h2>
+                            <h2 className="font-display text-sm font-semibold uppercase tracking-[0.12em] text-muted mb-3">Rounds</h2>
                             <div className="space-y-2">
                                 {tournament.rounds.map(round => (
-                                    <div key={round.id} className="bg-white rounded-2xl border border-[#E5E5EA] overflow-hidden shadow-sm">
+                                    <div key={round.id} className="bg-surface rounded-2xl border border-line overflow-hidden shadow-sm">
                                         <button
                                             onClick={() => setExpandedRound(expandedRound === round.roundNumber ? null : round.roundNumber)}
-                                            className="w-full flex items-center justify-between px-4 py-3.5 hover:bg-[#F5F5F7] transition-colors"
+                                            className="w-full flex items-center justify-between px-4 py-3.5 hover:bg-canvas transition-colors"
                                         >
-                                            <span className="font-bold text-[#1A1A2E]">Round {round.roundNumber}</span>
-                                            <svg className={`w-4 h-4 text-[#8E8E93] transition-transform ${expandedRound === round.roundNumber ? "rotate-180" : ""}`} fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                                            <span className="font-bold text-ink">Round {round.roundNumber}</span>
+                                            <svg className={`w-4 h-4 text-muted transition-transform ${expandedRound === round.roundNumber ? "rotate-180" : ""}`} fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
                                             </svg>
                                         </button>
 
                                         {expandedRound === round.roundNumber && (
-                                            <div className="border-t border-[#F5F5F7] divide-y divide-[#F5F5F7]">
+                                            <div className="border-t border-canvas divide-y divide-canvas">
                                                 {round.matches.map((match, i) => (
                                                     <div key={match.id} className="px-4 py-4">
-                                                        <p className="text-xs font-bold uppercase tracking-widest text-[#8E8E93] mb-3">Court {i + 1}</p>
+                                                        <p className="font-display text-sm font-semibold uppercase tracking-[0.12em] text-muted mb-3">Court {i + 1}</p>
                                                         <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3">
                                                             <div className="text-right">
-                                                                <Link to={`/player/${match.team1Player1.id}`} className="font-semibold text-[#1A1A2E] hover:text-[#FF4200] text-sm block truncate transition-colors">{match.team1Player1.name}</Link>
-                                                                <Link to={`/player/${match.team1Player2.id}`} className="font-semibold text-[#1A1A2E] hover:text-[#FF4200] text-sm block truncate transition-colors">{match.team1Player2.name}</Link>
+                                                                <Link to={`/player/${match.team1Player1.id}`} className="font-semibold text-ink hover:text-[#FF4200] text-sm block truncate transition-colors">{match.team1Player1.name}</Link>
+                                                                <Link to={`/player/${match.team1Player2.id}`} className="font-semibold text-ink hover:text-[#FF4200] text-sm block truncate transition-colors">{match.team1Player2.name}</Link>
                                                             </div>
                                                             <div className="flex items-center gap-1.5 justify-center shrink-0">
-                                                                <span className={`text-2xl font-black tabular-nums ${match.team1Score > match.team2Score ? "text-[#FF4200]" : "text-[#E5E5EA]"}`}>{match.team1Score}</span>
-                                                                <span className="text-[#E5E5EA] font-black text-lg">:</span>
-                                                                <span className={`text-2xl font-black tabular-nums ${match.team2Score > match.team1Score ? "text-[#FF4200]" : "text-[#E5E5EA]"}`}>{match.team2Score}</span>
+                                                                <span className={`text-2xl font-bold tabular-nums ${match.team1Score > match.team2Score ? "text-[#FF4200]" : "text-line"}`}>{match.team1Score}</span>
+                                                                <span className="text-line font-bold text-lg">:</span>
+                                                                <span className={`text-2xl font-bold tabular-nums ${match.team2Score > match.team1Score ? "text-[#FF4200]" : "text-line"}`}>{match.team2Score}</span>
                                                             </div>
                                                             <div className="text-left">
-                                                                <Link to={`/player/${match.team2Player1.id}`} className="font-semibold text-[#1A1A2E] hover:text-[#FF4200] text-sm block truncate transition-colors">{match.team2Player1.name}</Link>
-                                                                <Link to={`/player/${match.team2Player2.id}`} className="font-semibold text-[#1A1A2E] hover:text-[#FF4200] text-sm block truncate transition-colors">{match.team2Player2.name}</Link>
+                                                                <Link to={`/player/${match.team2Player1.id}`} className="font-semibold text-ink hover:text-[#FF4200] text-sm block truncate transition-colors">{match.team2Player1.name}</Link>
+                                                                <Link to={`/player/${match.team2Player2.id}`} className="font-semibold text-ink hover:text-[#FF4200] text-sm block truncate transition-colors">{match.team2Player2.name}</Link>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -226,32 +226,32 @@ function TeamStandings({ tournament }: { tournament: TournamentData }) {
     const rankRemap = new Map(uniqueRanks.map((r, i) => [r, i + 1]));
 
     return (
-        <div className="bg-white rounded-2xl border border-[#E5E5EA] overflow-hidden overflow-x-auto shadow-sm">
+        <div className="bg-surface rounded-2xl border border-line overflow-hidden overflow-x-auto shadow-sm">
             <table className="w-full text-sm min-w-[280px]">
-                <thead className="border-b border-[#F5F5F7]">
+                <thead className="border-b border-canvas">
                     <tr>
-                        <th className="text-left px-3 py-3 text-xs font-bold uppercase tracking-widest text-[#8E8E93] w-10">Rank</th>
-                        <th className="text-left px-3 py-3 text-xs font-bold uppercase tracking-widest text-[#8E8E93]">Team</th>
-                        <th className="text-right px-3 py-3 text-xs font-bold uppercase tracking-widest text-[#8E8E93]">Pts</th>
+                        <th className="text-left px-3 py-3 font-display text-sm font-semibold uppercase tracking-[0.12em] text-muted w-10">Rank</th>
+                        <th className="text-left px-3 py-3 font-display text-sm font-semibold uppercase tracking-[0.12em] text-muted">Team</th>
+                        <th className="text-right px-3 py-3 font-display text-sm font-semibold uppercase tracking-[0.12em] text-muted">Pts</th>
                     </tr>
                 </thead>
                 <tbody>
                     {teams.map(({ p1, p2, rank, points }) => (
-                        <tr key={p1.id} className="border-b border-[#F5F5F7] last:border-0 hover:bg-[#F5F5F7] transition-colors">
+                        <tr key={p1.id} className="border-b border-canvas last:border-0 hover:bg-canvas transition-colors">
                             <td className="px-3 py-3 align-middle">
                                 <RankMedal rank={rankRemap.get(rank) ?? rank} />
                             </td>
                             <td className="px-3 py-3">
-                                <Link to={`/player/${p1.player.id}`} className="font-semibold text-[#1A1A2E] hover:text-[#FF4200] transition-colors block">
+                                <Link to={`/player/${p1.player.id}`} className="font-semibold text-ink hover:text-[#FF4200] transition-colors block">
                                     {p1.player.name}
                                 </Link>
                                 {p2 && (
-                                    <Link to={`/player/${p2.player.id}`} className="font-semibold text-[#1A1A2E] hover:text-[#FF4200] transition-colors block">
+                                    <Link to={`/player/${p2.player.id}`} className="font-semibold text-ink hover:text-[#FF4200] transition-colors block">
                                         {p2.player.name}
                                     </Link>
                                 )}
                             </td>
-                            <td className="px-3 py-3 text-right font-black text-[#1A1A2E] align-middle">{points}</td>
+                            <td className="px-3 py-3 text-right font-bold text-ink align-middle">{points}</td>
                         </tr>
                     ))}
                 </tbody>
@@ -261,17 +261,17 @@ function TeamStandings({ tournament }: { tournament: TournamentData }) {
 }
 
 function RankMedal({ rank }: { rank: number }) {
-    if (rank === 1) return <span className="text-yellow-500 font-black text-lg">🥇</span>;
-    if (rank === 2) return <span className="text-gray-400 font-black text-lg">🥈</span>;
-    if (rank === 3) return <span className="text-amber-600 font-black text-lg">🥉</span>;
-    return <span className="text-[#8E8E93] font-bold">#{rank}</span>;
+    if (rank === 1) return <span className="text-yellow-500 font-bold text-lg">🥇</span>;
+    if (rank === 2) return <span className="text-gray-400 font-bold text-lg">🥈</span>;
+    if (rank === 3) return <span className="text-amber-600 font-bold text-lg">🥉</span>;
+    return <span className="text-muted font-bold">#{rank}</span>;
 }
 
 function LoadingPage() {
     return (
-        <div className="min-h-screen bg-[#F5F5F7]">
+        <div className="min-h-screen bg-canvas">
             <NavBar />
-            <div className="flex items-center justify-center h-64 text-[#8E8E93]">Loading…</div>
+            <div className="flex items-center justify-center h-64 text-muted">Loading…</div>
         </div>
     );
 }

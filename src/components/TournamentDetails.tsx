@@ -19,22 +19,22 @@ export function PrizeList({ tournament }: { tournament: TournamentPrizes }) {
     if (prizes.length === 0 && !tournament.prizeNotes) return null;
     return (
         <div>
-            <p className="text-xs font-bold uppercase tracking-widest text-[#8E8E93] mb-2">Prizes</p>
+            <p className="font-display text-sm font-semibold uppercase tracking-[0.12em] text-muted mb-2">Prizes</p>
             {prizes.length > 0 && (
                 <ul className="space-y-1.5">
                     {prizes.map((p, i) => (
-                        <li key={i} className="flex items-start gap-2 text-sm text-[#1A1A2E]">
+                        <li key={i} className="flex items-start gap-2 text-sm text-ink">
                             <span className="shrink-0 w-5 text-center" aria-hidden>{prizeIcon(p.label)}</span>
                             <span className="min-w-0">
                                 <span className="font-bold">{p.label}:</span> {p.prize}
-                                {p.partner && <span className="block text-xs text-[#8E8E93]">offered by {p.partner}</span>}
+                                {p.partner && <span className="block text-xs text-muted">offered by {p.partner}</span>}
                             </span>
                         </li>
                     ))}
                 </ul>
             )}
             {tournament.prizeNotes && (
-                <p className={`text-sm text-[#1A1A2E] whitespace-pre-line ${prizes.length > 0 ? "mt-2" : ""}`}>{tournament.prizeNotes}</p>
+                <p className={`text-sm text-ink whitespace-pre-line ${prizes.length > 0 ? "mt-2" : ""}`}>{tournament.prizeNotes}</p>
             )}
         </div>
     );
@@ -54,17 +54,17 @@ export function HowItWorks({ tournament, defaultOpen = false }: { tournament: Fo
                 aria-expanded={open}
                 className="w-full flex items-center justify-between gap-3 text-left py-2 -my-2"
             >
-                <span className="text-xs font-bold uppercase tracking-widest text-[#8E8E93]">
+                <span className="font-display text-sm font-semibold uppercase tracking-[0.12em] text-muted">
                     How {tournamentTypeLabel(tournament.type)} works
                 </span>
-                <svg className={`w-4 h-4 text-[#8E8E93] shrink-0 transition-transform ${open ? "rotate-180" : ""}`} fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                <svg className={`w-4 h-4 text-muted shrink-0 transition-transform ${open ? "rotate-180" : ""}`} fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
                 </svg>
             </button>
             {open && (
                 <div className="mt-2">
-                    <p className="text-sm text-[#8E8E93]">{tournamentTypeDescription(tournament.type)}</p>
-                    <ul className="mt-2 space-y-1 text-sm text-[#1A1A2E] list-disc pl-5">
+                    <p className="text-sm text-muted">{tournamentTypeDescription(tournament.type)}</p>
+                    <ul className="mt-2 space-y-1 text-sm text-ink list-disc pl-5">
                         {notes.map(note => <li key={note}>{note}</li>)}
                     </ul>
                 </div>

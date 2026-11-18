@@ -11,7 +11,7 @@ export function TeamAllocationCard({ allocation, teamsPerGroup }: {
 }) {
     const { registered, byPlayerId, partnerOf, teamSlots, allocated, unallocated, splitPairs, randomDraw, shuffleGroups, clear, placePlayer, placeInFirstFree } = allocation;
     return (
-        <div className="bg-white rounded-xl border border-gray-200 px-4 sm:px-5 py-4 space-y-3">
+        <div className="bg-surface rounded-xl border border-gray-200 px-4 sm:px-5 py-4 space-y-3">
             <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
                 <div>
                     <p className="text-sm font-semibold text-gray-700">{teamsPerGroup ? "Teams & groups" : "Teams"}</p>
@@ -60,7 +60,7 @@ export function TeamAllocationCard({ allocation, teamsPerGroup }: {
                                 <button
                                     key={p.id}
                                     onClick={() => placeInFirstFree(p.playerId)}
-                                    className="text-xs font-medium px-2.5 py-1.5 rounded-full bg-white border border-gray-200 text-gray-700 hover:border-[#FF4200] hover:text-[#FF4200]"
+                                    className="text-xs font-medium px-2.5 py-1.5 rounded-full bg-surface border border-gray-200 text-gray-700 hover:border-[#FF4200] hover:text-[#FF4200]"
                                 >
                                     {p.player.name}
                                     {partner && <span className="text-gray-400"> + {byPlayerId.get(partner)?.player.name}</span>}

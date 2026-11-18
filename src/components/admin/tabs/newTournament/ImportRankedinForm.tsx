@@ -89,7 +89,7 @@ export function ImportRankedinForm({ onImported, onBack }: { onImported: () => v
     if (imported) {
         return (
             <div className="max-w-2xl">
-                <div className="bg-white rounded-xl border border-green-200 p-6 flex flex-col items-center text-center gap-4">
+                <div className="bg-surface rounded-xl border border-green-200 p-6 flex flex-col items-center text-center gap-4">
                     <div className="w-14 h-14 rounded-full bg-green-100 flex items-center justify-center">
                         <svg className="w-7 h-7 text-green-600" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
                     </div>
@@ -112,7 +112,7 @@ export function ImportRankedinForm({ onImported, onBack }: { onImported: () => v
     return (
         <div className="space-y-4 max-w-2xl">
             {/* URL fetch card */}
-            <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6">
+            <div className="bg-surface rounded-xl border border-gray-200 p-4 sm:p-6">
                 <div className="flex items-start justify-between gap-3 mb-4 sm:mb-5">
                     <div className="min-w-0">
                         <h2 className="text-lg font-semibold text-gray-800">Import from Rankedin</h2>
@@ -134,7 +134,7 @@ export function ImportRankedinForm({ onImported, onBack }: { onImported: () => v
                         <input
                             value={url}
                             onChange={e => { setUrl(e.target.value); preview.reset(); }}
-                            className="flex-1 border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF4200] focus:border-transparent bg-white placeholder-gray-400 min-w-0"
+                            className="flex-1 border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF4200] focus:border-transparent bg-surface placeholder-gray-400 min-w-0"
                             placeholder="https://www.rankedin.com/en/americano/71474/…"
                             type="url"
                         />
@@ -154,7 +154,7 @@ export function ImportRankedinForm({ onImported, onBack }: { onImported: () => v
 
             {/* Import details card — appears after preview */}
             {previewData && (
-                <form onSubmit={handleImport} className="bg-white rounded-xl border border-gray-200 divide-y divide-gray-100">
+                <form onSubmit={handleImport} className="bg-surface rounded-xl border border-gray-200 divide-y divide-gray-100">
 
                     {/* Stats strip */}
                     <div className="px-4 sm:px-6 py-4 flex gap-6">
@@ -170,13 +170,13 @@ export function ImportRankedinForm({ onImported, onBack }: { onImported: () => v
                         <div className="space-y-2">
                             <label className="block text-sm font-medium text-gray-700">Name</label>
                             <input value={name} onChange={e => setName(e.target.value)}
-                                className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF4200] focus:border-transparent bg-white" />
+                                className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF4200] focus:border-transparent bg-surface" />
                         </div>
 
                         <div className="space-y-2">
                             <label className="block text-sm font-medium text-gray-700">Date</label>
                             <input type="date" value={date} onChange={e => setDate(e.target.value)}
-                                className="w-full sm:w-auto border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF4200] focus:border-transparent bg-white" />
+                                className="w-full sm:w-auto border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF4200] focus:border-transparent bg-surface" />
                         </div>
 
                         <div className="space-y-2">
@@ -305,7 +305,7 @@ function UnmatchedPlayerCard({ player: p, resolution: res, onResolve }: {
                                     key={c.id}
                                     type="button"
                                     onClick={() => onResolve(chosen ? { kind: "create" } : { kind: "link", localPlayerId: c.id, localName: c.name })}
-                                    className={`inline-flex items-center gap-2 w-full sm:w-auto px-3 py-2 sm:py-1.5 rounded-lg border text-sm transition-colors ${chosen ? "bg-green-600 text-white border-green-600" : "bg-white border-gray-300 text-gray-700 hover:border-green-400 hover:bg-green-50"}`}
+                                    className={`inline-flex items-center gap-2 w-full sm:w-auto px-3 py-2 sm:py-1.5 rounded-lg border text-sm transition-colors ${chosen ? "bg-[#16a34a] text-white border-green-600" : "bg-surface border-gray-300 text-gray-700 hover:border-green-400 hover:bg-green-50"}`}
                                 >
                                     {chosen && <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>}
                                     <span className="font-medium">{c.name}</span>
@@ -322,7 +322,7 @@ function UnmatchedPlayerCard({ player: p, resolution: res, onResolve }: {
                 <button
                     type="button"
                     onClick={() => onResolve({ kind: "create" })}
-                    className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border text-sm font-medium transition-colors ${isCreate ? "bg-[#FF4200] text-white border-[#FF4200]" : "border-dashed border-gray-400 text-gray-600 hover:border-[#FF4200] hover:text-[#FF4200] bg-white"}`}
+                    className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border text-sm font-medium transition-colors ${isCreate ? "bg-[#FF4200] text-white border-[#FF4200]" : "border-dashed border-gray-400 text-gray-600 hover:border-[#FF4200] hover:text-[#FF4200] bg-surface"}`}
                 >
                     <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
                     {p.candidates.length > 0 ? "Create as new" : "Create new player"}
@@ -334,7 +334,7 @@ function UnmatchedPlayerCard({ player: p, resolution: res, onResolve }: {
                             return (
                                 <button key={g} type="button"
                                     onClick={() => onResolve({ kind: "create", gender: g })}
-                                    className={`px-3 py-2 rounded-lg text-xs font-semibold border transition-colors ${gender === g ? "bg-[#FF4200] text-white border-[#FF4200]" : "border-gray-300 bg-white text-gray-600 hover:border-[#FF4200]"}`}>
+                                    className={`px-3 py-2 rounded-lg text-xs font-semibold border transition-colors ${gender === g ? "bg-[#FF4200] text-white border-[#FF4200]" : "border-gray-300 bg-surface text-gray-600 hover:border-[#FF4200]"}`}>
                                     {g === "MALE" ? "Male" : "Female"}
                                 </button>
                             );

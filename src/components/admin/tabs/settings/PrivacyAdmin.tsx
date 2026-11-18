@@ -24,7 +24,7 @@ export function PrivacyAdmin() {
         onError: fail,
     });
     return (
-        <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-5 space-y-3">
+        <div className="bg-surface rounded-xl border border-gray-200 p-4 sm:p-5 space-y-3">
             <div>
                 <h2 className="text-base font-semibold text-gray-800">Privacy policy (GDPR)</h2>
                 <p className="text-xs text-gray-500">

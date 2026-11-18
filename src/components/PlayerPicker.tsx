@@ -44,14 +44,14 @@ export function PlayerPicker({
                 onClick={() => { setOpen(v => !v); setSearch(""); setAdding(false); }}
                 className={`w-full text-left px-3 py-2.5 rounded-lg border text-sm transition-colors truncate ${
                     selected
-                        ? "border-gray-300 text-gray-800 bg-white hover:border-[#FF4200]"
-                        : "border-dashed border-gray-300 text-gray-400 bg-white hover:border-[#FF4200] hover:text-[#FF4200]"
+                        ? "border-gray-300 text-gray-800 bg-surface hover:border-[#FF4200]"
+                        : "border-dashed border-gray-300 text-gray-400 bg-surface hover:border-[#FF4200] hover:text-[#FF4200]"
                 }`}
             >
                 {selected ? selected.name : placeholder}
             </button>
             {open && (
-                <div className={`absolute z-30 top-full ${align === "right" ? "right-0" : "left-0"} mt-1 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden w-full min-w-[220px]`}>
+                <div className={`absolute z-30 top-full ${align === "right" ? "right-0" : "left-0"} mt-1 bg-surface border border-gray-200 rounded-xl shadow-lg overflow-hidden w-full min-w-[220px]`}>
                     {!adding && (
                         <div className="p-2 border-b border-gray-100">
                             <input

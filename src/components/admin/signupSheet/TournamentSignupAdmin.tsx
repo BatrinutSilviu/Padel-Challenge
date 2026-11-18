@@ -105,7 +105,7 @@ export function TournamentSignupAdmin({ tournament }: { tournament: TournamentDa
                 <div className="px-1"><ChatJumpLink tournamentId={tournament.id} /></div>
 
                 {/* Sign-up settings */}
-                <div className="bg-white rounded-xl border border-gray-200 px-4 sm:px-5 py-4 space-y-4">
+                <div className="bg-surface rounded-xl border border-gray-200 px-4 sm:px-5 py-4 space-y-4">
                     <div className="flex items-center justify-between gap-3">
                         <div>
                             <p className="text-sm font-semibold text-gray-700">Sign-ups</p>
@@ -173,7 +173,7 @@ export function TournamentSignupAdmin({ tournament }: { tournament: TournamentDa
 
                 {/* Waiting list */}
                 {waiting.length > 0 && (
-                    <div className="bg-white rounded-xl border border-amber-200 overflow-hidden">
+                    <div className="bg-surface rounded-xl border border-amber-200 overflow-hidden">
                         <div className="px-4 sm:px-5 py-3 border-b border-gray-100 flex items-start justify-between gap-3">
                             <div className="min-w-0">
                                 <span className="text-sm font-semibold text-gray-700">Waiting list</span>
@@ -205,7 +205,7 @@ export function TournamentSignupAdmin({ tournament }: { tournament: TournamentDa
                                         <button
                                             onClick={() => setConfirmed.mutate({ id: tournament.id, playerIds: [p.playerId], confirmed: true })}
                                             disabled={setConfirmed.isPending}
-                                            className="flex-1 sm:flex-none text-xs font-semibold px-3 py-2.5 sm:py-1.5 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50 whitespace-nowrap"
+                                            className="flex-1 sm:flex-none text-xs font-semibold px-3 py-2.5 sm:py-1.5 rounded-lg bg-[#059669] text-white hover:bg-[#047857] disabled:opacity-50 whitespace-nowrap"
                                         >
                                             Confirm paid
                                         </button>
@@ -224,7 +224,7 @@ export function TournamentSignupAdmin({ tournament }: { tournament: TournamentDa
                 )}
 
                 {/* Confirmed */}
-                <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                <div className="bg-surface rounded-xl border border-gray-200 overflow-hidden">
                     <div className="px-4 sm:px-5 py-3 border-b border-gray-100 flex items-center justify-between">
                         <span className="text-sm font-semibold text-gray-700">Confirmed</span>
                         <span className="text-sm font-semibold text-gray-500">

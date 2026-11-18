@@ -127,7 +127,7 @@ export function PrizeInputs({ value, onChange, disabled }: {
                                         type="button"
                                         onClick={() => setPrize(i, { who })}
                                         disabled={disabled}
-                                        className={`px-3 py-2 ${p.who === who ? "bg-[#FF4200] text-white" : "bg-white text-gray-600"}`}
+                                        className={`px-3 py-2 ${p.who === who ? "bg-[#FF4200] text-white" : "bg-surface text-gray-600"}`}
                                     >
                                         {who === "US" ? "Act!ve" : "A partner"}
                                     </button>
@@ -242,7 +242,7 @@ export function PayToSelect({ value, onChange, disabled }: {
                 </svg>
             </button>
             {open && (
-                <div role="listbox" aria-multiselectable className="mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-sm py-1">
+                <div role="listbox" aria-multiselectable className="mt-1 w-full bg-surface border border-gray-200 rounded-lg shadow-sm py-1">
                     {options.map(a => (
                         <label key={a.id} className="flex items-center gap-2.5 px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer">
                             <input
@@ -317,7 +317,7 @@ export function TournamentDetailsEditor({ tournament, section }: {
     }
 
     return (
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div className="bg-surface rounded-xl border border-gray-200 overflow-hidden">
             <button
                 type="button"
                 onClick={() => setOpen(v => !v)}

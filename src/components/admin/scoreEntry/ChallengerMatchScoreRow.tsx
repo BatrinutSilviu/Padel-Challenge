@@ -176,7 +176,7 @@ export function ChallengerMatchScoreRow({
         if (status === "saving") return "border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed";
         if (status === "unlock-pending") return "border-amber-400 bg-amber-50 text-gray-700 cursor-pointer";
         if (status === "locked") return "border-gray-200 bg-gray-50 text-gray-500 cursor-pointer";
-        if (status === "confirming") return "border-blue-400 text-gray-800 bg-white";
+        if (status === "confirming") return "border-blue-400 text-gray-800 bg-surface";
         return isValid && wins ? "border-[#FF4200] text-[#FF4200]" : "border-gray-300 text-gray-700";
     }
 
@@ -243,7 +243,7 @@ export function ChallengerMatchScoreRow({
                                 readOnly={isLocked}
                                 disabled={status === "saving"}
                                 placeholder="0"
-                                className="w-12 text-center border rounded-lg px-1.5 py-2 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-[#FF4200] border-gray-300 text-gray-700 bg-white"
+                                className="w-12 text-center border rounded-lg px-1.5 py-2 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-[#FF4200] border-gray-300 text-gray-700 bg-surface"
                             />
                             <span className="text-gray-300 font-bold text-sm">:</span>
                             <input
@@ -255,7 +255,7 @@ export function ChallengerMatchScoreRow({
                                 readOnly={isLocked}
                                 disabled={status === "saving"}
                                 placeholder="0"
-                                className="w-12 text-center border rounded-lg px-1.5 py-2 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-[#FF4200] border-gray-300 text-gray-700 bg-white"
+                                className="w-12 text-center border rounded-lg px-1.5 py-2 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-[#FF4200] border-gray-300 text-gray-700 bg-surface"
                             />
                         </div>
                     )}

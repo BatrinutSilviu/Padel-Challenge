@@ -15,10 +15,10 @@ export function LeagueMatchPage() {
     const { data: match, isPending, error } = trpc.league.match.useQuery({ id: id! });
 
     return (
-        <div className="min-h-screen bg-[#F5F5F7]">
+        <div className="min-h-screen bg-canvas">
             <NavBar />
             <main className="max-w-2xl mx-auto px-3 sm:px-4 py-6 sm:py-8 pb-24 sm:pb-8 space-y-4">
-                {isPending ? <p className="text-[#8E8E93]">Loading…</p>
+                {isPending ? <p className="text-muted">Loading…</p>
                     : error || !match ? <p className="text-red-600">Match not found.</p>
                     : <MatchView match={match} />}
             </main>
@@ -34,10 +34,10 @@ function MatchView({ match }: { match: LeagueMatchDetails }) {
 
     return (
         <>
-            <Link to={`/league/${match.league.id}`} className="text-[#8E8E93] hover:text-[#FF4200] transition-colors text-sm font-semibold">← {match.league.name}</Link>
+            <Link to={`/league/${match.league.id}`} className="text-muted hover:text-[#FF4200] transition-colors text-sm font-semibold">← {match.league.name}</Link>
 
-            <div className="bg-white rounded-2xl border border-[#E5E5EA] p-5 shadow-sm space-y-4">
-                <p className="text-xs font-bold uppercase tracking-widest text-[#8E8E93]">
+            <div className="bg-surface rounded-2xl border border-line p-5 shadow-sm space-y-4">
+                <p className="font-display text-sm font-semibold uppercase tracking-[0.12em] text-muted">
                     {match.group
                         ? <>{tierLabel(match.group.tier.level)} · Group {match.group.name} · Week {match.week} · {formatWeekRange(match.league.startDate, match.week!)}</>
                         : <>Playoff{match.playoffKind ? ` · ${match.playoffKind === "PROMOTION" ? "promotion" : "relegation"}` : ""}</>}
@@ -48,12 +48,12 @@ function MatchView({ match }: { match: LeagueMatchDetails }) {
                         const sets = side === 1 ? match.team1Sets : match.team2Sets;
                         return (
                             <div key={side} className="flex items-center justify-between gap-3">
-                                <p className={`text-base min-w-0 ${winner === side ? "font-black text-[#1A1A2E]" : "font-semibold text-[#3A3A4E]"} ${team.eliminated ? "line-through" : ""}`}>
+                                <p className={`text-base min-w-0 ${winner === side ? "font-bold text-ink" : "font-semibold text-ink-2"} ${team.eliminated ? "line-through" : ""}`}>
                                     {names[side - 1]}
                                     {match.mySide === side && <span className="ml-2 text-[10px] font-bold uppercase text-[#FF4200]">You</span>}
                                 </p>
                                 {match.status !== "PENDING" && !match.walkoverWinner && (
-                                    <span className={`text-xl font-black tabular-nums ${winner === side ? "text-[#FF4200]" : "text-[#C7C7CC]"}`}>{sets}</span>
+                                    <span className={`text-xl font-bold tabular-nums ${winner === side ? "text-[#FF4200]" : "text-faint"}`}>{sets}</span>
                                 )}
                             </div>
                         );
@@ -61,7 +61,7 @@ function MatchView({ match }: { match: LeagueMatchDetails }) {
                 </div>
                 <ResultLine match={match} />
                 {(match.scheduledAt || match.venue) && match.status !== "CONFIRMED" && (
-                    <p className="text-sm text-[#1A1A2E] bg-[#F5F5F7] rounded-xl px-3 py-2">
+                    <p className="text-sm text-ink bg-canvas rounded-xl px-3 py-2">
                         📅 {match.scheduledAt ? formatScheduledAt(match.scheduledAt) : "Time not set"}
                         {match.venue && <> · 📍 {match.venue}</>}
                     </p>
@@ -73,7 +73,7 @@ function MatchView({ match }: { match: LeagueMatchDetails }) {
             {match.contacts && <ContactsSection match={match} />}
 
             {!match.mySide && playing && (
-                <p className="text-sm text-[#8E8E93] text-center">
+                <p className="text-sm text-muted text-center">
                     {token ? "Only the four players of this match can report the score and see contact details."
                         : <>Playing this match? <Link to={`/login?redirect=/league/match/${match.id}`} className="text-[#FF4200] font-semibold hover:underline">Log in</Link> to see your opponents' contact details and report the score.</>}
                 </p>
@@ -90,7 +90,7 @@ function ResultLine({ match }: { match: LeagueMatchDetails }) {
     else if (match.status === "CONFIRMED") text = `${formatResult(match)} · confirmed`;
     else if (match.status === "SUBMITTED") text = `${formatResult(match)} · reported by ${teamName(match.submittedBySide === 1 ? match.team1 : match.team2)}, waiting for the other team to confirm${match.disputed ? " (the teams reported different scores — an admin will check)" : ""}`;
     else text = "Not played yet.";
-    return <p className={`text-sm ${match.disputed && match.status === "SUBMITTED" ? "text-red-600" : "text-[#8E8E93]"}`}>{text}</p>;
+    return <p className={`text-sm ${match.disputed && match.status === "SUBMITTED" ? "text-red-600" : "text-muted"}`}>{text}</p>;
 }
 
 function useInvalidateMatch(matchId: string) {
@@ -118,7 +118,7 @@ function ScoreSection({ match, names }: { match: LeagueMatchDetails; names: [str
 
     if (match.status === "CONFIRMED" || match.team1.eliminated || match.team2.eliminated) {
         return match.status === "CONFIRMED" ? (
-            <p className="text-xs text-center text-[#8E8E93]">Something wrong with the result? Ask an admin to correct it.</p>
+            <p className="text-xs text-center text-muted">Something wrong with the result? Ask an admin to correct it.</p>
         ) : null;
     }
 
@@ -137,12 +137,12 @@ function ScoreSection({ match, names }: { match: LeagueMatchDetails; names: [str
     );
 
     return (
-        <section className="bg-white rounded-2xl border border-[#E5E5EA] p-5 shadow-sm space-y-3">
-            <h2 className="font-black text-[#1A1A2E]">Score</h2>
+        <section className="bg-surface rounded-2xl border border-line p-5 shadow-sm space-y-3">
+            <h2 className="font-bold text-ink">Score</h2>
             {theyReported && !editing ? (
                 <>
-                    <p className="text-sm text-[#3A3A4E]">
-                        Your opponents reported <span className="font-bold text-[#1A1A2E]">{formatResult(match)}</span> ({names[0]} first). Is that right?
+                    <p className="text-sm text-ink-2">
+                        Your opponents reported <span className="font-bold text-ink">{formatResult(match)}</span> ({names[0]} first). Is that right?
                     </p>
                     {confirm.error && <p className="text-sm text-red-500">{confirm.error.message}</p>}
                     <div className="flex gap-2">
@@ -163,7 +163,7 @@ function ScoreSection({ match, names }: { match: LeagueMatchDetails; names: [str
                 </>
             ) : iReported && !editing ? (
                 <div className="flex items-center justify-between gap-3">
-                    <p className="text-sm text-[#3A3A4E]">You reported <span className="font-bold text-[#1A1A2E]">{formatResult(match)}</span>. Waiting for your opponents to confirm.</p>
+                    <p className="text-sm text-ink-2">You reported <span className="font-bold text-ink">{formatResult(match)}</span>. Waiting for your opponents to confirm.</p>
                     <button onClick={() => setEditing(true)} className="shrink-0 text-sm font-semibold text-[#FF4200] hover:underline">Change</button>
                 </div>
             ) : (
@@ -201,10 +201,10 @@ function ScheduleSection({ match }: { match: LeagueMatchDetails }) {
     const changed = when !== toLocalInput(match.scheduledAt) || venue !== (match.venue ?? "");
 
     return (
-        <section className="bg-white rounded-2xl border border-[#E5E5EA] p-5 shadow-sm space-y-3">
+        <section className="bg-surface rounded-2xl border border-line p-5 shadow-sm space-y-3">
             <div>
-                <h2 className="font-black text-[#1A1A2E]">When & where</h2>
-                <p className="text-xs text-[#8E8E93]">Once you've agreed with your opponents, note it here so everyone sees it.</p>
+                <h2 className="font-bold text-ink">When & where</h2>
+                <p className="text-xs text-muted">Once you've agreed with your opponents, note it here so everyone sees it.</p>
             </div>
             <div className="grid sm:grid-cols-2 gap-2">
                 <input
@@ -217,7 +217,7 @@ function ScheduleSection({ match }: { match: LeagueMatchDetails }) {
                     value={venue}
                     onChange={e => setVenue(e.target.value)}
                     aria-label="Club"
-                    className={`w-full border border-gray-300 rounded-lg px-3 py-2.5 text-base sm:text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#FF4200] ${venue ? "text-[#1A1A2E]" : "text-[#8E8E93]"}`}
+                    className={`w-full border border-gray-300 rounded-lg px-3 py-2.5 text-base sm:text-sm bg-surface focus:outline-none focus:ring-2 focus:ring-[#FF4200] ${venue ? "text-ink" : "text-muted"}`}
                 >
                     <option value="">Choose the club…</option>
                     {VENUES.map(v => (
@@ -256,10 +256,10 @@ function ContactsSection({ match }: { match: LeagueMatchDetails }) {
     const teamOf = (id: string) => ([match.team1.player1Id, match.team1.player2Id].includes(id) ? 1 : 2);
 
     return (
-        <section className="bg-white rounded-2xl border border-[#E5E5EA] p-5 shadow-sm space-y-4">
+        <section className="bg-surface rounded-2xl border border-line p-5 shadow-sm space-y-4">
             <div>
-                <h2 className="font-black text-[#1A1A2E]">Players</h2>
-                <p className="text-xs text-[#8E8E93]">🔒 Phone numbers are only shown to the four players of this match.</p>
+                <h2 className="font-bold text-ink">Players</h2>
+                <p className="text-xs text-muted">🔒 Phone numbers are only shown to the four players of this match.</p>
             </div>
 
             {filledIn.length >= 2 && (
@@ -280,23 +280,23 @@ function ContactsSection({ match }: { match: LeagueMatchDetails }) {
                 </div>
             )}
 
-            <div className="divide-y divide-[#F5F5F7]">
+            <div className="divide-y divide-canvas">
                 {contacts.map(c => (
                     <div key={c.playerId} className="py-3 first:pt-0 last:pb-0 space-y-1.5">
                         <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1.5">
-                            <p className="font-semibold text-[#1A1A2E] min-w-0">
+                            <p className="font-semibold text-ink min-w-0">
                                 {c.name}
-                                <span className="ml-2 text-[10px] font-bold uppercase text-[#8E8E93]">{teamOf(c.playerId) === match.mySide ? "Your team" : "Opponent"}</span>
+                                <span className="ml-2 text-[10px] font-bold uppercase text-muted">{teamOf(c.playerId) === match.mySide ? "Your team" : "Opponent"}</span>
                             </p>
                             {c.phone && c.playerId !== playerId && (
                                 <div className="flex gap-1.5 shrink-0">
-                                    <a href={`tel:${c.phone.replace(/[^\d+]/g, "")}`} className="text-xs font-semibold px-2.5 py-1.5 rounded-lg bg-[#F5F5F7] text-[#1A1A2E] hover:bg-[#E5E5EA]">📞 {c.phone}</a>
+                                    <a href={`tel:${c.phone.replace(/[^\d+]/g, "")}`} className="text-xs font-semibold px-2.5 py-1.5 rounded-lg bg-canvas text-ink hover:bg-line">📞 {c.phone}</a>
                                     <a href={whatsappLink(c.phone)} target="_blank" rel="noreferrer" className="text-xs font-semibold px-2.5 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100">WhatsApp</a>
                                 </div>
                             )}
                         </div>
                         {!c.phone && c.playerId !== playerId && (
-                            <p className="text-xs text-[#8E8E93]">{c.hasAccount ? "No phone number added yet." : "No account yet — no phone number."}</p>
+                            <p className="text-xs text-muted">{c.hasAccount ? "No phone number added yet." : "No account yet — no phone number."}</p>
                         )}
                         <Availability c={c} />
                     </div>
@@ -314,22 +314,22 @@ function ContactsSection({ match }: { match: LeagueMatchDetails }) {
 
 function Availability({ c }: { c: NonNullable<LeagueMatchDetails["contacts"]>[number] }) {
     if (c.availability.length === 0 && c.venues.length === 0 && !c.note) {
-        return <p className="text-xs text-[#C7C7CC]">No availability added.</p>;
+        return <p className="text-xs text-faint">No availability added.</p>;
     }
     const chip = "text-xs font-semibold px-2 py-0.5 rounded-md";
     return (
         <div className="space-y-1">
             <div className="flex flex-wrap gap-1">
                 {rangesByDay(c.availability).map(([day, rs]) => (
-                    <span key={day} className={`${chip} bg-[#333366]/10 text-[#333366] tabular-nums`}>{DAY_LABELS[day]} {rs.map(formatRange).join(", ")}</span>
+                    <span key={day} className={`${chip} bg-[#333366]/10 text-[#9FD2DD] tabular-nums`}>{DAY_LABELS[day]} {rs.map(formatRange).join(", ")}</span>
                 ))}
             </div>
             {c.venues.length > 0 && (
                 <div className="flex flex-wrap gap-1">
-                    {c.venues.map(v => <span key={v} className={`${chip} bg-[#F5F5F7] text-[#3A3A4E]`}>📍 {v}</span>)}
+                    {c.venues.map(v => <span key={v} className={`${chip} bg-canvas text-ink-2`}>📍 {v}</span>)}
                 </div>
             )}
-            {c.note && <p className="text-xs text-[#8E8E93] italic">“{c.note}”</p>}
+            {c.note && <p className="text-xs text-muted italic">“{c.note}”</p>}
         </div>
     );
 }

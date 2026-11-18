@@ -34,7 +34,8 @@ const WINNERS_SCREEN_MS = 15 * 60_000;
 // /tournament/:id/live — one tournament.
 export function MastersLiveBoard() {
     const { id } = useParams<{ id: string }>();
-    return <PhoneGate tournamentId={id}><MastersTvBoard id={id!} /></PhoneGate>;
+    // data-light-board keeps the board's own colours: the site's dark palette (index.css) skips it.
+    return <div data-light-board className="contents"><PhoneGate tournamentId={id}><MastersTvBoard id={id!} /></PhoneGate></div>;
 }
 
 function MastersTvBoard({ id }: { id: string }) {
@@ -46,7 +47,7 @@ function MastersTvBoard({ id }: { id: string }) {
 // /live — whichever live Masters tournament was scored last; switches when the other
 // one gets a result.
 export function LatestLiveBoard() {
-    return <PhoneGate><LatestTvBoard /></PhoneGate>;
+    return <div data-light-board className="contents"><PhoneGate><LatestTvBoard /></PhoneGate></div>;
 }
 
 // The board is laid out for a TV. On a phone held upright it can't be read, so it
@@ -219,7 +220,7 @@ function LiveBoard({ tournament, updatedAt, stale }: { tournament: TournamentDat
                             type="button"
                             onClick={() => show(s.key)}
                             className={`px-5 py-2 rounded-full text-base font-bold uppercase tracking-widest transition-colors whitespace-nowrap ${
-                                scene.key === s.key ? "bg-white text-[#1A1A3E]" : "text-white/50 hover:text-white hover:bg-white/10"
+                                scene.key === s.key ? "bg-surface text-[#1A1A3E]" : "text-white/50 hover:text-white hover:bg-white/10"
                             }`}
                         >
                             {s.label}
@@ -229,8 +230,8 @@ function LiveBoard({ tournament, updatedAt, stale }: { tournament: TournamentDat
                 {tournament.status === "IN_PROGRESS" ? (
                     <span className="flex items-center gap-2.5 rounded-full bg-[#FF4200] px-5 py-2 text-lg font-black tracking-widest shrink-0">
                         <span className="relative flex h-3 w-3">
-                            <span className="absolute inline-flex h-full w-full rounded-full bg-white opacity-75 animate-ping" />
-                            <span className="relative inline-flex h-3 w-3 rounded-full bg-white" />
+                            <span className="absolute inline-flex h-full w-full rounded-full bg-surface opacity-75 animate-ping" />
+                            <span className="relative inline-flex h-3 w-3 rounded-full bg-surface" />
                         </span>
                         LIVE
                     </span>

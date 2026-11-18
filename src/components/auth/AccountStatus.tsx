@@ -62,11 +62,11 @@ export function ChooseProfilePage() {
     const blocked = !!account && (!!account.playerId || account.claim?.status === "PENDING");
 
     return (
-        <div className="min-h-screen bg-[#F5F5F7]">
+        <div className="min-h-screen bg-canvas">
             <NavBar />
             <div className="flex items-center justify-center min-h-[calc(100vh-64px)] px-4 py-8">
-                <div className="bg-white rounded-2xl border border-[#E5E5EA] p-8 w-full max-w-md space-y-5 shadow-sm">
-                    <h1 className="text-xl font-black text-[#1A1A2E]">Choose your player profile</h1>
+                <div className="bg-surface rounded-2xl border border-line p-8 w-full max-w-md space-y-5 shadow-sm">
+                    <h1 className="text-xl font-bold text-ink">Choose your player profile</h1>
                     {!account ? (
                         <p className="text-sm text-gray-400">Loading…</p>
                     ) : blocked ? (

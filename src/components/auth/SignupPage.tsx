@@ -67,12 +67,12 @@ export function SignupPage() {
     const inputClass = "w-full border border-gray-300 rounded-lg px-3 py-3 text-base focus:outline-none focus:ring-2 focus:ring-[#FF4200]";
 
     return (
-        <div className="min-h-screen bg-[#F5F5F7]">
+        <div className="min-h-screen bg-canvas">
             <NavBar />
             <div className="flex items-center justify-center min-h-[calc(100vh-64px)] px-4 py-8">
-                <div className="bg-white rounded-2xl border border-[#E5E5EA] p-8 w-full max-w-md space-y-5 shadow-sm">
+                <div className="bg-surface rounded-2xl border border-line p-8 w-full max-w-md space-y-5 shadow-sm">
                     <div>
-                        <h1 className="text-xl font-black text-[#1A1A2E]">{awaitingEmail ? "Check your inbox" : "Create an account"}</h1>
+                        <h1 className="text-xl font-bold text-ink">{awaitingEmail ? "Check your inbox" : "Create an account"}</h1>
                         {google && (
                             <p className="text-sm text-gray-500 mt-1">
                                 Signing up with Google as <span className="font-semibold text-gray-700">{google.email}</span>
@@ -88,7 +88,7 @@ export function SignupPage() {
                         <ProfileStep initialName={google?.name ?? ""} onChoose={setIdentity} />
                     ) : (
                         <form onSubmit={handleSubmit} className="space-y-5">
-                            <div className="bg-[#F5F5F7] rounded-lg px-3 py-2.5 space-y-1">
+                            <div className="bg-canvas rounded-lg px-3 py-2.5 space-y-1">
                                 <div className="flex items-center justify-between gap-2">
                                     <p className="text-sm text-gray-700 min-w-0 truncate">
                                         Signing up as <span className="font-semibold">{identity.name}</span>

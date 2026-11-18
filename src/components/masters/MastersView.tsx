@@ -18,7 +18,7 @@ export function MastersView({ tournament }: { tournament: TournamentData }) {
 
             <section>
                 <div className="flex items-center justify-between mb-3">
-                    <h2 className="text-xs font-bold uppercase tracking-widest text-[#8E8E93]">Bracket</h2>
+                    <h2 className="font-display text-sm font-semibold uppercase tracking-[0.12em] text-muted">Bracket</h2>
                     <Link
                         to={`/tournament/${tournament.id}/live`}
                         target="_blank"
@@ -31,8 +31,8 @@ export function MastersView({ tournament }: { tournament: TournamentData }) {
             </section>
 
             <section>
-                <h2 className="text-xs font-bold uppercase tracking-widest text-[#8E8E93] mb-3">Group Stage</h2>
-                <p className="text-xs text-[#8E8E93] mb-3">
+                <h2 className="font-display text-sm font-semibold uppercase tracking-[0.12em] text-muted mb-3">Group Stage</h2>
+                <p className="text-xs text-muted mb-3">
                     {groupCount === 1 ? "The top 2 play the Final." : `The top 2 of each group go through to the ${firstStage}.`}
                 </p>
                 <div className={`grid grid-cols-1 gap-4 ${groupCount > 1 ? "lg:grid-cols-2" : ""}`}>

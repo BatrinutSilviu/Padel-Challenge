@@ -18,20 +18,20 @@ export function ProfilePage() {
     });
 
     return (
-        <div className="min-h-screen bg-[#F5F5F7]">
+        <div className="min-h-screen bg-canvas">
             <NavBar />
             <main className="max-w-xl mx-auto px-3 sm:px-4 py-6 sm:py-8 pb-24 sm:pb-8 space-y-4">
-                <Link to="/league" className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#8E8E93] hover:text-[#FF4200]">← League</Link>
-                <div className="bg-white rounded-2xl border border-[#E5E5EA] p-5 sm:p-6 shadow-sm space-y-1">
-                    <p className="text-xs font-bold uppercase tracking-widest text-[#FF4200]">League</p>
-                    <h1 className="text-xl font-black text-[#1A1A2E]">My contact & availability</h1>
-                    <p className="text-sm text-[#8E8E93]">
+                <Link to="/league" className="inline-flex items-center gap-1.5 text-sm font-semibold text-muted hover:text-[#FF4200]">← League</Link>
+                <div className="bg-surface rounded-2xl border border-line p-5 sm:p-6 shadow-sm space-y-1">
+                    <p className="font-display text-sm font-semibold uppercase tracking-[0.12em] text-[#FF4200]">League</p>
+                    <h1 className="text-xl font-bold text-ink">My contact & availability</h1>
+                    <p className="text-sm text-muted">
                         Help your league opponents find a time to play: your phone number, and when and where you like to play.
                     </p>
                 </div>
-                <div className="bg-white rounded-2xl border border-[#E5E5EA] p-5 sm:p-6 shadow-sm">
+                <div className="bg-surface rounded-2xl border border-line p-5 sm:p-6 shadow-sm">
                     {isPending || !profile ? (
-                        <p className="text-[#8E8E93]">Loading…</p>
+                        <p className="text-muted">Loading…</p>
                     ) : (
                         <ProfileForm
                             profile={profile}

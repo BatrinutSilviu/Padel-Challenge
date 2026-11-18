@@ -169,7 +169,7 @@ export function KingOfTheCourtMatchScoreRow({
         if (status === "saving") return "border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed";
         if (status === "unlock-pending") return "border-amber-400 bg-amber-50 text-gray-700 cursor-pointer";
         if (status === "locked") return "border-gray-200 bg-gray-50 text-gray-500 cursor-pointer";
-        if (status === "confirming") return "border-blue-400 text-gray-800 bg-white";
+        if (status === "confirming") return "border-blue-400 text-gray-800 bg-surface";
         return isValid && wins ? "border-[#FF4200] text-[#FF4200]" : "border-gray-300 text-gray-700";
     }
 

@@ -54,7 +54,7 @@ export function PlayersTab() {
     return (
         <div className="space-y-6 max-w-2xl">
             <ProfileClaimsQueue />
-            <form onSubmit={handleAdd} className="bg-white rounded-xl border border-gray-200 p-5 space-y-4">
+            <form onSubmit={handleAdd} className="bg-surface rounded-xl border border-gray-200 p-5 space-y-4">
                 <h2 className="text-base font-semibold text-gray-800">Add Player</h2>
                 <div className="flex flex-col sm:flex-row gap-3">
                     <div className="flex-1 space-y-1.5">
@@ -119,7 +119,7 @@ export function PlayersTab() {
                 {error && <p className="text-sm text-red-500">{error}</p>}
             </form>
 
-            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden overflow-x-auto">
+            <div className="bg-surface rounded-xl border border-gray-200 overflow-hidden overflow-x-auto">
                 <div className="p-3 border-b border-gray-100">
                     <input
                         type="search"

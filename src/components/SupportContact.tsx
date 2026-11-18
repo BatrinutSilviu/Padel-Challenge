@@ -17,14 +17,14 @@ export function SupportContact({ context }: { context?: string }) {
     if (!contacts?.length) return null;
     const text = context ? `?text=${encodeURIComponent(`Salut! Am o întrebare despre ${context}.`)}` : "";
     return (
-        <div className="bg-white rounded-2xl border border-[#E5E5EA] p-4 space-y-3">
-            <p className="text-sm font-bold text-[#1A1A2E]">Questions? We're here to help</p>
+        <div className="bg-surface rounded-2xl border border-line p-4 space-y-3">
+            <p className="text-sm font-bold text-ink">Questions? We're here to help</p>
             {contacts.map((c, i) => (
-                <div key={i} className={`flex flex-col sm:flex-row sm:items-center justify-between gap-2 ${i > 0 ? "pt-3 border-t border-[#F5F5F7]" : ""}`}>
-                    <p className="text-sm text-[#8E8E93] min-w-0">
-                        {c.name ? <span className="font-semibold text-[#1A1A2E]">{c.name}</span> : null}
+                <div key={i} className={`flex flex-col sm:flex-row sm:items-center justify-between gap-2 ${i > 0 ? "pt-3 border-t border-canvas" : ""}`}>
+                    <p className="text-sm text-muted min-w-0">
+                        {c.name ? <span className="font-semibold text-ink">{c.name}</span> : null}
                         {c.name ? " · " : ""}
-                        <a href={`tel:${c.phone!.replace(/\s+/g, "")}`} className="font-semibold text-[#1A1A2E] whitespace-nowrap">{c.phone}</a>
+                        <a href={`tel:${c.phone!.replace(/\s+/g, "")}`} className="font-semibold text-ink whitespace-nowrap">{c.phone}</a>
                     </p>
                     <div className="flex gap-2 shrink-0">
                         {c.whatsapp && (
@@ -39,7 +39,7 @@ export function SupportContact({ context }: { context?: string }) {
                         )}
                         <a
                             href={`tel:${c.phone!.replace(/\s+/g, "")}`}
-                            className="flex-1 sm:flex-none text-center text-sm font-bold px-4 py-2.5 rounded-xl border border-[#E5E5EA] text-[#1A1A2E] hover:border-[#FF4200]"
+                            className="flex-1 sm:flex-none text-center text-sm font-bold px-4 py-2.5 rounded-xl border border-line text-ink hover:border-[#FF4200]"
                         >
                             Call
                         </a>

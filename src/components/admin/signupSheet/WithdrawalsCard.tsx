@@ -7,7 +7,7 @@ export function WithdrawalsCard({ tournamentId, signedUpIds }: { tournamentId: s
     const withdrawals = withdrawalsQuery.data ?? [];
     if (withdrawals.length === 0) return null;
     return (
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div className="bg-surface rounded-xl border border-gray-200 overflow-hidden">
             <div className="px-4 sm:px-5 py-3 border-b border-gray-100 flex items-center justify-between">
                 <span className="text-sm font-semibold text-gray-700">Withdrawn</span>
                 <span className="text-sm font-semibold text-gray-500">{withdrawals.length}</span>

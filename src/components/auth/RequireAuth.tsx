@@ -16,7 +16,7 @@ export function RequireAuth({ children, requirePlayer = true }: { children: Reac
     }
     if (requirePlayer && account && !account.playerId) {
         return (
-            <div className="min-h-screen bg-[#F5F5F7]">
+            <div className="min-h-screen bg-canvas">
                 <NavBar />
                 <main className="max-w-xl mx-auto px-3 sm:px-4 py-6 sm:py-8 pb-24 sm:pb-8">
                     <AccountStatusNotice />

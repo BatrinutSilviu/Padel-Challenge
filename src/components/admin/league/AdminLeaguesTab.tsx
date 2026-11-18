@@ -24,7 +24,7 @@ export function AdminLeaguesTab() {
         <div className="space-y-6">
             <form
                 onSubmit={e => { e.preventDefault(); create.mutate({ name: name.trim(), startDate, tierCount }); }}
-                className="bg-white rounded-xl border border-gray-200 p-4 sm:p-5 space-y-4"
+                className="bg-surface rounded-xl border border-gray-200 p-4 sm:p-5 space-y-4"
             >
                 <div>
                     <h2 className="font-semibold text-gray-800">New Act!ve Padel League</h2>
@@ -41,7 +41,7 @@ export function AdminLeaguesTab() {
                     </label>
                     <label className="space-y-1">
                         <span className="text-sm font-medium text-gray-700">Leagues (tiers)</span>
-                        <select value={tierCount} onChange={e => setTierCount(Number(e.target.value))} className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-base sm:text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#FF4200]">
+                        <select value={tierCount} onChange={e => setTierCount(Number(e.target.value))} className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-base sm:text-sm bg-surface focus:outline-none focus:ring-2 focus:ring-[#FF4200]">
                             {[1, 2, 3, 4, 5, 6].map(n => <option key={n} value={n}>{n === 1 ? "1 — just one league" : `${n} — League 1 to ${n}`}</option>)}
                         </select>
                     </label>
@@ -53,7 +53,7 @@ export function AdminLeaguesTab() {
                 </button>
             </form>
 
-            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+            <div className="bg-surface rounded-xl border border-gray-200 overflow-hidden">
                 {isPending && <p className="p-4 text-gray-400">Loading…</p>}
                 {!isPending && leagues?.length === 0 && <p className="p-4 text-gray-400">No leagues yet.</p>}
                 {leagues?.map(l => (

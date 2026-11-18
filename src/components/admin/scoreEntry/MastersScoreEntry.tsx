@@ -97,7 +97,7 @@ export function MastersScoreEntry({
         <div ref={listRef} className="space-y-4 scroll-mt-[50px]">
             {sections.length > 1 && (
                 <div className="sticky top-[50px] z-20 -mx-3 sm:mx-0 px-3 sm:px-0 py-2 bg-gray-50/95 backdrop-blur">
-                    <div className="flex gap-1 bg-white border border-gray-200 rounded-xl p-1">
+                    <div className="flex gap-1 bg-surface border border-gray-200 rounded-xl p-1">
                         {sections.map(s => {
                             const done = s.total > 0 && s.scored === s.total;
                             const on = s.key === active.key;
@@ -125,7 +125,7 @@ export function MastersScoreEntry({
             )}
 
             {active.key !== KNOCKOUT ? (
-                <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                <div className="bg-surface rounded-xl border border-gray-200 overflow-hidden">
                     <SectionHeader title={active.label} note="2 sets · tiebreak at 1-1" />
                     <div className="divide-y divide-gray-200">
                         {progress.groupRounds[active.key].map((round, ri) => (
@@ -143,7 +143,7 @@ export function MastersScoreEntry({
                     </div>
                 </div>
             ) : (
-                <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                <div className="bg-surface rounded-xl border border-gray-200 overflow-hidden">
                     <SectionHeader title="Knockout" note="Best of 3 sets" accent />
                     <div className="divide-y divide-gray-100">
                         {rows.map(({ label, match }) => (

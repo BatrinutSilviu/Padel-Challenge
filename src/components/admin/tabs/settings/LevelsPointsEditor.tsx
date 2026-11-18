@@ -55,7 +55,7 @@ export function LevelsPointsEditor() {
         setCoefs({ league: String(data.coefficients.league), ...Object.fromEntries(Object.entries(data.coefficients.leagueTier).map(([t, v]) => [`leagueTier:${t}`, String(v)])) });
     }, [data]);
 
-    if (!data) return <div className="bg-white rounded-xl border border-gray-200 p-5 text-sm text-gray-400">Loading levels and points…</div>;
+    if (!data) return <div className="bg-surface rounded-xl border border-gray-200 p-5 text-sm text-gray-400">Loading levels and points…</div>;
 
     function levelSettingsFromForm(): LevelSettings | string {
         const num = (k: string) => Number(levels[k]);
@@ -88,7 +88,7 @@ export function LevelsPointsEditor() {
     const levelRows = [...data.levels.levels].reverse();
 
     return (
-        <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-6">
+        <div className="bg-surface rounded-xl border border-gray-200 p-5 space-y-6">
             <div>
                 <h2 className="text-base font-semibold text-gray-800">Levels, coefficients and points</h2>
                 <p className="text-sm text-gray-500">

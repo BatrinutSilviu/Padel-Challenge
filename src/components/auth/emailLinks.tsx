@@ -7,11 +7,11 @@ import { trpc } from "../../trpc";
 // The page frame the auth pages share.
 export function AuthCard({ title, children }: { title: string; children: ReactNode }) {
     return (
-        <div className="min-h-screen bg-[#F5F5F7]">
+        <div className="min-h-screen bg-canvas">
             <NavBar />
             <div className="flex items-center justify-center min-h-[calc(100vh-64px)] px-4 py-8">
-                <div className="bg-white rounded-2xl border border-[#E5E5EA] p-8 w-full max-w-sm space-y-4 shadow-sm">
-                    <h1 className="text-xl font-black text-[#1A1A2E]">{title}</h1>
+                <div className="bg-surface rounded-2xl border border-line p-8 w-full max-w-sm space-y-4 shadow-sm">
+                    <h1 className="text-xl font-bold text-ink">{title}</h1>
                     {children}
                 </div>
             </div>

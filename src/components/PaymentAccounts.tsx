@@ -18,7 +18,7 @@ function CopyButton({ text }: { text: string }) {
                     setTimeout(() => setCopied(false), 2000);
                 } catch { /* clipboard blocked — the text can still be selected */ }
             }}
-            className="shrink-0 text-[11px] font-bold px-2 py-1 rounded-md border border-[#E5E5EA] text-[#3A3A4E] hover:border-[#FF4200] hover:text-[#FF4200] transition-colors"
+            className="shrink-0 text-[11px] font-bold px-2 py-1 rounded-md border border-line text-ink-2 hover:border-[#FF4200] hover:text-[#FF4200] transition-colors"
         >
             {copied ? "Copied ✓" : "Copy"}
         </button>
@@ -39,16 +39,16 @@ export function PayTo({ accounts, entryFee, advanceFee, tournamentName }: {
     return (
         <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5">
             <p className="text-xs text-amber-900">
-                <span className="font-black">💳 How to pay:</span>{" "}
+                <span className="font-bold">💳 How to pay:</span>{" "}
                 {amount !== null ? <>send <b>{amount} lei</b> to one of these</> : <>pay to one of these</>}, with your name and <i>{tournamentName}</i> in the details.
             </p>
-            <ul className="mt-1.5 divide-y divide-amber-100 bg-white rounded-lg border border-amber-100">
+            <ul className="mt-1.5 divide-y divide-amber-100 bg-surface rounded-lg border border-amber-100">
                 {accounts.map(a => {
                     const link = revolutLink(a);
                     return (
                         <li key={a.id} className="px-2.5 py-1.5">
-                            <p className="text-xs text-[#8E8E93] truncate">
-                                <span className="font-bold text-[#1A1A2E]">{accountTitle(a)}</span> · {a.accountHolder}
+                            <p className="text-xs text-muted truncate">
+                                <span className="font-bold text-ink">{accountTitle(a)}</span> · {a.accountHolder}
                                 {a.notes && <> · {a.notes}</>}
                             </p>
                             {accountValues(a).map(v => (
@@ -56,7 +56,7 @@ export function PayTo({ accounts, entryFee, advanceFee, tournamentName }: {
                                     {link && v === a.paymentHandle ? (
                                         <a href={link} target="_blank" rel="noopener noreferrer" className="font-mono text-xs text-[#FF4200] font-semibold [overflow-wrap:anywhere]">{v} ↗</a>
                                     ) : (
-                                        <span className="font-mono text-xs text-[#1A1A2E] [overflow-wrap:anywhere]">{v}</span>
+                                        <span className="font-mono text-xs text-ink [overflow-wrap:anywhere]">{v}</span>
                                     )}
                                     <CopyButton text={v} />
                                 </div>

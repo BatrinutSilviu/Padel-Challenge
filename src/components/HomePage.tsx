@@ -26,8 +26,8 @@ function PartnerInvitations() {
         <div className="space-y-2 mb-6">
             {data.map(inv => (
                 <Link key={inv.tournament.id} to={`/tournament/${inv.tournament.id}`}
-                    className="flex items-center justify-between gap-3 rounded-2xl border border-[#FF4200]/40 bg-white px-4 py-3 shadow-sm hover:border-[#FF4200]">
-                    <span className="text-sm text-[#1A1A2E] min-w-0">
+                    className="flex items-center justify-between gap-3 rounded-2xl border border-[#FF4200]/40 bg-surface px-4 py-3 shadow-sm hover:border-[#FF4200]">
+                    <span className="text-sm text-ink min-w-0">
                         🤝 <span className="font-bold">{inv.from}</span> invited you to play together in <span className="font-bold">{inv.tournament.name}</span>
                     </span>
                     <span className="shrink-0 text-sm font-bold text-[#FF4200]">Answer →</span>
@@ -43,18 +43,20 @@ export function HomePage() {
     const setTab = (t: Tab) => setSearchParams({ tab: t });
 
     return (
-        <div className="min-h-screen bg-[#F5F5F7]">
+        <div className="min-h-screen bg-canvas">
             <NavBar />
             <main className="max-w-5xl mx-auto px-3 sm:px-4 py-6 sm:py-8 pb-24 sm:pb-8">
-                <div className="flex gap-1 bg-white border border-[#E5E5EA] rounded-2xl p-1 mb-6 w-full sm:w-fit shadow-sm">
+                <div role="tablist" className="flex border-b border-line mb-6 -mx-3 px-3 sm:mx-0 sm:px-0 overflow-x-auto">
                     {(["divisions", "players", "tournaments"] as Tab[]).map(t => (
                         <button
                             key={t}
+                            role="tab"
+                            aria-selected={tab === t}
                             onClick={() => setTab(t)}
-                            className={`flex-1 sm:flex-none px-4 py-2 md:px-6 md:py-2.5 rounded-xl text-sm md:text-base font-bold capitalize transition-all whitespace-nowrap ${
+                            className={`flex-1 sm:flex-none px-1 sm:px-0 sm:mr-8 py-3 -mb-px border-b-2 font-display text-base md:text-lg font-semibold uppercase tracking-wider whitespace-nowrap transition-colors ${
                                 tab === t
-                                    ? "bg-[#FF4200] text-white shadow-sm"
-                                    : "text-[#8E8E93] hover:text-[#1A1A2E]"
+                                    ? "border-[#FF4200] text-ink"
+                                    : "border-transparent text-muted hover:text-ink"
                             }`}
                         >
                             {t}
@@ -76,7 +78,7 @@ export function HomePage() {
 
                 <div className="mt-6 space-y-3">
                     <SupportContact />
-                    <p className="text-center text-xs text-[#8E8E93]">
+                    <p className="text-center text-xs text-muted">
                         <Link to="/privacy" className="hover:text-[#FF4200]">Politica de confidențialitate (GDPR)</Link>
                     </p>
                 </div>
@@ -101,7 +103,7 @@ function OpenSignups() {
         <>
         {openForSignup.length > 0 && (
             <section className="space-y-2 mt-8">
-                <h2 className="text-xs font-bold uppercase tracking-widest text-[#8E8E93]">Open for sign-up</h2>
+                <h2 className="font-display text-sm font-semibold uppercase tracking-[0.12em] text-muted">Open for sign-up</h2>
                 {openForSignup.map(t => {
                     const left = spotsLeft(t);
                     const mine = mySignups.get(t.id);
@@ -118,7 +120,7 @@ function OpenSignups() {
                                 </span>
                             ) : (
                                 <span className={`text-xs font-bold px-3 py-1.5 rounded-xl whitespace-nowrap ${
-                                    left === 0 ? "bg-[#F5F5F7] text-[#8E8E93]" : "bg-[#FF4200] text-white"
+                                    left === 0 ? "bg-canvas text-muted" : "bg-[#FF4200] text-white"
                                 }`}>
                                     {left === 0 ? "Waiting list" : "Join"}
                                 </span>
@@ -137,20 +139,20 @@ function DivisionsTab() {
     const describe = useDivisionDescriptions();
     return (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {isPending && <p className="text-[#8E8E93]">Loading…</p>}
+            {isPending && <p className="text-muted">Loading…</p>}
             {data?.map(({ division, playerCount }) => {
                 return (
                     <Link
                         key={division}
                         to={`/division/${division}`}
-                        className="bg-white rounded-2xl border border-[#E5E5EA] p-5 hover:border-[#FF4200]/40 hover:shadow-md transition-all group"
+                        className="bg-surface rounded-2xl border border-line p-5 hover:border-[#FF4200]/40 hover:shadow-md transition-all group"
                     >
                         <div className="flex items-center justify-between mb-2">
-                            <span className="text-base font-black text-[#1A1A2E] group-hover:text-[#FF4200] transition-colors">{divisionLabel(division)}</span>
+                            <span className="text-base font-bold text-ink group-hover:text-[#FF4200] transition-colors">{divisionLabel(division)}</span>
                             
                         </div>
-                        {describe(division) && <p className="text-sm text-[#3A3A4E] leading-snug line-clamp-2 mb-1.5">{describe(division)}</p>}
-                        <p className="text-sm text-[#8E8E93] font-medium">{playerCount} player{playerCount !== 1 ? "s" : ""}</p>
+                        {describe(division) && <p className="text-sm text-ink-2 leading-snug line-clamp-2 mb-1.5">{describe(division)}</p>}
+                        <p className="text-sm text-muted font-medium">{playerCount} player{playerCount !== 1 ? "s" : ""}</p>
                     </Link>
                 );
             })}
@@ -169,8 +171,8 @@ function PlayersTab() {
     const [genderFilter, setGenderFilter] = useState<"ALL" | "MALE" | "FEMALE">("ALL");
     const [search, setSearch] = useState("");
 
-    if (isPending) return <p className="text-[#8E8E93]">Loading…</p>;
-    if (!data?.length) return <p className="text-[#8E8E93]">No players yet.</p>;
+    if (isPending) return <p className="text-muted">Loading…</p>;
+    if (!data?.length) return <p className="text-muted">No players yet.</p>;
 
     const filtered = data
         .filter(p => genderFilter === "ALL" || p.gender === genderFilter)
@@ -194,7 +196,7 @@ function PlayersTab() {
     return (
         <div className="space-y-4">
             <div className="relative group">
-                <svg xmlns="http://www.w3.org/2000/svg" className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8E8E93] group-focus-within:text-[#FF4200] transition-colors pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <svg xmlns="http://www.w3.org/2000/svg" className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted group-focus-within:text-[#FF4200] transition-colors pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
                 </svg>
                 <input
@@ -202,25 +204,25 @@ function PlayersTab() {
                     value={search}
                     onChange={e => setSearch(e.target.value)}
                     placeholder="Search players…"
-                    className="w-full pl-11 pr-10 py-3 bg-white border-2 border-[#E5E5EA] rounded-2xl text-sm text-[#1A1A2E] placeholder-[#8E8E93] shadow-sm focus:outline-none focus:border-[#FF4200] transition-colors"
+                    className="w-full pl-11 pr-10 py-3 bg-surface border-2 border-line rounded-2xl text-sm text-ink placeholder-muted shadow-sm focus:outline-none focus:border-[#FF4200] transition-colors"
                 />
                 {search && (
                     <button
                         onClick={() => setSearch("")}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 flex items-center justify-center rounded-full bg-[#E5E5EA] hover:bg-gray-300 text-[#8E8E93] transition-colors text-xs"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 flex items-center justify-center rounded-full bg-line hover:bg-gray-300 text-muted transition-colors text-xs"
                     >
                         ✕
                     </button>
                 )}
             </div>
             {isPoints && <RankingPointsInfo />}
-            <div className="flex gap-1 bg-white border border-[#E5E5EA] rounded-2xl p-1 w-fit shadow-sm">
+            <div className="flex gap-1 bg-surface border border-line rounded-2xl p-1 w-fit shadow-sm">
                 {(["ALL", "MALE", "FEMALE"] as const).map(g => (
                     <button
                         key={g}
                         onClick={() => setGenderFilter(g)}
                         className={`px-4 py-1.5 md:px-5 md:py-2 rounded-xl text-sm md:text-base font-bold transition-all ${
-                            genderFilter === g ? "bg-[#FF4200] text-white shadow-sm" : "text-[#8E8E93] hover:text-[#1A1A2E]"
+                            genderFilter === g ? "bg-[#FF4200] text-white shadow-sm" : "text-muted hover:text-ink"
                         }`}
                     >
                         {g === "ALL" ? "All" : g === "MALE" ? "♂ Male" : "♀ Female"}
@@ -228,20 +230,20 @@ function PlayersTab() {
                 ))}
             </div>
 
-            {groups.length === 0 && <p className="text-[#8E8E93]">No players found.</p>}
+            {groups.length === 0 && <p className="text-muted">No players found.</p>}
 
             {groups.map(({ division, players }) => {
                 const colors = DIVISION_COLORS[division];
                 return (
-                    <div key={division} className="bg-white rounded-2xl border border-[#E5E5EA] overflow-hidden shadow-sm">
+                    <div key={division} className="bg-surface rounded-2xl border border-line overflow-hidden shadow-sm">
                         <Link
                             to={`/division/${division}`}
                             className={`flex items-center justify-between px-4 py-3 ${colors.bg} border-b ${colors.border} hover:opacity-80 transition-opacity`}
                         >
                             <div className="flex items-center gap-2">
-                                <span className={`font-black text-sm ${colors.text}`}>{divisionLabel(division)}</span>
+                                <span className={`font-bold text-sm ${colors.text}`}>{divisionLabel(division)}</span>
                             </div>
-                            <span className="text-xs font-medium text-[#8E8E93]">{players.length} players</span>
+                            <span className="text-xs font-medium text-muted">{players.length} players</span>
                         </Link>
 
                         <div>
@@ -255,34 +257,34 @@ function PlayersTab() {
                                     <Link
                                         key={player.id}
                                         to={`/player/${player.id}`}
-                                        className="flex items-center gap-3 px-4 py-3 border-b border-[#F5F5F7] last:border-0 hover:bg-[#F5F5F7] transition-colors"
+                                        className="flex items-center gap-3 px-4 py-3 border-b border-canvas last:border-0 hover:bg-canvas transition-colors"
                                     >
-                                        <span className={`text-sm font-black w-6 text-center shrink-0 ${
+                                        <span className={`text-sm font-bold w-6 text-center shrink-0 ${
                                             divRank === 0 ? "text-amber-500" :
                                             divRank === 1 ? "text-gray-400" :
-                                            divRank === 2 ? "text-orange-400" : "text-[#E5E5EA]"
+                                            divRank === 2 ? "text-orange-400" : "text-line"
                                         }`}>
                                             {divRank === 0 ? "🥇" : divRank === 1 ? "🥈" : divRank === 2 ? "🥉" : divRank + 1}
                                         </span>
 
-                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-black shrink-0 ${colors.bg} ${colors.text}`}>
+                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${colors.bg} ${colors.text}`}>
                                             {initials(player.name)}
                                         </div>
 
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center gap-1.5 min-w-0">
-                                                <span className="font-semibold text-[#1A1A2E] text-sm truncate">{player.name}</span>
+                                                <span className="font-semibold text-ink text-sm truncate">{player.name}</span>
                                                 {(player.badges as BadgeType[]).map(badge => (
                                                     <span key={badge} title={BADGE_META[badge].description} className="text-sm shrink-0">{BADGE_META[badge].emoji}</span>
                                                 ))}
                                             </div>
-                                            <span className="text-xs text-[#8E8E93]">Overall #{overallRank}</span>
+                                            <span className="text-xs text-muted">Overall #{overallRank}</span>
                                         </div>
 
                                         <div className="flex items-center gap-3 shrink-0">
                                             <div className="text-right">
-                                                <span className="text-sm font-black text-[#FF4200]">{scoreOf(player)}</span>
-                                                <span className="text-xs text-[#8E8E93] ml-1">{unit}</span>
+                                                <span className="text-sm font-bold text-[#FF4200]">{scoreOf(player)}</span>
+                                                <span className="text-xs text-muted ml-1">{unit}</span>
                                             </div>
                                         </div>
                                     </Link>
@@ -309,9 +311,9 @@ function TournamentsTab() {
 
     return (
         <div className="space-y-4">
-            <div className="bg-white border border-[#E5E5EA] rounded-2xl p-4 space-y-3 shadow-sm">
+            <div className="bg-surface border border-line rounded-2xl p-4 space-y-3 shadow-sm">
                 <div className="flex flex-col gap-2">
-                    <span className="text-xs font-bold uppercase tracking-widest text-[#8E8E93]">Level</span>
+                    <span className="font-display text-sm font-semibold uppercase tracking-[0.12em] text-muted">Level</span>
                     <div className="flex flex-wrap gap-1.5">
                         <FilterChip active={divisionFilter === "ALL"} onClick={() => setDivisionFilter("ALL")}>All</FilterChip>
                         {activeDivisions.map(d => (
@@ -322,10 +324,10 @@ function TournamentsTab() {
                     </div>
                 </div>
 
-                <div className="border-t border-[#F5F5F7]" />
+                <div className="border-t border-canvas" />
 
                 <div className="flex flex-col gap-2">
-                    <span className="text-xs font-bold uppercase tracking-widest text-[#8E8E93]">Type</span>
+                    <span className="font-display text-sm font-semibold uppercase tracking-[0.12em] text-muted">Type</span>
                     <div className="flex flex-wrap gap-1.5">
                         {(["ALL", "AMERICANO", "AMERICANO_CHAMPIONS", "CHALLENGER", "TEAM_AMERICANO", "MASTERS"] as const).map(type => (
                             <FilterChip key={type} active={typeFilter === type} onClick={() => setTypeFilter(type)}>
@@ -337,8 +339,8 @@ function TournamentsTab() {
             </div>
 
             <div className="space-y-2">
-                {isPending && <p className="text-[#8E8E93]">Loading…</p>}
-                {!isPending && filtered.length === 0 && <p className="text-[#8E8E93]">No tournaments found.</p>}
+                {isPending && <p className="text-muted">Loading…</p>}
+                {!isPending && filtered.length === 0 && <p className="text-muted">No tournaments found.</p>}
                 {filtered.map(t => (
                     <TournamentCard key={t.id} tournament={t} aside={<StatusBadge status={t.status} />} />
                 ))}
@@ -352,7 +354,7 @@ function FilterChip({ active, onClick, children }: { active: boolean; onClick: (
         <button
             onClick={onClick}
             className={`px-3 py-1.5 rounded-xl text-sm font-bold transition-all whitespace-nowrap ${
-                active ? "bg-[#FF4200] text-white shadow-sm" : "bg-[#F5F5F7] text-[#8E8E93] hover:text-[#1A1A2E]"
+                active ? "bg-[#FF4200] text-white shadow-sm" : "bg-canvas text-muted hover:text-ink"
             }`}
         >
             {children}
@@ -372,7 +374,7 @@ export function StatusBadge({ status }: { status: string }) {
         COMPLETED: "Completed",
     };
     return (
-        <span className={`text-xs font-bold px-2.5 py-1 rounded-full whitespace-nowrap ${styles[status] ?? "bg-[#F5F5F7] text-[#8E8E93]"}`}>
+        <span className={`text-xs font-bold px-2.5 py-1 rounded-full whitespace-nowrap ${styles[status] ?? "bg-canvas text-muted"}`}>
             {labels[status] ?? status}
         </span>
     );

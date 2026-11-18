@@ -87,7 +87,7 @@ export function TournamentSettingsEditor({ tournament: t }: { tournament: Settin
     }
 
     return (
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div className="bg-surface rounded-xl border border-gray-200 overflow-hidden">
             <button
                 type="button"
                 onClick={() => setOpen(v => !v)}

@@ -17,14 +17,14 @@ export function PrivacyPage() {
         ? <>telefon / WhatsApp <b>{contact.phone}</b>{contact.name ? ` (${contact.name})` : ""}</>
         : <>datele de contact afișate pe paginile turneelor</>;
 
-    const h2 = "text-base font-black text-[#1A1A2E] mt-6 mb-2";
+    const h2 = "text-base font-bold text-ink mt-6 mb-2";
     return (
-        <div className="min-h-screen bg-[#F5F5F7]">
+        <div className="min-h-screen bg-canvas">
             <NavBar />
             <main className="max-w-3xl mx-auto px-4 py-6 sm:py-8 pb-24 sm:pb-8">
-                <article className="bg-white rounded-2xl border border-[#E5E5EA] p-5 sm:p-8 shadow-sm text-sm text-[#3A3A4E] leading-relaxed">
-                    <h1 className="text-2xl font-black text-[#1A1A2E]">Politica de confidențialitate</h1>
-                    <p className="text-xs text-[#8E8E93] mt-1">Privacy policy · în vigoare din 11 noiembrie 2026</p>
+                <article className="bg-surface rounded-2xl border border-line p-5 sm:p-8 shadow-sm text-sm text-ink-2 leading-relaxed">
+                    <h1 className="text-2xl font-bold text-ink">Politica de confidențialitate</h1>
+                    <p className="text-xs text-muted mt-1">Privacy policy · în vigoare din 11 noiembrie 2026</p>
 
                     <p className="mt-4">
                         Aplicația Act!ve Padel organizează turneele, clasamentele și liga comunității. Operatorul datelor tale personale
@@ -98,7 +98,7 @@ export function PrivacyPage() {
 // before they join a tournament.
 export function PrivacyConsent({ checked, onChange }: { checked: boolean; onChange: (checked: boolean) => void }) {
     return (
-        <label className="flex items-start gap-2.5 text-sm text-[#3A3A4E]">
+        <label className="flex items-start gap-2.5 text-sm text-ink-2">
             <input type="checkbox" checked={checked} onChange={e => onChange(e.target.checked)} className="mt-0.5 w-4 h-4 shrink-0 accent-[#FF4200]" />
             <span>
                 I agree to the processing of my personal data as described in the{" "}
