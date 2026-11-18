@@ -46,10 +46,6 @@ export function HomePage() {
         <div className="min-h-screen bg-[#F5F5F7]">
             <NavBar />
             <main className="max-w-5xl mx-auto px-3 sm:px-4 py-6 sm:py-8 pb-24 sm:pb-8">
-                <AccountStatusNotice className="mb-6" />
-                <PartnerInvitations />
-                <OpenSignups />
-
                 <div className="flex gap-1 bg-white border border-[#E5E5EA] rounded-2xl p-1 mb-6 w-full sm:w-fit shadow-sm">
                     {(["divisions", "players", "tournaments"] as Tab[]).map(t => (
                         <button
@@ -66,7 +62,15 @@ export function HomePage() {
                     ))}
                 </div>
 
-                {tab === "divisions" && <DivisionsTab />}
+                <AccountStatusNotice className="mb-6" />
+                <PartnerInvitations />
+
+                {tab === "divisions" && (
+                    <>
+                        <OpenSignups />
+                        <DivisionsTab />
+                    </>
+                )}
                 {tab === "players" && <PlayersTab />}
                 {tab === "tournaments" && <TournamentsTab />}
 
@@ -84,8 +88,8 @@ export function HomePage() {
 
 type MySignup = RouterOutputs["tournament"]["mySignups"][number];
 
-// Tournaments taking sign-ups, at the top of every tab so players find them; for a
-// logged-in player, the ones they're already on say so.
+// Tournaments taking sign-ups, on the home tab under the tab bar (the Tournaments tab
+// lists them too); for a logged-in player, the ones they're already on say so.
 function OpenSignups() {
     const { token } = useAuth();
     const { data } = trpc.tournament.list.useQuery();
