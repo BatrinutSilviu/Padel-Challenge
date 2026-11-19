@@ -322,3 +322,20 @@ body:not(.light-board) {
 @media (max-width: 639px) {
   .order-coef .score-value { display: none; }
 }
+
+/* Date and time boxes on iPhone (Safari): left to itself it draws them with its own minimum
+   width and height and centred text, so they come out bigger than the other fields and push
+   out of a half-width column. Make them behave like a text box. */
+input[type="date"], input[type="time"] {
+  -webkit-appearance: none;
+  appearance: none;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 2.625rem; /* an empty one would otherwise collapse */
+  display: block;
+}
+input[type="date"]::-webkit-date-and-time-value,
+input[type="time"]::-webkit-date-and-time-value {
+  text-align: left;
+  margin: 0;
+}
