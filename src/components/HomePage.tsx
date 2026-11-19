@@ -59,14 +59,15 @@ export function HomePage() {
         <div className="min-h-screen bg-canvas">
             <NavBar />
             <main className="max-w-5xl mx-auto px-3 sm:px-4 py-6 sm:py-8 pb-24 sm:pb-8">
-                <div role="tablist" className="flex border-b border-line mb-6 -mx-3 px-3 sm:mx-0 sm:px-0 overflow-x-auto">
+                {/* Four equal tabs that always fit: no sideways scrolling on a phone. */}
+                <div role="tablist" className="grid grid-cols-4 sm:flex border-b border-line mb-6">
                     {(["divisions", "matches", "players", "tournaments"] as Tab[]).map(t => (
                         <button
                             key={t}
                             role="tab"
                             aria-selected={tab === t}
                             onClick={() => setTab(t)}
-                            className={`flex-1 sm:flex-none px-1 sm:px-0 sm:mr-8 py-3 -mb-px border-b-2 font-display text-base md:text-lg font-semibold uppercase tracking-wider whitespace-nowrap transition-colors ${
+                            className={`min-w-0 sm:mr-8 py-3 -mb-px border-b-2 font-display text-[13px] min-[380px]:text-sm sm:text-base md:text-lg font-semibold uppercase tracking-normal sm:tracking-wider whitespace-nowrap transition-colors ${
                                 tab === t
                                     ? "border-[#FF4200] text-ink"
                                     : "border-transparent text-muted hover:text-ink"

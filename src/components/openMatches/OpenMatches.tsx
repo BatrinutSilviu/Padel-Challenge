@@ -245,54 +245,43 @@ function CreateOpenMatch({ onDone }: { onDone: () => void }) {
                     {/* Free text, no suggestions: wherever the player wants to play. */}
                     <input required minLength={2} maxLength={80} value={venue} onChange={e => setVenue(e.target.value)} autoComplete="off" className={input} />
                 </label>
-                <label className="space-y-1 text-sm text-ink-2">
-                    <span className="block font-semibold">Date</span>
-                    <input type="date" required value={date} onChange={e => setDate(e.target.value)} className={input} />
-                </label>
-                <div className="grid grid-cols-2 gap-3">
-                    <label className="space-y-1 text-sm text-ink-2">
+                {/* Side by side, except on the narrowest phones where they'd be cut off. */}
+                <div className="grid grid-cols-1 min-[360px]:grid-cols-2 gap-3 sm:col-span-2">
+                    <label className="space-y-1 text-sm text-ink-2 min-w-0">
+                        <span className="block font-semibold">Date</span>
+                        <input type="date" required value={date} onChange={e => setDate(e.target.value)} className={input} />
+                    </label>
+                    <label className="space-y-1 text-sm text-ink-2 min-w-0">
                         <span className="block font-semibold">Start</span>
                         <input type="time" required step={900} value={time} onChange={e => setTime(e.target.value)} className={input} />
                     </label>
-                    <label className="space-y-1 text-sm text-ink-2">
-                        <span className="block font-semibold">Length</span>
-                        <select value={duration} onChange={e => setDuration(Number(e.target.value))} className={input}>
-                            {DURATIONS.map(d => <option key={d} value={d}>{d} min</option>)}
-                        </select>
-                    </label>
+                </div>
+                <div className="space-y-1 text-sm text-ink-2 sm:col-span-2">
+                    <span className="block font-semibold">Length</span>
+                    <Chips label="Length" value={duration} onChange={setDuration} options={DURATIONS.map(d => ({ value: d, label: `${d} min` }))} />
                 </div>
                 <div className="space-y-1 text-sm text-ink-2 sm:col-span-2">
                     <span className="block font-semibold">Players I need</span>
-                    <div className="flex gap-1 bg-canvas border border-gray-300 rounded-lg p-1 w-fit" role="radiogroup" aria-label="Players I need">
-                        {[1, 2, 3].map(n => (
-                            <button
-                                key={n}
-                                type="button"
-                                role="radio"
-                                aria-checked={needed === n}
-                                onClick={() => setNeeded(n)}
-                                className={`w-11 py-1.5 rounded-md text-sm font-bold transition-colors ${needed === n ? "bg-[#FF4200] text-white" : "text-muted hover:text-ink"}`}
-                            >
-                                {n}
-                            </button>
-                        ))}
-                    </div>
+                    <Chips label="Players I need" value={needed} onChange={setNeeded} options={[1, 2, 3].map(n => ({ value: n, label: String(n) }))} />
                     <span className="block text-xs text-muted">
                         {needed === 3 ? "Just you so far — 3 more make four." : `You bring ${3 - needed} — ${needed} more make${needed === 1 ? "s" : ""} four.`}
                     </span>
                 </div>
-                <label className="space-y-1 text-sm text-ink-2 sm:col-span-2">
+                <div className="space-y-1.5 text-sm text-ink-2 sm:col-span-2">
                     <span className="block font-semibold">Who can join</span>
-                    <select value={chosenLevel} onChange={e => setLevel(e.target.value)} className={input}>
-                        {levels.map(l => (
-                            <option key={l.division} value={String(l.division)}>
-                                {divisionLabel(l.division)} players
-                            </option>
-                        ))}
-                        <option value="custom">Custom coefficient range…</option>
-                    </select>
-                    {picked && <span className="block text-xs text-muted">{divisionLabel(picked.division)} players can join. With a custom range, players whose coefficient is in it can join.</span>}
-                </label>
+                    <Chips
+                        label="Who can join"
+                        value={chosenLevel}
+                        onChange={setLevel}
+                        options={[
+                            ...levels.map(l => ({ value: String(l.division), label: divisionLabel(l.division) })),
+                            { value: "custom", label: "Custom range" },
+                        ]}
+                    />
+                    <span className="block text-xs text-muted">
+                        {picked ? `${divisionLabel(picked.division)} players can join.` : "Players whose coefficient is in the range can join."}
+                    </span>
+                </div>
                 {chosenLevel === "custom" && (
                     <div className="grid grid-cols-2 gap-3 sm:col-span-2">
                         <label className="space-y-1 text-sm text-ink-2">
@@ -320,5 +309,34 @@ function CreateOpenMatch({ onDone }: { onDone: () => void }) {
                 </button>
             </div>
         </form>
+    );
+}
+
+// A row of tappable options (instead of a <select>), wrapping on a phone.
+function Chips<T extends string | number>({ label, value, onChange, options }: {
+    label: string;
+    value: T;
+    onChange: (v: T) => void;
+    options: { value: T; label: string }[];
+}) {
+    return (
+        <div className="flex flex-wrap gap-1.5" role="radiogroup" aria-label={label}>
+            {options.map(o => (
+                <button
+                    key={String(o.value)}
+                    type="button"
+                    role="radio"
+                    aria-checked={value === o.value}
+                    onClick={() => onChange(o.value)}
+                    className={`min-w-11 px-3 py-2 rounded-lg border text-sm font-semibold transition-colors ${
+                        value === o.value
+                            ? "bg-[#FF4200] border-[#FF4200] text-white"
+                            : "bg-canvas border-line text-ink-2 hover:border-gray-400 hover:text-ink"
+                    }`}
+                >
+                    {o.label}
+                </button>
+            ))}
+        </div>
     );
 }
