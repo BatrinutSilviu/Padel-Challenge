@@ -62,6 +62,11 @@ export function PlayerPage() {
                                     {DIVISION_NAMES[player.division] ?? `Division ${player.division}`}
                                 </span>
                                 <RecommendedLevel division={player.division} recommended={player.recommendedDivision} />
+                                {player.selfLevel != null && player.selfLevel !== player.division && (
+                                    <span className="text-xs text-muted" title="The level they picked when signing up — their real level comes from their results">
+                                        · says {DIVISION_NAMES[player.selfLevel] ?? `Level ${player.selfLevel}`}
+                                    </span>
+                                )}
                                 <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
                                     player.gender === "FEMALE" ? "bg-pink-100 text-pink-700" : "bg-sky-50 text-sky-600"
                                 }`}>

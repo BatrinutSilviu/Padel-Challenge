@@ -2,11 +2,13 @@ import { useEffect, useState } from "react";
 import { trpc } from "../../trpc";
 import { cleanPlayerName, playerNameError } from "../../lib/playerName";
 import { phoneError } from "../../lib/phone";
+import { DIVISION_NAMES, useDivisionDescriptions } from "../../lib/divisions";
 import type { Identity } from "./identity";
 
 // Step one of signing up (and of picking again after a rejected claim): type your name,
 // pick yourself among the existing profiles that match, or start a new one — a new player
-// also says whether they're male or female and leaves a phone number.
+// also says whether they're male or female, roughly what level they play at (only shown, never
+// used — everyone new starts as a Beginner) and leaves a phone number.
 export function ProfileStep({ initialName = "", onChoose }: {
     initialName?: string;
     onChoose: (identity: Identity) => void;
@@ -96,6 +98,9 @@ export function ProfileStep({ initialName = "", onChoose }: {
     );
 }
 
+// Beginner first, then up to Level 1.
+const SELF_LEVELS = [6, 5, 4, 3, 2, 1];
+
 const inputClass = "w-full border border-gray-300 rounded-lg px-3 py-3 text-base focus:outline-none focus:ring-2 focus:ring-[#FF4200]";
 
 function NewPlayerDetails({ name, onBack, onChoose }: {
@@ -104,6 +109,8 @@ function NewPlayerDetails({ name, onBack, onChoose }: {
     onChoose: (identity: Identity) => void;
 }) {
     const [gender, setGender] = useState<"MALE" | "FEMALE" | null>(null);
+    const [selfLevel, setSelfLevel] = useState(6);
+    const describe = useDivisionDescriptions();
     const [phone, setPhone] = useState("");
     const [touched, setTouched] = useState(false);
 
@@ -115,7 +122,7 @@ function NewPlayerDetails({ name, onBack, onChoose }: {
         e.preventDefault();
         setTouched(true);
         if (!canContinue || !gender) return;
-        onChoose({ mode: "new", name, gender, phone: trimmed });
+        onChoose({ mode: "new", name, gender, phone: trimmed, selfLevel });
     }
 
     return (
@@ -148,6 +155,28 @@ function NewPlayerDetails({ name, onBack, onChoose }: {
                     ))}
                 </div>
                 {touched && !gender && <p className="text-xs text-red-500">Pick male or female</p>}
+            </div>
+
+            <div className="space-y-1.5">
+                <p className="text-sm font-medium text-gray-700">My level</p>
+                <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-label="My level">
+                    {SELF_LEVELS.map(l => (
+                        <button
+                            key={l}
+                            type="button"
+                            role="radio"
+                            aria-checked={selfLevel === l}
+                            onClick={() => setSelfLevel(l)}
+                            className={`py-2.5 rounded-lg text-sm font-semibold border transition-colors ${
+                                selfLevel === l ? "bg-[#FF4200] border-[#FF4200] text-white" : "border-gray-300 text-gray-600 hover:border-[#FF4200]"
+                            }`}
+                        >
+                            {DIVISION_NAMES[l]}
+                        </button>
+                    ))}
+                </div>
+                {describe(selfLevel) && <p className="text-xs text-gray-500">{describe(selfLevel)}</p>}
+                <p className="text-xs text-gray-400">Just so we know roughly — you start as a Beginner and your results set your level.</p>
             </div>
 
             <div className="space-y-1">

@@ -10,7 +10,7 @@ type PlayerContact = { email: string | null; hasAccount: boolean; google: boolea
 // A player in the admin list. Edit changes their name, division and gender (players who
 // signed up themselves sometimes pick the wrong ones), and their contact details.
 export function PlayerRow({ player: p, contact, onDelete }: {
-    player: { id: string; name: string; division: number; gender: string };
+    player: { id: string; name: string; division: number; gender: string; selfLevel?: number | null };
     contact?: PlayerContact;
     onDelete: () => void;
 }) {
@@ -136,6 +136,11 @@ export function PlayerRow({ player: p, contact, onDelete }: {
         <tr className="border-b border-gray-100 last:border-0">
             <td className="px-4 py-2 font-medium text-gray-800">
                 <div>{p.name}</div>
+                {p.selfLevel != null && p.selfLevel !== p.division && (
+                    <div className="text-xs font-normal text-gray-500" title="Picked when signing up — only shown, nothing goes by it">
+                        Says they play {DIVISION_NAMES[p.selfLevel] ?? `Level ${p.selfLevel}`}
+                    </div>
+                )}
                 <div className="text-xs text-gray-400 sm:hidden">{divisionText} · {genderText}</div>
                 {(contact?.email || contact?.phone) && (
                     <div className="text-xs font-normal text-gray-500 mt-0.5">

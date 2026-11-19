@@ -2,11 +2,11 @@
 // tournament history — claimed, and linked once an admin approves), or a new one.
 export type Identity =
     | { mode: "existing"; playerId: string; name: string }
-    | { mode: "new"; name: string; gender: "MALE" | "FEMALE"; phone: string };
+    | { mode: "new"; name: string; gender: "MALE" | "FEMALE"; phone: string; selfLevel: number };
 
 // What the backend expects for the chosen identity.
 export function identityInput(identity: Identity) {
     return identity.mode === "existing"
         ? { mode: "existing" as const, playerId: identity.playerId }
-        : { mode: "new" as const, name: identity.name, gender: identity.gender, phone: identity.phone };
+        : { mode: "new" as const, name: identity.name, gender: identity.gender, phone: identity.phone, selfLevel: identity.selfLevel };
 }
