@@ -18,13 +18,21 @@ export function DivisionPage() {
 
     const standings = trpc.division.standings.useQuery({ division });
     const tournaments = trpc.tournament.list.useQuery({ division });
-    const { order, setOrder, listOrder, stale, isPoints, scoreLabel } = useListOrder();
-    // Sorted only when the standings or the (deferred) order change.
-    const sorted = useMemo(() => {
-        const { compare, ranks } = orderTools(listOrder, isPoints);
-        const players = (standings.data ?? []).slice().sort(compare);
-        return { players, positions: ranks(players) };
-    }, [standings.data, listOrder, isPoints]);
+    const { order, setOrder, isPoints, scoreLabel } = useListOrder();
+    // Both orders at once: each row gets its position and rank in each, and the class on the
+    // list picks one (index.css), so switching re-renders nothing.
+    const rows = useMemo(() => {
+        const byScore = orderTools("SCORE", isPoints), byCoef = orderTools("COEFFICIENT", isPoints);
+        const inScore = (standings.data ?? []).slice().sort(byScore.compare);
+        const inCoef = [...inScore].sort(byCoef.compare);
+        const posCoef = new Map(inCoef.map((p, i) => [p.id, i]));
+        const rankScore = byScore.ranks(inScore), rankCoef = byCoef.ranks(inCoef);
+        return inScore.map((player, i) => ({
+            player,
+            pos: { score: i, coef: posCoef.get(player.id)! },
+            rank: { score: rankScore.get(player.id)!, coef: rankCoef.get(player.id)! },
+        }));
+    }, [standings.data, isPoints]);
     const describe = useDivisionDescriptions();
 
     if (isNaN(division) || division < 1 || division > 7) {
@@ -62,20 +70,12 @@ export function DivisionPage() {
                     </div>
                     {standings.isPending && <p className="text-muted">Loading…</p>}
                     {standings.data?.length === 0 && <p className="text-muted">No players in this division.</p>}
-                    <div className={`bg-surface rounded-2xl border border-line overflow-hidden shadow-sm transition-opacity ${stale ? "opacity-60" : ""}`}>
-                        {(() => {
-                            return sorted.players.map(player => {
-                                const rank = sorted.positions.get(player.id)!;
-                                return (
-                                    <PlayerRow
-                                        key={player.id}
-                                        player={player}
-                                        rank={rank}
-                                        division={division}
-                                    />
-                                );
-                            });
-                        })()}
+                    <div className={`bg-surface rounded-2xl border border-line overflow-hidden shadow-sm ${order === "COEFFICIENT" ? "order-coef" : "order-score"}`}>
+                        <div className="ordered-rows flex flex-col">
+                            {rows.map(({ player, pos, rank }) => (
+                                <PlayerRow key={player.id} player={player} pos={pos} rank={rank} division={division} />
+                            ))}
+                        </div>
                     </div>
                     <div className="text-xs text-muted mt-2 space-y-0.5">
                         <p>▲ Recommended to move up a level — the top 10% of this level by level coefficient (+0.12 per podium in the last 12 months).</p>
@@ -100,22 +100,25 @@ export function DivisionPage() {
 
 type PlayerEntry = RouterOutputs["division"]["standings"][number];
 
-function PlayerRow({ player, rank, division }: {
+function PlayerRow({ player, pos, rank, division }: {
     player: PlayerEntry;
-    rank: number;
+    pos: { score: number; coef: number };
+    rank: { score: number; coef: number };
     division: number;
 }) {
     const [expanded, setExpanded] = useState(false);
     const { scoreOf, unit } = useRankingSystem();
 
     return (
-        <div className="border-b border-canvas last:border-0">
+        <div className="border-b border-canvas" style={{ "--pos-score": pos.score, "--pos-coef": pos.coef } as React.CSSProperties}>
             <div
                 className="flex items-center justify-between px-4 py-3 hover:bg-canvas transition-colors cursor-pointer gap-2"
                 onClick={() => setExpanded(e => !e)}
             >
                 <div className="flex items-center gap-2 min-w-0 flex-1">
-                    <span className="text-sm font-bold text-muted w-5 shrink-0 text-right">{rank}</span>
+                    <span className="text-sm font-bold text-muted w-5 shrink-0 text-right">
+                        <span className="by-score">{rank.score}</span><span className="by-coef">{rank.coef}</span>
+                    </span>
                     <Link
                         to={`/player/${player.id}`}
                         onClick={e => e.stopPropagation()}

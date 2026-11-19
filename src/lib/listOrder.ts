@@ -1,4 +1,4 @@
-import { useDeferredValue, useState } from "react";
+import { useState } from "react";
 import { useRankingSystem } from "./ranking";
 
 // How player lists are ordered: by the ranking score (points or Elo, whichever the site ranks by)
@@ -17,18 +17,16 @@ function readOrder(): ListOrder {
 
 type Rankable = { id: string; name: string; elo: number; rankingPoints: number; level: { coefficient: number | null } };
 
-// `order` drives the toggle and changes at once; `listOrder` follows it a moment later (a
-// deferred value), so the toggle repaints straight away and re-ordering a long list doesn't
-// hold the tap up. Sort and rank by `listOrder` (see orderTools), inside a useMemo.
+// Lists work out both orders up front (orderTools) and show one with a class, so changing
+// `order` only changes that class.
 export function useListOrder() {
     const { isPoints } = useRankingSystem();
     const [order, setOrderState] = useState<ListOrder>(readOrder);
-    const listOrder = useDeferredValue(order);
     const setOrder = (o: ListOrder) => {
         setOrderState(o);
         try { localStorage.setItem(KEY, o); } catch { /* private mode: only for this visit */ }
     };
-    return { order, setOrder, listOrder, stale: order !== listOrder, isPoints, scoreLabel: isPoints ? "Points" : "ELO" };
+    return { order, setOrder, isPoints, scoreLabel: isPoints ? "Points" : "ELO" };
 }
 
 // Comparing and ranking players by an order. Plain functions of their inputs, so lists built

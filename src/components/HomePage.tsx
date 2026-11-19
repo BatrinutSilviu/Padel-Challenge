@@ -14,7 +14,7 @@ import { SupportContact } from "./SupportContact";
 import { RecommendedLevel } from "./RecommendedLevel";
 import { OpenMatches } from "./openMatches/OpenMatches";
 import { useRankingSystem } from "../lib/ranking";
-import { orderTools, useListOrder, type ListOrder } from "../lib/listOrder";
+import { orderTools, useListOrder } from "../lib/listOrder";
 import { formatCoefficient } from "../lib/levels";
 import { ListOrderToggle } from "./ListOrderToggle";
 
@@ -179,34 +179,47 @@ function initials(name: string) {
 }
 
 type ListPlayer = RouterOutputs["player"]["list"][number];
-type PlayerGroup = { division: number; players: ListPlayer[]; divRanks: Map<string, number> };
+// A row's position and ranks in both orders, so switching the order is only a class on the list
+// (see .order-score / .order-coef in index.css) — no re-render, no rows moved.
+type Placed = { player: ListPlayer; pos: { score: number; coef: number }; div: { score: number; coef: number }; overall: { score: number; coef: number } };
+type PlayerGroup = { division: number; rows: Placed[] };
 
 function PlayersTab() {
     const { data, isPending } = trpc.player.list.useQuery();
     const { unit } = useRankingSystem();
-    const { order, setOrder, listOrder, stale, isPoints, scoreLabel } = useListOrder();
+    const { order, setOrder, isPoints, scoreLabel } = useListOrder();
     const [genderFilter, setGenderFilter] = useState<"ALL" | "MALE" | "FEMALE">("ALL");
     const [search, setSearch] = useState("");
 
-    // Sorted and ranked only when the list, a filter or the (deferred) order changes — so the
-    // order toggle repaints first and the list follows.
-    const list = useMemo(() => {
+    // Both orders worked out at once, only when the list or a filter changes.
+    const groups = useMemo(() => {
         if (!data) return null;
-        const { compare, ranks } = orderTools(listOrder, isPoints);
-        const overallRanks = ranks([...data].sort(compare));
+        const byScore = orderTools("SCORE", isPoints), byCoef = orderTools("COEFFICIENT", isPoints);
+        const overallScore = byScore.ranks([...data].sort(byScore.compare));
+        const overallCoef = byCoef.ranks([...data].sort(byCoef.compare));
         const q = search.toLowerCase();
         const filtered = data
             .filter(p => genderFilter === "ALL" || p.gender === genderFilter)
             .filter(p => p.name.toLowerCase().includes(q));
-        const groups: PlayerGroup[] = [1, 2, 3, 4, 5, 6].map(d => {
-            const players = filtered.filter(p => p.division === d).sort(compare);
-            return { division: d, players, divRanks: ranks(players) };
-        }).filter(g => g.players.length > 0);
-        return { overallRanks, groups };
-    }, [data, listOrder, isPoints, genderFilter, search]);
+        return [1, 2, 3, 4, 5, 6].map((d): PlayerGroup => {
+            const inScore = filtered.filter(p => p.division === d).sort(byScore.compare);
+            const inCoef = [...inScore].sort(byCoef.compare);
+            const posCoef = new Map(inCoef.map((p, i) => [p.id, i]));
+            const divScore = byScore.ranks(inScore), divCoef = byCoef.ranks(inCoef);
+            return {
+                division: d,
+                rows: inScore.map((player, i) => ({
+                    player,
+                    pos: { score: i, coef: posCoef.get(player.id)! },
+                    div: { score: divScore.get(player.id)!, coef: divCoef.get(player.id)! },
+                    overall: { score: overallScore.get(player.id)!, coef: overallCoef.get(player.id)! },
+                })),
+            };
+        }).filter(g => g.rows.length > 0);
+    }, [data, isPoints, genderFilter, search]);
 
     if (isPending) return <p className="text-muted">Loading…</p>;
-    if (!data?.length || !list) return <p className="text-muted">No players yet.</p>;
+    if (!data?.length || !groups) return <p className="text-muted">No players yet.</p>;
 
     return (
         <div className="space-y-4">
@@ -248,33 +261,37 @@ function PlayersTab() {
             <ListOrderToggle order={order} onChange={setOrder} scoreLabel={scoreLabel} />
             </div>
 
-            {list.groups.length === 0 && <p className="text-muted">No players found.</p>}
+            {groups.length === 0 && <p className="text-muted">No players found.</p>}
 
-            <PlayerGroups
-                groups={list.groups}
-                overallRanks={list.overallRanks}
-                order={listOrder}
-                isPoints={isPoints}
-                unit={unit}
-                stale={stale}
-            />
+            <div className={order === "COEFFICIENT" ? "order-coef" : "order-score"}>
+                <PlayerGroups groups={groups} isPoints={isPoints} unit={unit} />
+            </div>
         </div>
     );
 }
 
-// The players, level by level. Memoised: it only re-renders when the sorted list changes.
-const PlayerGroups = memo(function PlayerGroups({ groups, overallRanks, order, isPoints, unit, stale }: {
+function Medal({ rank }: { rank: number }) {
+    const i = rank - 1;
+    return (
+        <span className={`text-sm font-bold w-6 text-center shrink-0 ${
+            i === 0 ? "text-amber-500" : i === 1 ? "text-gray-400" : i === 2 ? "text-orange-400" : "text-line"
+        }`}>
+            {i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : rank}
+        </span>
+    );
+}
+
+// The players, level by level. It doesn't depend on the order at all: each row carries its
+// position and ranks for both, and the class around it picks which ones show.
+const PlayerGroups = memo(function PlayerGroups({ groups, isPoints, unit }: {
     groups: PlayerGroup[];
-    overallRanks: Map<string, number>;
-    order: ListOrder;
     isPoints: boolean;
     unit: string;
-    stale: boolean;
 }) {
-    const { byCoefficient, scoreOf } = orderTools(order, isPoints);
+    const { scoreOf } = orderTools("SCORE", isPoints);
     const navigate = useNavigate();
-    // Rows are plain links (hundreds of router <Link>s make re-ordering slow); one handler
-    // turns an ordinary click on any of them into an in-app navigation.
+    // Rows are plain links (hundreds of router <Link>s are slow); one handler turns an
+    // ordinary click on any of them into an in-app navigation.
     const onClick = (e: React.MouseEvent) => {
         if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
         const a = (e.target as HTMLElement).closest("a");
@@ -284,8 +301,8 @@ const PlayerGroups = memo(function PlayerGroups({ groups, overallRanks, order, i
         navigate(href);
     };
     return (
-        <div onClick={onClick} className={`space-y-4 transition-opacity ${stale ? "opacity-60" : ""}`}>
-            {groups.map(({ division, players, divRanks }) => {
+        <div onClick={onClick} className="space-y-4">
+            {groups.map(({ division, rows }) => {
                 const colors = DIVISION_COLORS[division];
                 return (
                     <div key={division} className="bg-surface rounded-2xl border border-line overflow-hidden shadow-sm">
@@ -296,55 +313,49 @@ const PlayerGroups = memo(function PlayerGroups({ groups, overallRanks, order, i
                             <div className="flex items-center gap-2">
                                 <span className={`font-bold text-sm ${colors.text}`}>{divisionLabel(division)}</span>
                             </div>
-                            <span className="text-xs font-medium text-muted">{players.length} players</span>
+                            <span className="text-xs font-medium text-muted">{rows.length} players</span>
                         </Link>
 
-                        <div>
-                            {players.map(player => {
-                                const overallRank = overallRanks.get(player.id)!;
-                                const divRank = divRanks.get(player.id)! - 1;
-                                return (
-                                    <a
-                                        key={player.id}
-                                        href={`/player/${player.id}`}
-                                        className="flex items-center gap-3 px-4 py-3 border-b border-canvas last:border-0 hover:bg-canvas transition-colors [content-visibility:auto] [contain-intrinsic-size:auto_60px]"
-                                    >
-                                        <span className={`text-sm font-bold w-6 text-center shrink-0 ${
-                                            divRank === 0 ? "text-amber-500" :
-                                            divRank === 1 ? "text-gray-400" :
-                                            divRank === 2 ? "text-orange-400" : "text-line"
-                                        }`}>
-                                            {divRank === 0 ? "🥇" : divRank === 1 ? "🥈" : divRank === 2 ? "🥉" : divRank + 1}
+                        <div className="ordered-rows flex flex-col">
+                            {rows.map(({ player, pos, div, overall }) => (
+                                <a
+                                    key={player.id}
+                                    href={`/player/${player.id}`}
+                                    style={{ "--pos-score": pos.score, "--pos-coef": pos.coef } as React.CSSProperties}
+                                    className="flex items-center gap-3 px-4 py-3 border-b border-canvas hover:bg-canvas [content-visibility:auto] [contain-intrinsic-size:auto_60px]"
+                                >
+                                    <span className="by-score contents"><Medal rank={div.score} /></span>
+                                    <span className="by-coef contents"><Medal rank={div.coef} /></span>
+
+                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${colors.bg} ${colors.text}`}>
+                                        {initials(player.name)}
+                                    </div>
+
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-1.5 min-w-0">
+                                            <span className="font-semibold text-ink text-sm truncate">{player.name}</span>
+                                            <RecommendedLevel division={player.division} recommended={player.recommendedDivision} />
+                                        </div>
+                                        <span className="text-xs text-muted">
+                                            Overall #<span className="by-score">{overall.score}</span><span className="by-coef">{overall.coef}</span>
                                         </span>
+                                    </div>
 
-                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${colors.bg} ${colors.text}`}>
-                                            {initials(player.name)}
-                                        </div>
-
-                                        <div className="flex-1 min-w-0">
-                                            <div className="flex items-center gap-1.5 min-w-0">
-                                                <span className="font-semibold text-ink text-sm truncate">{player.name}</span>
-                                                <RecommendedLevel division={player.division} recommended={player.recommendedDivision} />
+                                    {/* The number the list is ordered by comes first and stands out (index.css). */}
+                                    <div className="flex items-center gap-3 shrink-0">
+                                        {player.level.coefficient !== null && (
+                                            <div className="coef-value text-right" title={`Level coefficient${player.level.provisional ? " (provisional — still settling)" : ""}`}>
+                                                <span className="text-sm font-bold tabular-nums">{formatCoefficient(player.level.coefficient)}{player.level.provisional && "*"}</span>
+                                                <span className="text-xs text-muted ml-1">lvl</span>
                                             </div>
-                                            <span className="text-xs text-muted">Overall #{overallRank}</span>
+                                        )}
+                                        <div className="score-value text-right">
+                                            <span className="text-sm font-bold">{scoreOf(player)}</span>
+                                            <span className="text-xs text-muted ml-1">{unit}</span>
                                         </div>
-
-                                        <div className="flex items-center gap-3 shrink-0">
-                                            {/* The number the list is ordered by comes first and stands out. */}
-                                            {player.level.coefficient !== null && (
-                                                <div className={`text-right ${byCoefficient ? "order-first" : ""}`} title={`Level coefficient${player.level.provisional ? " (provisional — still settling)" : ""}`}>
-                                                    <span className={`text-sm font-bold tabular-nums ${byCoefficient ? "text-[#9FD2DD]" : "text-muted"}`}>{formatCoefficient(player.level.coefficient)}{player.level.provisional && "*"}</span>
-                                                    <span className="text-xs text-muted ml-1">lvl</span>
-                                                </div>
-                                            )}
-                                            <div className={`text-right ${byCoefficient ? "hidden sm:block" : ""}`}>
-                                                <span className={`text-sm font-bold ${byCoefficient ? "text-muted" : "text-[#FF4200]"}`}>{scoreOf(player)}</span>
-                                                <span className="text-xs text-muted ml-1">{unit}</span>
-                                            </div>
-                                        </div>
-                                    </a>
-                                );
-                            })}
+                                    </div>
+                                </a>
+                            ))}
                         </div>
                     </div>
                 );
