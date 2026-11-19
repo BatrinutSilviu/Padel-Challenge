@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { trpc } from "../../trpc";
 import type { RouterOutputs } from "../../backendRouter";
@@ -7,7 +7,7 @@ import { divisionLabel, DIVISION_BADGES } from "../../lib/divisions";
 import { useLevelRules } from "../../lib/levels";
 import { ClockIcon, PinIcon } from "../ui/icons";
 
-// Open matches (backend routers/openMatch): a player sets up a match — venue, time, a level
+// Open matches (backend routers/openMatch): a player sets up a match — location, time, a level
 // or a coefficient range — and others in the range join until there are four.
 
 type OpenMatch = RouterOutputs["openMatch"]["list"][number];
@@ -83,7 +83,8 @@ function OpenMatchCard({ match: m, loggedIn, isAdmin }: { match: OpenMatch; logg
     const starts = new Date(m.startsAt);
     const ends = new Date(starts.getTime() + m.durationMinutes * 60_000);
     const date = dateParts(starts);
-    const free = m.spots - m.players.length;
+    // Spots the organiser fills with their own people count as taken.
+    const free = m.spots - m.players.length - m.brought;
     const badge = m.division !== null ? DIVISION_BADGES[m.division] : null;
 
     return (
@@ -125,6 +126,11 @@ function OpenMatchCard({ match: m, loggedIn, isAdmin }: { match: OpenMatch; logg
                             {p.player.name}
                             {p.playerId === m.createdById && <span className="text-xs text-muted"> · set it up</span>}
                         </Link>
+                    ))}
+                    {Array.from({ length: m.brought }, (_, i) => (
+                        <span key={`b${i}`} className="text-sm px-2.5 py-1 rounded-md bg-canvas border border-line text-muted">
+                            With {m.createdBy.name.split(" ")[0]}
+                        </span>
                     ))}
                     {Array.from({ length: free }, (_, i) => (
                         <span key={i} className="text-sm px-2.5 py-1 rounded-md border border-dashed border-gray-300 text-muted">Open spot</span>
@@ -191,20 +197,14 @@ function tomorrow(): string {
 function CreateOpenMatch({ onDone }: { onDone: () => void }) {
     const utils = trpc.useUtils();
     const { data: rules } = useLevelRules();
-    const { data: tournaments } = trpc.tournament.list.useQuery();
     // The player's own level is the default (the players list is already loaded on the home page).
     const { playerId } = useAuth();
     const { data: players } = trpc.player.list.useQuery();
-    // Venues from the tournaments, to pick from (or type another).
-    const venues = useMemo(
-        () => [...new Set((tournaments ?? []).map(t => t.location).filter((v): v is string => !!v))].sort(),
-        [tournaments],
-    );
-
     const [venue, setVenue] = useState("");
     const [date, setDate] = useState(tomorrow());
     const [time, setTime] = useState("19:00");
     const [duration, setDuration] = useState(90);
+    const [needed, setNeeded] = useState(3);
     const [level, setLevel] = useState<string>("");
     const [min, setMin] = useState("");
     const [max, setMax] = useState("");
@@ -229,9 +229,9 @@ function CreateOpenMatch({ onDone }: { onDone: () => void }) {
         if (chosenLevel === "custom") {
             const lo = Number(min), hi = Number(max);
             if (min === "" || max === "" || isNaN(lo) || isNaN(hi)) return setError("Give the lowest and the highest coefficient.");
-            create.mutate({ venue, startsAt, durationMinutes: duration, division: null, minCoefficient: lo, maxCoefficient: hi, note: note || undefined });
+            create.mutate({ venue, playersNeeded: needed, startsAt, durationMinutes: duration, division: null, minCoefficient: lo, maxCoefficient: hi, note: note || undefined });
         } else {
-            create.mutate({ venue, startsAt, durationMinutes: duration, division: Number(chosenLevel), note: note || undefined });
+            create.mutate({ venue, playersNeeded: needed, startsAt, durationMinutes: duration, division: Number(chosenLevel), note: note || undefined });
         }
     }
 
@@ -241,9 +241,9 @@ function CreateOpenMatch({ onDone }: { onDone: () => void }) {
             <h3 className="font-display text-lg font-semibold uppercase tracking-wider text-ink">Set up a match</h3>
             <div className="grid sm:grid-cols-2 gap-3">
                 <label className="space-y-1 text-sm text-ink-2 sm:col-span-2">
-                    <span className="block font-semibold">Venue</span>
-                    <input list="open-match-venues" required minLength={2} maxLength={80} value={venue} onChange={e => setVenue(e.target.value)} placeholder="X3 Padel" className={input} />
-                    <datalist id="open-match-venues">{venues.map(v => <option key={v} value={v} />)}</datalist>
+                    <span className="block font-semibold">Location</span>
+                    {/* Free text, no suggestions: wherever the player wants to play. */}
+                    <input required minLength={2} maxLength={80} value={venue} onChange={e => setVenue(e.target.value)} autoComplete="off" className={input} />
                 </label>
                 <label className="space-y-1 text-sm text-ink-2">
                     <span className="block font-semibold">Date</span>
@@ -260,6 +260,26 @@ function CreateOpenMatch({ onDone }: { onDone: () => void }) {
                             {DURATIONS.map(d => <option key={d} value={d}>{d} min</option>)}
                         </select>
                     </label>
+                </div>
+                <div className="space-y-1 text-sm text-ink-2 sm:col-span-2">
+                    <span className="block font-semibold">Players I need</span>
+                    <div className="flex gap-1 bg-canvas border border-gray-300 rounded-lg p-1 w-fit" role="radiogroup" aria-label="Players I need">
+                        {[1, 2, 3].map(n => (
+                            <button
+                                key={n}
+                                type="button"
+                                role="radio"
+                                aria-checked={needed === n}
+                                onClick={() => setNeeded(n)}
+                                className={`w-11 py-1.5 rounded-md text-sm font-bold transition-colors ${needed === n ? "bg-[#FF4200] text-white" : "text-muted hover:text-ink"}`}
+                            >
+                                {n}
+                            </button>
+                        ))}
+                    </div>
+                    <span className="block text-xs text-muted">
+                        {needed === 3 ? "Just you so far — 3 more make four." : `You bring ${3 - needed} — ${needed} more make${needed === 1 ? "s" : ""} four.`}
+                    </span>
                 </div>
                 <label className="space-y-1 text-sm text-ink-2 sm:col-span-2">
                     <span className="block font-semibold">Who can join</span>
