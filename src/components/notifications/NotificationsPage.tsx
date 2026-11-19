@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { trpc } from "../../trpc";
 import { NavBar } from "../NavBar";
-import { ChatIcon, PeopleIcon } from "../ui/icons";
+import { ChatIcon, PeopleIcon, TrophyIcon } from "../ui/icons";
 import { timeAgo } from "./useNotifications";
 
 // Everything under the bell: new messages in the chats of the player's tournaments, and new
@@ -48,14 +48,14 @@ export function NotificationList({ heading = true }: { heading?: boolean }) {
             {data?.length === 0 && (
                 <div className="bg-surface rounded-2xl border border-line px-4 py-8 text-center">
                     <p className="text-sm text-ink-2">No notifications yet.</p>
-                    <p className="text-xs text-muted mt-1">New messages in your tournaments' chats and new matches for your level show up here.</p>
+                    <p className="text-xs text-muted mt-1">New tournaments and matches for your level, and new messages in your tournaments' chats, show up here.</p>
                 </div>
             )}
 
             {!!data?.length && (
                 <div className="bg-surface rounded-2xl border border-line overflow-hidden divide-y divide-canvas">
                     {data.map(n => {
-                        const Icon = n.kind === "CHAT" ? ChatIcon : PeopleIcon;
+                        const Icon = n.kind === "CHAT" ? ChatIcon : n.kind === "TOURNAMENT" ? TrophyIcon : PeopleIcon;
                         const title = n.kind === "CHAT"
                             ? `${n.count} new message${n.count === 1 ? "" : "s"} · ${n.title}`
                             : n.title;

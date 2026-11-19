@@ -111,7 +111,9 @@ type Award = {
     countedPoints: number;
 };
 
-type LevelTotal = { division: number | null; points: number; weight: number; counted: number };
+// position: the player's place among everyone by the points earned at that level; events:
+// how many tournaments (or league seasons) they come from.
+type LevelTotal = { division: number | null; points: number; weight: number; counted: number; position?: number; events?: number };
 
 // Where a player's ranking points come from: per level, then each result, newest first.
 export function RankingBreakdown({ awards, byLevel, total, currentDivision }: {
@@ -122,23 +124,42 @@ export function RankingBreakdown({ awards, byLevel, total, currentDivision }: {
 }) {
     return (
         <section>
-            <h2 className="font-display text-sm font-semibold uppercase tracking-[0.12em] text-muted mb-3">Ranking points · last 12 months</h2>
+            <h2 className="font-display text-sm font-semibold uppercase tracking-[0.12em] text-muted mb-1">Ranking points · last 12 months</h2>
+            <p className="text-xs text-muted mb-3">#: place among all players by the points earned at that level. Tap a level for its standings.</p>
             {awards.length === 0 ? (
                 <p className="text-muted text-sm">No ranking points in the last 12 months.</p>
             ) : (
                 <div className="space-y-3">
                     <div className="bg-surface rounded-2xl border border-line overflow-hidden shadow-sm">
                         {byLevel.map(l => (
-                            <div key={l.division ?? "league"} className="flex items-center justify-between gap-3 px-4 py-2.5 border-b border-canvas text-sm">
-                                <span className="text-ink font-semibold">
-                                    {l.division === null ? "Act!ve Padel League" : divisionLabel(l.division)}
-                                    {l.division === currentDivision && <span className="ml-2 text-[10px] font-bold uppercase text-[#FF4200]">current</span>}
+                            <Link
+                                key={l.division ?? "league"}
+                                to={l.division === null ? "/league" : `/division/${l.division}`}
+                                className="flex items-center justify-between gap-3 px-4 py-2.5 border-b border-canvas text-sm hover:bg-canvas transition-colors"
+                            >
+                                <span className="flex items-center gap-3 min-w-0">
+                                    {l.position !== undefined && (
+                                        <span className="w-12 shrink-0 font-display text-lg font-bold text-ink tabular-nums" title="Place among everyone by the points earned at this level">
+                                            #{l.position}
+                                        </span>
+                                    )}
+                                    <span className="min-w-0">
+                                        <span className="block text-ink font-semibold">
+                                            {l.division === null ? "Act!ve Padel League" : divisionLabel(l.division)}
+                                            {l.division === currentDivision && <span className="ml-2 text-[10px] font-bold uppercase text-[#FF4200]">current</span>}
+                                        </span>
+                                        {l.events !== undefined && (
+                                            <span className="block text-xs text-muted">
+                                                {l.events} {l.division === null ? (l.events === 1 ? "season" : "seasons") : (l.events === 1 ? "tournament" : "tournaments")}
+                                            </span>
+                                        )}
+                                    </span>
                                 </span>
-                                <span className="tabular-nums text-right">
+                                <span className="tabular-nums text-right shrink-0">
                                     {l.weight < 1 && <span className="text-xs text-muted mr-2">{Math.round(l.points)} × {l.weight}</span>}
                                     <b>{Math.round(l.counted)}</b>
                                 </span>
-                            </div>
+                            </Link>
                         ))}
                         <div className="flex justify-between px-4 py-3 bg-canvas text-sm font-bold">
                             <span>Total</span>
