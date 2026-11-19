@@ -14,6 +14,9 @@ import { SupportContact } from "./SupportContact";
 import { RecommendedLevel } from "./RecommendedLevel";
 import { OpenMatches } from "./openMatches/OpenMatches";
 import { useRankingSystem } from "../lib/ranking";
+import { useListOrder } from "../lib/listOrder";
+import { formatCoefficient } from "../lib/levels";
+import { ListOrderToggle } from "./ListOrderToggle";
 
 type Tab = "divisions" | "matches" | "players" | "tournaments";
 
@@ -178,6 +181,7 @@ function initials(name: string) {
 function PlayersTab() {
     const { data, isPending } = trpc.player.list.useQuery();
     const { isPoints, scoreOf, unit } = useRankingSystem();
+    const { order, setOrder, byCoefficient, compare, ranks, scoreLabel } = useListOrder();
     const [genderFilter, setGenderFilter] = useState<"ALL" | "MALE" | "FEMALE">("ALL");
     const [search, setSearch] = useState("");
 
@@ -188,20 +192,12 @@ function PlayersTab() {
         .filter(p => genderFilter === "ALL" || p.gender === genderFilter)
         .filter(p => p.name.toLowerCase().includes(search.toLowerCase()));
 
-    const sortedByPoints = [...data].sort((a, b) => scoreOf(b) - scoreOf(a));
-    const overallRanks = new Map<string, number>();
-    sortedByPoints.forEach((p, i) => {
-        const prev = sortedByPoints[i - 1];
-        const tied = prev && scoreOf(p) === scoreOf(prev);
-        overallRanks.set(p.id, tied ? overallRanks.get(prev.id)! : i + 1);
-    });
+    const overallRanks = ranks([...data].sort(compare));
 
-    const groups = [1, 2, 3, 4, 5, 6].map(d => ({
-        division: d,
-        players: filtered
-            .filter(p => p.division === d)
-            .sort((a, b) => scoreOf(b) - scoreOf(a)),
-    })).filter(g => g.players.length > 0);
+    const groups = [1, 2, 3, 4, 5, 6].map(d => {
+        const players = filtered.filter(p => p.division === d).sort(compare);
+        return { division: d, players, divRanks: ranks(players) };
+    }).filter(g => g.players.length > 0);
 
     return (
         <div className="space-y-4">
@@ -226,6 +222,7 @@ function PlayersTab() {
                 )}
             </div>
             {isPoints && <RankingPointsInfo />}
+            <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex gap-1 bg-surface border border-line rounded-2xl p-1 w-fit shadow-sm">
                 {(["ALL", "MALE", "FEMALE"] as const).map(g => (
                     <button
@@ -239,10 +236,12 @@ function PlayersTab() {
                     </button>
                 ))}
             </div>
+            <ListOrderToggle order={order} onChange={setOrder} scoreLabel={scoreLabel} />
+            </div>
 
             {groups.length === 0 && <p className="text-muted">No players found.</p>}
 
-            {groups.map(({ division, players }) => {
+            {groups.map(({ division, players, divRanks }) => {
                 const colors = DIVISION_COLORS[division];
                 return (
                     <div key={division} className="bg-surface rounded-2xl border border-line overflow-hidden shadow-sm">
@@ -257,12 +256,9 @@ function PlayersTab() {
                         </Link>
 
                         <div>
-                            {players.map((player, i) => {
+                            {players.map(player => {
                                 const overallRank = overallRanks.get(player.id)!;
-                                const prev = players[i - 1];
-                                const divRank = prev && scoreOf(prev) === scoreOf(player)
-                                    ? players.findIndex(p => scoreOf(p) === scoreOf(player))
-                                    : i;
+                                const divRank = divRanks.get(player.id)! - 1;
                                 return (
                                     <Link
                                         key={player.id}
@@ -290,8 +286,15 @@ function PlayersTab() {
                                         </div>
 
                                         <div className="flex items-center gap-3 shrink-0">
-                                            <div className="text-right">
-                                                <span className="text-sm font-bold text-[#FF4200]">{scoreOf(player)}</span>
+                                            {/* The number the list is ordered by comes first and stands out. */}
+                                            {player.level.coefficient !== null && (
+                                                <div className={`text-right ${byCoefficient ? "order-first" : ""}`} title={`Level coefficient${player.level.provisional ? " (provisional — still settling)" : ""}`}>
+                                                    <span className={`text-sm font-bold tabular-nums ${byCoefficient ? "text-[#9FD2DD]" : "text-muted"}`}>{formatCoefficient(player.level.coefficient)}{player.level.provisional && "*"}</span>
+                                                    <span className="text-xs text-muted ml-1">lvl</span>
+                                                </div>
+                                            )}
+                                            <div className={`text-right ${byCoefficient ? "hidden sm:block" : ""}`}>
+                                                <span className={`text-sm font-bold ${byCoefficient ? "text-muted" : "text-[#FF4200]"}`}>{scoreOf(player)}</span>
                                                 <span className="text-xs text-muted ml-1">{unit}</span>
                                             </div>
                                         </div>

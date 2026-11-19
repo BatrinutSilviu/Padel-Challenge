@@ -9,6 +9,8 @@ import { TournamentCard } from "./TournamentCard";
 import { formatCoefficient } from "../lib/levels";
 import { RecommendedLevel } from "./RecommendedLevel";
 import { useRankingSystem } from "../lib/ranking";
+import { useListOrder } from "../lib/listOrder";
+import { ListOrderToggle } from "./ListOrderToggle";
 
 export function DivisionPage() {
     const { id } = useParams<{ id: string }>();
@@ -16,7 +18,7 @@ export function DivisionPage() {
 
     const standings = trpc.division.standings.useQuery({ division });
     const tournaments = trpc.tournament.list.useQuery({ division });
-    const { scoreOf } = useRankingSystem();
+    const { order, setOrder, compare, ranks, scoreLabel } = useListOrder();
     const describe = useDivisionDescriptions();
 
     if (isNaN(division) || division < 1 || division > 7) {
@@ -48,17 +50,18 @@ export function DivisionPage() {
                 </div>
 
                 <section>
-                    <SectionLabel>Standings</SectionLabel>
+                    <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+                        <SectionLabel className="">Standings</SectionLabel>
+                        <ListOrderToggle order={order} onChange={setOrder} scoreLabel={scoreLabel} />
+                    </div>
                     {standings.isPending && <p className="text-muted">Loading…</p>}
                     {standings.data?.length === 0 && <p className="text-muted">No players in this division.</p>}
                     <div className="bg-surface rounded-2xl border border-line overflow-hidden shadow-sm">
                         {(() => {
-                            const byPoints = (a: PlayerEntry, b: PlayerEntry) =>
-                                scoreOf(b) - scoreOf(a) || a.name.localeCompare(b.name);
-                            const sorted = (standings.data ?? []).slice().sort(byPoints);
-                            return sorted.map((player, i) => {
-                                const prev = sorted[i - 1];
-                                const rank = prev && scoreOf(prev) === scoreOf(player) ? sorted.findIndex(p => scoreOf(p) === scoreOf(player)) + 1 : i + 1;
+                            const sorted = (standings.data ?? []).slice().sort(compare);
+                            const positions = ranks(sorted);
+                            return sorted.map(player => {
+                                const rank = positions.get(player.id)!;
                                 return (
                                     <PlayerRow
                                         key={player.id}
@@ -162,9 +165,9 @@ function PlayerRow({ player, rank, division }: {
     );
 }
 
-function SectionLabel({ children }: { children: React.ReactNode }) {
+function SectionLabel({ children, className = "mb-3" }: { children: React.ReactNode; className?: string }) {
     return (
-        <div className="flex items-center gap-2.5 mb-3">
+        <div className={`flex items-center gap-2.5 ${className}`}>
             <div className="w-1 h-4 rounded-full bg-[#FF4200]" />
             <h2 className="font-display text-sm font-semibold uppercase tracking-[0.12em] text-muted">{children}</h2>
         </div>
