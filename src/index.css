@@ -7,7 +7,7 @@
 
 /* Colour names the app uses. Their defaults are the old light look; the dark "club" palette
    below replaces them (and Tailwind's own scales) everywhere except the TV live board,
-   which has its own dark design and marks itself with data-light-board. */
+   which has its own dark design and puts the light-board class on <body> while it's open. */
 @theme {
   --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Barlow Condensed", ui-sans-serif, system-ui, sans-serif;
@@ -109,8 +109,9 @@ html {
   --tw-orig-rose-500: var(--color-rose-500);
 }
 
-/* Step 2: the dark palette. */
-body:not(:has([data-light-board])) {
+/* Step 2: the dark palette. A class, not body:has(…): a :has() on body makes the browser
+   re-check it, and re-style the whole page, on every change to the page (slow on phones). */
+body:not(.light-board) {
   color-scheme: dark;
   --color-canvas: #0E0F1C;
   --color-surface: #171930;

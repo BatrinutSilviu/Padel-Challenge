@@ -31,11 +31,20 @@ const POLL_MS = 10_000;
 // Matches WINNERS_SCREEN_MINUTES on the backend, which decides this for /live.
 const WINNERS_SCREEN_MS = 15 * 60_000;
 
+// The board keeps its own colours: while it's open, <body> has the light-board class, which
+// the site's dark palette (index.css) skips.
+function useLightBoard() {
+    useEffect(() => {
+        document.body.classList.add("light-board");
+        return () => document.body.classList.remove("light-board");
+    }, []);
+}
+
 // /tournament/:id/live — one tournament.
 export function MastersLiveBoard() {
     const { id } = useParams<{ id: string }>();
-    // data-light-board keeps the board's own colours: the site's dark palette (index.css) skips it.
-    return <div data-light-board className="contents"><PhoneGate tournamentId={id}><MastersTvBoard id={id!} /></PhoneGate></div>;
+    useLightBoard();
+    return <PhoneGate tournamentId={id}><MastersTvBoard id={id!} /></PhoneGate>;
 }
 
 function MastersTvBoard({ id }: { id: string }) {
@@ -47,7 +56,8 @@ function MastersTvBoard({ id }: { id: string }) {
 // /live — whichever live Masters tournament was scored last; switches when the other
 // one gets a result.
 export function LatestLiveBoard() {
-    return <div data-light-board className="contents"><PhoneGate><LatestTvBoard /></PhoneGate></div>;
+    useLightBoard();
+    return <PhoneGate><LatestTvBoard /></PhoneGate>;
 }
 
 // The board is laid out for a TV. On a phone held upright it can't be read, so it

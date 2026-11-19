@@ -1,8 +1,8 @@
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { trpc } from "../trpc";
 import type { RouterOutputs } from "../backendRouter";
 import { NavBar } from "./NavBar";
-import { useEffect, useState } from "react";
+import { memo, useEffect, useMemo, useState } from "react";
 import { useAuth } from "../contexts/useAuth";
 import { AccountStatusNotice } from "./auth/AccountStatus";
 
@@ -14,7 +14,7 @@ import { SupportContact } from "./SupportContact";
 import { RecommendedLevel } from "./RecommendedLevel";
 import { OpenMatches } from "./openMatches/OpenMatches";
 import { useRankingSystem } from "../lib/ranking";
-import { useListOrder } from "../lib/listOrder";
+import { orderTools, useListOrder, type ListOrder } from "../lib/listOrder";
 import { formatCoefficient } from "../lib/levels";
 import { ListOrderToggle } from "./ListOrderToggle";
 
@@ -178,26 +178,35 @@ function initials(name: string) {
     return name.split(" ").map(w => w[0]).slice(0, 2).join("").toUpperCase();
 }
 
+type ListPlayer = RouterOutputs["player"]["list"][number];
+type PlayerGroup = { division: number; players: ListPlayer[]; divRanks: Map<string, number> };
+
 function PlayersTab() {
     const { data, isPending } = trpc.player.list.useQuery();
-    const { isPoints, scoreOf, unit } = useRankingSystem();
-    const { order, setOrder, byCoefficient, compare, ranks, scoreLabel } = useListOrder();
+    const { unit } = useRankingSystem();
+    const { order, setOrder, listOrder, stale, isPoints, scoreLabel } = useListOrder();
     const [genderFilter, setGenderFilter] = useState<"ALL" | "MALE" | "FEMALE">("ALL");
     const [search, setSearch] = useState("");
 
+    // Sorted and ranked only when the list, a filter or the (deferred) order changes — so the
+    // order toggle repaints first and the list follows.
+    const list = useMemo(() => {
+        if (!data) return null;
+        const { compare, ranks } = orderTools(listOrder, isPoints);
+        const overallRanks = ranks([...data].sort(compare));
+        const q = search.toLowerCase();
+        const filtered = data
+            .filter(p => genderFilter === "ALL" || p.gender === genderFilter)
+            .filter(p => p.name.toLowerCase().includes(q));
+        const groups: PlayerGroup[] = [1, 2, 3, 4, 5, 6].map(d => {
+            const players = filtered.filter(p => p.division === d).sort(compare);
+            return { division: d, players, divRanks: ranks(players) };
+        }).filter(g => g.players.length > 0);
+        return { overallRanks, groups };
+    }, [data, listOrder, isPoints, genderFilter, search]);
+
     if (isPending) return <p className="text-muted">Loading…</p>;
-    if (!data?.length) return <p className="text-muted">No players yet.</p>;
-
-    const filtered = data
-        .filter(p => genderFilter === "ALL" || p.gender === genderFilter)
-        .filter(p => p.name.toLowerCase().includes(search.toLowerCase()));
-
-    const overallRanks = ranks([...data].sort(compare));
-
-    const groups = [1, 2, 3, 4, 5, 6].map(d => {
-        const players = filtered.filter(p => p.division === d).sort(compare);
-        return { division: d, players, divRanks: ranks(players) };
-    }).filter(g => g.players.length > 0);
+    if (!data?.length || !list) return <p className="text-muted">No players yet.</p>;
 
     return (
         <div className="space-y-4">
@@ -239,8 +248,43 @@ function PlayersTab() {
             <ListOrderToggle order={order} onChange={setOrder} scoreLabel={scoreLabel} />
             </div>
 
-            {groups.length === 0 && <p className="text-muted">No players found.</p>}
+            {list.groups.length === 0 && <p className="text-muted">No players found.</p>}
 
+            <PlayerGroups
+                groups={list.groups}
+                overallRanks={list.overallRanks}
+                order={listOrder}
+                isPoints={isPoints}
+                unit={unit}
+                stale={stale}
+            />
+        </div>
+    );
+}
+
+// The players, level by level. Memoised: it only re-renders when the sorted list changes.
+const PlayerGroups = memo(function PlayerGroups({ groups, overallRanks, order, isPoints, unit, stale }: {
+    groups: PlayerGroup[];
+    overallRanks: Map<string, number>;
+    order: ListOrder;
+    isPoints: boolean;
+    unit: string;
+    stale: boolean;
+}) {
+    const { byCoefficient, scoreOf } = orderTools(order, isPoints);
+    const navigate = useNavigate();
+    // Rows are plain links (hundreds of router <Link>s make re-ordering slow); one handler
+    // turns an ordinary click on any of them into an in-app navigation.
+    const onClick = (e: React.MouseEvent) => {
+        if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+        const a = (e.target as HTMLElement).closest("a");
+        const href = a?.getAttribute("href");
+        if (!href?.startsWith("/player/")) return;
+        e.preventDefault();
+        navigate(href);
+    };
+    return (
+        <div onClick={onClick} className={`space-y-4 transition-opacity ${stale ? "opacity-60" : ""}`}>
             {groups.map(({ division, players, divRanks }) => {
                 const colors = DIVISION_COLORS[division];
                 return (
@@ -260,10 +304,10 @@ function PlayersTab() {
                                 const overallRank = overallRanks.get(player.id)!;
                                 const divRank = divRanks.get(player.id)! - 1;
                                 return (
-                                    <Link
+                                    <a
                                         key={player.id}
-                                        to={`/player/${player.id}`}
-                                        className="flex items-center gap-3 px-4 py-3 border-b border-canvas last:border-0 hover:bg-canvas transition-colors"
+                                        href={`/player/${player.id}`}
+                                        className="flex items-center gap-3 px-4 py-3 border-b border-canvas last:border-0 hover:bg-canvas transition-colors [content-visibility:auto] [contain-intrinsic-size:auto_60px]"
                                     >
                                         <span className={`text-sm font-bold w-6 text-center shrink-0 ${
                                             divRank === 0 ? "text-amber-500" :
@@ -298,7 +342,7 @@ function PlayersTab() {
                                                 <span className="text-xs text-muted ml-1">{unit}</span>
                                             </div>
                                         </div>
-                                    </Link>
+                                    </a>
                                 );
                             })}
                         </div>
@@ -307,7 +351,7 @@ function PlayersTab() {
             })}
         </div>
     );
-}
+});
 
 function TournamentsTab() {
     const { data, isPending } = trpc.tournament.list.useQuery();

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { trpc } from "../trpc";
 import type { RouterOutputs } from "../backendRouter";
@@ -9,7 +9,7 @@ import { TournamentCard } from "./TournamentCard";
 import { formatCoefficient } from "../lib/levels";
 import { RecommendedLevel } from "./RecommendedLevel";
 import { useRankingSystem } from "../lib/ranking";
-import { useListOrder } from "../lib/listOrder";
+import { orderTools, useListOrder } from "../lib/listOrder";
 import { ListOrderToggle } from "./ListOrderToggle";
 
 export function DivisionPage() {
@@ -18,7 +18,13 @@ export function DivisionPage() {
 
     const standings = trpc.division.standings.useQuery({ division });
     const tournaments = trpc.tournament.list.useQuery({ division });
-    const { order, setOrder, compare, ranks, scoreLabel } = useListOrder();
+    const { order, setOrder, listOrder, stale, isPoints, scoreLabel } = useListOrder();
+    // Sorted only when the standings or the (deferred) order change.
+    const sorted = useMemo(() => {
+        const { compare, ranks } = orderTools(listOrder, isPoints);
+        const players = (standings.data ?? []).slice().sort(compare);
+        return { players, positions: ranks(players) };
+    }, [standings.data, listOrder, isPoints]);
     const describe = useDivisionDescriptions();
 
     if (isNaN(division) || division < 1 || division > 7) {
@@ -56,12 +62,10 @@ export function DivisionPage() {
                     </div>
                     {standings.isPending && <p className="text-muted">Loading…</p>}
                     {standings.data?.length === 0 && <p className="text-muted">No players in this division.</p>}
-                    <div className="bg-surface rounded-2xl border border-line overflow-hidden shadow-sm">
+                    <div className={`bg-surface rounded-2xl border border-line overflow-hidden shadow-sm transition-opacity ${stale ? "opacity-60" : ""}`}>
                         {(() => {
-                            const sorted = (standings.data ?? []).slice().sort(compare);
-                            const positions = ranks(sorted);
-                            return sorted.map(player => {
-                                const rank = positions.get(player.id)!;
+                            return sorted.players.map(player => {
+                                const rank = sorted.positions.get(player.id)!;
                                 return (
                                     <PlayerRow
                                         key={player.id}
