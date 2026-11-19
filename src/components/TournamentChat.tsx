@@ -75,6 +75,26 @@ export function TournamentChat({ tournamentId, tournamentName }: { tournamentId:
     // The list's height before older messages went in on top, to keep the reader's place.
     const heightBefore = useRef<number | null>(null);
 
+    // Arriving from a notification (…#chat): go to the chat once it's on the page. Loading
+    // the messages read its notification on the server, so the bell's number is refreshed.
+    const loaded = !!data;
+    useEffect(() => {
+        if (!loaded) return;
+        void utils.notification.unreadCount.invalidate();
+        if (window.location.hash !== "#chat") return;
+        // Scrolled by hand, just below the sticky header (scrollIntoView ignores the chat's
+        // scroll margin here).
+        const jump = () => {
+            const el = document.getElementById("chat");
+            const header = document.querySelector("header")?.getBoundingClientRect().height ?? 0;
+            if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - header - 12 });
+        };
+        jump();
+        // Again once the rest of the page above the chat has loaded and pushed it down.
+        const id = setTimeout(jump, 600);
+        return () => clearTimeout(id);
+    }, [loaded, utils]);
+
     const refresh = () => utils.chat.messages.invalidate({ tournamentId });
     const send = trpc.chat.send.useMutation({
         onSuccess: () => { setText(""); setError(""); nearBottom.current = true; refresh(); },

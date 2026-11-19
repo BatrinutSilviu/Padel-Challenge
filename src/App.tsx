@@ -18,6 +18,8 @@ import { LeaguesPage } from "./components/league/LeaguesPage";
 import { LeaguePage } from "./components/league/LeaguePage";
 import { LeagueMatchPage } from "./components/league/LeagueMatchPage";
 import { ProfilePage } from "./components/ProfilePage";
+import { MePage } from "./components/MePage";
+import { NotificationsPage } from "./components/notifications/NotificationsPage";
 import { AdminLeaguePage } from "./components/admin/league/AdminLeaguePage";
 
 export default function App() {
@@ -42,6 +44,8 @@ export default function App() {
             <Route path="/league/:id" element={<LeaguePage />} />
             <Route path="/league/match/:id" element={<LeagueMatchPage />} />
             <Route path="/league/availability" element={<RequireAuth><ProfilePage /></RequireAuth>} />
+            <Route path="/me" element={<RequireAuth><MePage /></RequireAuth>} />
+            <Route path="/notifications" element={<RequireAuth><NotificationsPage /></RequireAuth>} />
             {/* The old address of the availability page. */}
             <Route path="/profile" element={<Navigate to="/league/availability" replace />} />
             <Route path="/account/profile" element={<RequireAuth requirePlayer={false}><ChooseProfilePage /></RequireAuth>} />
