@@ -81,7 +81,9 @@ export function GoogleSignInButton({ redirect }: { redirect: string | null }) {
                 });
                 api.renderButton(el, {
                     type: "standard",
-                    theme: "outline",
+                    // Dark, to sit on the site's dark cards; English like the rest of the page.
+                    theme: "filled_black",
+                    locale: "en",
                     size: "large",
                     text: "continue_with",
                     shape: "rectangular",
@@ -97,7 +99,9 @@ export function GoogleSignInButton({ redirect }: { redirect: string | null }) {
 
     return (
         <div className="space-y-4">
-            <div ref={buttonRef} className="w-full flex justify-center min-h-[44px]" />
+            {/* color-scheme light: Google's button is a light iframe, and on the site's dark
+                color-scheme Chrome would paint it on an opaque white box. */}
+            <div ref={buttonRef} className="w-full flex justify-center min-h-[44px] [color-scheme:light]" />
             {googleLogin.isPending && <p className="text-sm text-center text-gray-400">Signing in with Google…</p>}
             {error && <p className="text-sm text-center text-red-500">{error}</p>}
             <div className="flex items-center gap-3 text-xs text-gray-400">
