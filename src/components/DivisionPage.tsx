@@ -11,6 +11,7 @@ import { RecommendedLevel } from "./RecommendedLevel";
 import { useRankingSystem } from "../lib/ranking";
 import { orderTools, useListOrder } from "../lib/listOrder";
 import { ListOrderToggle } from "./ListOrderToggle";
+import { ProvisionalNote } from "./ProvisionalNote";
 
 export function DivisionPage() {
     const { id } = useParams<{ id: string }>();
@@ -80,6 +81,7 @@ export function DivisionPage() {
                     <div className="text-xs text-muted mt-2 space-y-0.5">
                         <p>▲ Recommended to move up a level — the top 10% of this level by level coefficient (+0.12 per podium in the last 12 months).</p>
                         <p>▼ Recommended to move down a level — the bottom 10%. Only players with 10+ rated matches move; the moves are applied periodically.</p>
+                        <ProvisionalNote />
                     </div>
                 </section>
 
@@ -134,13 +136,13 @@ function PlayerRow({ player, pos, rank, division }: {
                         {player.participations.map(p => <RankBadge key={p.id} rank={p.finalRank} />)}
                     </div>
                     {player.level.coefficient !== null && (
-                        <div className="text-right" title={`Level coefficient${player.level.provisional ? " (provisional — still settling)" : ""}`}>
-                            <span className="text-sm font-bold text-[#9FD2DD] tabular-nums">{formatCoefficient(player.level.coefficient)}{player.level.provisional && "*"}</span>
+                        <div className="coef-value text-right" title={`Level coefficient${player.level.provisional ? " (provisional — still settling)" : ""}`}>
+                            <span className="text-sm font-bold tabular-nums">{formatCoefficient(player.level.coefficient)}{player.level.provisional && "*"}</span>
                             <span className="hidden sm:inline text-xs text-muted ml-1">lvl</span>
                         </div>
                     )}
-                    <div className="text-right">
-                        <span className="text-sm font-bold text-[#FF4200]">{scoreOf(player)}</span>
+                    <div className="score-value text-right">
+                        <span className="text-sm font-bold">{scoreOf(player)}</span>
                         <span className="text-xs text-muted ml-1">{unit}</span>
                     </div>
                     <span className="sm:hidden text-muted text-xs w-3 text-center shrink-0">

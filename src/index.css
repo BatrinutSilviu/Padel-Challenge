@@ -316,8 +316,8 @@ body:not(.light-board) {
 /* The number the list is ordered by comes first and stands out. */
 .order-score .score-value > :first-child { color: #FF4200; }
 .order-score .coef-value > :first-child { color: var(--color-muted); }
-.order-coef .coef-value { order: -1; }
-.order-coef .coef-value > :first-child { color: #9FD2DD; }
+.order-coef a .coef-value { order: -1; } /* home page rows; level pages keep their layout */
+.order-coef .coef-value > :first-child { color: #FF4200; }
 .order-coef .score-value > :first-child { color: var(--color-muted); }
 @media (max-width: 639px) {
   .order-coef .score-value { display: none; }

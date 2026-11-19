@@ -17,6 +17,7 @@ import { useRankingSystem } from "../lib/ranking";
 import { orderTools, useListOrder } from "../lib/listOrder";
 import { formatCoefficient } from "../lib/levels";
 import { ListOrderToggle } from "./ListOrderToggle";
+import { ProvisionalNote } from "./ProvisionalNote";
 
 type Tab = "divisions" | "matches" | "players" | "tournaments";
 
@@ -266,6 +267,7 @@ function PlayersTab() {
             <div className={order === "COEFFICIENT" ? "order-coef" : "order-score"}>
                 <PlayerGroups groups={groups} isPoints={isPoints} unit={unit} />
             </div>
+            <div className="text-xs text-muted"><ProvisionalNote /></div>
         </div>
     );
 }
