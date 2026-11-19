@@ -6,7 +6,6 @@ import { TournamentPage } from "./components/TournamentPage";
 import { PlayerPage } from "./components/PlayerPage";
 import { AdminPage } from "./components/admin/AdminPage";
 import { AdminScoreEntry } from "./components/admin/scoreEntry/AdminScoreEntry";
-import { BadgesPage } from "./components/BadgesPage";
 import { LoginPage } from "./components/auth/LoginPage";
 import { SignupPage } from "./components/auth/SignupPage";
 import { ConfirmEmailPage } from "./components/auth/ConfirmEmailPage";
@@ -30,7 +29,6 @@ export default function App() {
             <Route path="/tournament/:id/live" element={<MastersLiveBoard />} />
             <Route path="/live" element={<LatestLiveBoard />} />
             <Route path="/player/:id" element={<PlayerPage />} />
-            <Route path="/badges" element={<BadgesPage />} />
             <Route path="/privacy" element={<PrivacyPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/signup" element={<SignupPage />} />

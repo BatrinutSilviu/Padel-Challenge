@@ -8,7 +8,6 @@ import { AccountStatusNotice } from "./auth/AccountStatus";
 
 import { DIVISION_COLORS, divisionLabel, useDivisionDescriptions } from "../lib/divisions";
 import { TournamentType, TOURNAMENT_TYPE_LABELS, spotsLeft } from "../lib/tournaments";
-import { BADGE_META, BadgeType } from "../lib/badges";
 import { RankingPointsInfo } from "./RankingPointsInfo";
 import { TournamentCard } from "./TournamentCard";
 import { SupportContact } from "./SupportContact";
@@ -285,9 +284,6 @@ function PlayersTab() {
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center gap-1.5 min-w-0">
                                                 <span className="font-semibold text-ink text-sm truncate">{player.name}</span>
-                                                {(player.badges as BadgeType[]).map(badge => (
-                                                    <span key={badge} title={BADGE_META[badge].description} className="text-sm shrink-0">{BADGE_META[badge].emoji}</span>
-                                                ))}
                                                 <RecommendedLevel division={player.division} recommended={player.recommendedDivision} />
                                             </div>
                                             <span className="text-xs text-muted">Overall #{overallRank}</span>

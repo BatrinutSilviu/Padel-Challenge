@@ -2,7 +2,6 @@ import { useParams, Link } from "react-router-dom";
 import { trpc } from "../trpc";
 import { NavBar } from "./NavBar";
 import { DIVISION_NAMES } from "../lib/divisions";
-import { BADGE_META, BadgeType } from "../lib/badges";
 import { RankingBreakdown } from "./RankingPointsInfo";
 import { useRankingSystem } from "../lib/ranking";
 import { formatCoefficient } from "../lib/levels";
@@ -99,26 +98,6 @@ export function PlayerPage() {
                 </div>
 
                 <PlayerStats playerId={player.id} awards={isPoints ? player.rankingAwards : null} />
-
-                {player.badges.length > 0 && (
-                    <section>
-                        <h2 className="font-display text-sm font-semibold uppercase tracking-[0.12em] text-muted mb-3">Achievements</h2>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                            {(player.badges as BadgeType[]).map(badge => {
-                                const meta = BADGE_META[badge];
-                                return (
-                                    <div key={badge} className={`flex items-center gap-3 px-4 py-3 rounded-2xl border ${meta.className}`}>
-                                        <span className="text-2xl shrink-0">{meta.emoji}</span>
-                                        <div className="min-w-0">
-                                            <p className="text-sm font-bold leading-tight">{meta.label}</p>
-                                            <p className="text-xs opacity-70 leading-tight">{meta.description}</p>
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </section>
-                )}
 
                 {isPoints && <RankingBreakdown awards={player.rankingAwards} byLevel={player.rankingByLevel} total={player.rankingPoints} currentDivision={player.division} />}
 

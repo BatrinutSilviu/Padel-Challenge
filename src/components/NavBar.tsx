@@ -1,15 +1,14 @@
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/useAuth";
-import { CogIcon, HomeIcon, StarIcon, TrophyIcon } from "./ui/icons";
+import { CogIcon, HomeIcon, TrophyIcon } from "./ui/icons";
 
 export function NavBar() {
     const isAdmin = !!localStorage.getItem("admin_token");
     const { token, logout } = useAuth();
     const { pathname } = useLocation();
     const isLeague = pathname.startsWith("/league");
-    const isBadges = pathname.startsWith("/badges");
     const isAdminPage = pathname.startsWith("/admin");
-    const isHome = !isLeague && !isBadges && !isAdminPage;
+    const isHome = !isLeague && !isAdminPage;
 
     return (
         <>
@@ -22,7 +21,6 @@ export function NavBar() {
                     <nav className="hidden sm:flex items-center gap-6 font-display text-[15px] font-semibold uppercase tracking-wider">
                         <NavLink to="/" active={isHome}>Home</NavLink>
                         <NavLink to="/league" active={isLeague}>League</NavLink>
-                        <NavLink to="/badges" active={isBadges}>Badges</NavLink>
                         {isAdmin && <NavLink to="/admin" active={isAdminPage}>Admin</NavLink>}
                         {token ? (
                             <button
@@ -50,8 +48,7 @@ export function NavBar() {
 function MobileBottomNav({ isAdmin }: { isAdmin: boolean }) {
     const { pathname } = useLocation();
     const isLeague = pathname.startsWith("/league");
-    const isHome = !pathname.startsWith("/badges") && !pathname.startsWith("/admin") && !isLeague;
-    const isBadges = pathname.startsWith("/badges");
+    const isHome = !pathname.startsWith("/admin") && !isLeague;
     const isAdminPage = pathname.startsWith("/admin");
 
     return (
@@ -62,9 +59,6 @@ function MobileBottomNav({ isAdmin }: { isAdmin: boolean }) {
                 </BottomTab>
                 <BottomTab to="/league" label="League" active={isLeague}>
                     <TrophyIcon className="w-5 h-5" />
-                </BottomTab>
-                <BottomTab to="/badges" label="Badges" active={isBadges}>
-                    <StarIcon className="w-5 h-5" />
                 </BottomTab>
                 {isAdmin && (
                     <BottomTab to="/admin" label="Admin" active={isAdminPage}>

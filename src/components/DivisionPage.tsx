@@ -4,7 +4,6 @@ import { trpc } from "../trpc";
 import type { RouterOutputs } from "../backendRouter";
 import { NavBar } from "./NavBar";
 import { DIVISION_NAMES, useDivisionDescriptions } from "../lib/divisions";
-import { BADGE_META, BadgeType } from "../lib/badges";
 import { StatusBadge } from "./HomePage";
 import { TournamentCard } from "./TournamentCard";
 import { formatCoefficient } from "../lib/levels";
@@ -117,13 +116,6 @@ function PlayerRow({ player, rank, division }: {
                     >
                         {player.name}
                     </Link>
-                    {/* On a phone only the first badge fits beside the name; the rest are counted. */}
-                    {(player.badges as BadgeType[]).map((badge, i) => (
-                        <span key={badge} title={BADGE_META[badge].description} className={`text-base shrink-0 ${i > 0 ? "hidden sm:inline" : ""}`}>{BADGE_META[badge].emoji}</span>
-                    ))}
-                    {player.badges.length > 1 && (
-                        <span className="sm:hidden text-[11px] font-bold text-muted shrink-0">+{player.badges.length - 1}</span>
-                    )}
                     <RecommendedLevel division={division} recommended={player.recommendedDivision} />
                 </div>
 

@@ -18,7 +18,7 @@ const OPTIONS: { system: RankingSystem; title: string; description: string }[] =
     },
 ];
 
-// The site-wide ranking system: what standings, badges and promotion/relegation go by.
+// The site-wide ranking system: what standings and promotion/relegation go by.
 // Elo is always kept up to date, so switching takes effect straight away.
 export function RankingSystemSettings() {
     const qc = useQueryClient();
@@ -51,7 +51,7 @@ export function RankingSystemSettings() {
     function choose(next: RankingSystem) {
         if (next === system || setSystem.isPending) return;
         const label = OPTIONS.find(o => o.system === next)!.title;
-        if (!confirm(`Rank all players by ${label}? Standings, badges and promotion/relegation will use it from now on.`)) return;
+        if (!confirm(`Rank all players by ${label}? Standings and promotion/relegation will use it from now on.`)) return;
         setSystem.mutate({ system: next });
     }
 
@@ -60,7 +60,7 @@ export function RankingSystemSettings() {
             <div className="bg-surface rounded-xl border border-gray-200 p-5 space-y-3">
                 <div>
                     <h2 className="text-base font-semibold text-gray-800">Ranking system</h2>
-                    <p className="text-xs text-gray-400 mt-0.5">Used across the whole site: player standings, badges and who gets promoted or relegated.</p>
+                    <p className="text-xs text-gray-400 mt-0.5">Used across the whole site: player standings and who gets promoted or relegated.</p>
                 </div>
                 <div className="grid sm:grid-cols-2 gap-3">
                     {OPTIONS.map(o => {

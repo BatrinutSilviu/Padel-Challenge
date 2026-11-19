@@ -38,9 +38,6 @@ export const WalletIcon = (p: IconProps) => (
 export const TrophyIcon = (p: IconProps) => (
     <Svg {...p}><path d="M7 4h10v4a5 5 0 0 1-10 0z" /><path d="M12 13v4M8 20h8M7 6H4v1a3 3 0 0 0 3 3M17 6h3v1a3 3 0 0 1-3 3" /></Svg>
 );
-export const StarIcon = (p: IconProps) => (
-    <Svg {...p}><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z" /></Svg>
-);
 export const HomeIcon = (p: IconProps) => (
     <Svg {...p}><path d="M4 11l8-7 8 7v9a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z" /></Svg>
 );
