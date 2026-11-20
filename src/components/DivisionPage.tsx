@@ -6,7 +6,7 @@ import { NavBar } from "./NavBar";
 import { DIVISION_NAMES, useDivisionDescriptions } from "../lib/divisions";
 import { StatusBadge } from "./HomePage";
 import { TournamentCard } from "./TournamentCard";
-import { formatCoefficient } from "../lib/levels";
+import { formatCoefficient, useLevelRules } from "../lib/levels";
 import { RecommendedLevel } from "./RecommendedLevel";
 import { useRankingSystem } from "../lib/ranking";
 import { orderTools, useListOrder } from "../lib/listOrder";
@@ -35,6 +35,9 @@ export function DivisionPage() {
         }));
     }, [standings.data, isPoints]);
     const describe = useDivisionDescriptions();
+    // The division's band of the 0–10 level coefficient.
+    const { data: rules } = useLevelRules();
+    const band = rules?.levels.levels.find(l => l.division === division);
 
     if (isNaN(division) || division < 1 || division > 7) {
         return <div className="p-8 text-red-600">Invalid division.</div>;
@@ -59,6 +62,11 @@ export function DivisionPage() {
                             <h1 className="text-3xl font-bold text-ink tracking-tight leading-none">
                                 {DIVISION_NAMES[division] ?? `Division ${division}`}
                             </h1>
+                            {band && (
+                                <span className="text-sm font-semibold text-ink-2 bg-surface border border-line rounded-md px-2 py-0.5 tabular-nums" title="Level coefficient range">
+                                    Coefficient {band.min.toFixed(1)}–{band.max.toFixed(1)}
+                                </span>
+                            )}
                         </div>
                         {describe(division) && <p className="text-sm text-ink-2 mt-2 max-w-2xl">{describe(division)}</p>}
                     </div>

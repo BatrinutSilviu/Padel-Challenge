@@ -15,7 +15,7 @@ import { RecommendedLevel } from "./RecommendedLevel";
 import { OpenMatches } from "./openMatches/OpenMatches";
 import { useRankingSystem } from "../lib/ranking";
 import { orderTools, useListOrder } from "../lib/listOrder";
-import { formatCoefficient } from "../lib/levels";
+import { formatCoefficient, useLevelRules } from "../lib/levels";
 import { ListOrderToggle } from "./ListOrderToggle";
 import { ProvisionalNote } from "./ProvisionalNote";
 
@@ -152,10 +152,14 @@ function OpenSignups() {
 function DivisionsTab() {
     const { data, isPending } = trpc.division.list.useQuery();
     const describe = useDivisionDescriptions();
+    // Each division's band of the 0–10 level coefficient (admin-editable level settings).
+    const { data: rules } = useLevelRules();
+    const band = (d: number) => rules?.levels.levels.find(l => l.division === d);
     return (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {isPending && <p className="text-muted">Loading…</p>}
             {data?.map(({ division, playerCount }) => {
+                const range = band(division);
                 return (
                     <Link
                         key={division}
@@ -164,7 +168,11 @@ function DivisionsTab() {
                     >
                         <div className="flex items-center justify-between mb-2">
                             <span className="text-base font-bold text-ink group-hover:text-[#FF4200] transition-colors">{divisionLabel(division)}</span>
-                            
+                            {range && (
+                                <span className="text-xs font-semibold text-ink-2 bg-canvas border border-line rounded-md px-2 py-0.5 tabular-nums" title="Level coefficient range">
+                                    Coef. {range.min.toFixed(1)}–{range.max.toFixed(1)}
+                                </span>
+                            )}
                         </div>
                         {describe(division) && <p className="text-sm text-ink-2 leading-snug line-clamp-2 mb-1.5">{describe(division)}</p>}
                         <p className="text-sm text-muted font-medium">{playerCount} player{playerCount !== 1 ? "s" : ""}</p>
