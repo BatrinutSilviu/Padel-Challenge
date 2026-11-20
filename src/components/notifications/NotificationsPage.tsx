@@ -4,8 +4,8 @@ import { NavBar } from "../NavBar";
 import { ChatIcon, PeopleIcon, TrophyIcon } from "../ui/icons";
 import { timeAgo } from "./useNotifications";
 
-// Everything under the bell: new messages in the chats of the player's tournaments, and new
-// open matches they can join. Opening one marks it read and goes to it.
+// Everything under the bell: new messages in the chats of the player's tournaments and open
+// matches, new tournaments and new open matches they can join. Opening one marks it read and goes to it.
 export function NotificationsPage() {
     return (
         <div className="min-h-screen bg-canvas">
@@ -48,7 +48,7 @@ export function NotificationList({ heading = true }: { heading?: boolean }) {
             {data?.length === 0 && (
                 <div className="bg-surface rounded-2xl border border-line px-4 py-8 text-center">
                     <p className="text-sm text-ink-2">No notifications yet.</p>
-                    <p className="text-xs text-muted mt-1">New tournaments and matches for your level, and new messages in your tournaments' chats, show up here.</p>
+                    <p className="text-xs text-muted mt-1">New tournaments and matches for your level, and new messages in the chats of your tournaments and matches, show up here.</p>
                 </div>
             )}
 

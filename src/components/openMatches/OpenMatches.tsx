@@ -1,14 +1,16 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import { trpc } from "../../trpc";
 import type { RouterOutputs } from "../../backendRouter";
 import { useAuth } from "../../contexts/useAuth";
 import { divisionLabel, DIVISION_BADGES } from "../../lib/divisions";
 import { useLevelRules } from "../../lib/levels";
-import { ClockIcon, PinIcon } from "../ui/icons";
+import { ChatIcon, ClockIcon, PinIcon } from "../ui/icons";
+import { ChatUnreadBadge, OpenMatchChat } from "../TournamentChat";
 
 // Open matches (backend routers/openMatch): a player sets up a match — location, time, a level
-// or a coefficient range — and others in the range join until there are four.
+// or a coefficient range — and others in the range join until there are four. The players in
+// a match have a chat under its card (?chat=<id> opens it, as chat notifications do).
 
 type OpenMatch = RouterOutputs["openMatch"]["list"][number];
 
@@ -28,6 +30,8 @@ export function OpenMatches() {
     const isAdmin = !!localStorage.getItem("admin_token");
     const { data, isPending } = trpc.openMatch.list.useQuery(undefined, { refetchInterval: 60_000 });
     const [creating, setCreating] = useState(false);
+    const [searchParams] = useSearchParams();
+    const chatParam = searchParams.get("chat");
 
     return (
         <div className="space-y-4">
@@ -64,14 +68,24 @@ export function OpenMatches() {
                 </div>
             )}
             <div className="space-y-3">
-                {(data ?? []).map(m => <OpenMatchCard key={m.id} match={m} loggedIn={!!token} isAdmin={isAdmin} />)}
+                {(data ?? []).map(m => <OpenMatchCard key={m.id} match={m} loggedIn={!!token} isAdmin={isAdmin} chatOpen={chatParam === m.id} />)}
             </div>
         </div>
     );
 }
 
-function OpenMatchCard({ match: m, loggedIn, isAdmin }: { match: OpenMatch; loggedIn: boolean; isAdmin: boolean }) {
+function OpenMatchCard({ match: m, loggedIn, isAdmin, chatOpen }: { match: OpenMatch; loggedIn: boolean; isAdmin: boolean; chatOpen: boolean }) {
     const utils = trpc.useUtils();
+    const canChat = m.joined || isAdmin;
+    const [showChat, setShowChat] = useState(chatOpen);
+    const cardRef = useRef<HTMLDivElement>(null);
+    // Arriving from a chat notification: open this match's chat and bring it into view.
+    useEffect(() => {
+        if (!chatOpen) return;
+        setShowChat(true);
+        const id = setTimeout(() => cardRef.current?.scrollIntoView({ block: "start", behavior: "smooth" }), 100);
+        return () => clearTimeout(id);
+    }, [chatOpen]);
     const [error, setError] = useState("");
     const opts = { onSuccess: () => { setError(""); void utils.openMatch.list.invalidate(); }, onError: (e: { message: string }) => setError(e.message) };
     const join = trpc.openMatch.join.useMutation(opts);
@@ -88,6 +102,7 @@ function OpenMatchCard({ match: m, loggedIn, isAdmin }: { match: OpenMatch; logg
     const badge = m.division !== null ? DIVISION_BADGES[m.division] : null;
 
     return (
+        <div ref={cardRef} className="space-y-2 scroll-mt-20">
         <div className={`flex gap-4 bg-surface rounded-xl border px-4 py-4 ${m.joined ? "border-[#FF4200]/50" : "border-line"}`}>
             <div className="w-12 shrink-0 flex flex-col items-center font-display uppercase leading-none border-r border-line pr-4 pt-0.5">
                 <span className="text-xs font-semibold tracking-wider text-muted">{date.dow}</span>
@@ -180,11 +195,28 @@ function OpenMatchCard({ match: m, loggedIn, isAdmin }: { match: OpenMatch; logg
                             Take down (admin)
                         </button>
                     )}
+                    {canChat && <ChatToggle openMatchId={m.joined ? m.id : undefined} open={showChat} onToggle={() => setShowChat(s => !s)} />}
                     {m.joined && <span className="text-xs text-emerald-600 font-semibold">You're in</span>}
                     {error && <span className="text-xs text-red-600">{error}</span>}
                 </div>
             </div>
         </div>
+        {canChat && showChat && <OpenMatchChat openMatchId={m.id} />}
+        </div>
+    );
+}
+
+// Shows or hides the match's chat; for its players, with the number of new messages.
+function ChatToggle({ openMatchId, open, onToggle }: { openMatchId?: string; open: boolean; onToggle: () => void }) {
+    return (
+        <button
+            onClick={onToggle}
+            aria-expanded={open}
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-gray-300 text-sm font-semibold text-ink hover:border-gray-400"
+        >
+            <ChatIcon className="w-4 h-4 text-[#9FD2DD]" /> {open ? "Hide chat" : "Chat"}
+            {openMatchId && !open && <ChatUnreadBadge room={{ openMatchId }} />}
+        </button>
     );
 }
 
