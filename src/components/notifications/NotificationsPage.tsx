@@ -69,7 +69,7 @@ export function NotificationList({ heading = true }: { heading?: boolean }) {
                                     <Icon className="w-4 h-4" />
                                 </span>
                                 <span className="flex-1 min-w-0">
-                                    <span className={`block text-sm ${n.readAt ? "text-ink-2" : "font-semibold text-ink"}`}>{title}</span>
+                                    <span className={`block text-sm [overflow-wrap:anywhere] ${n.readAt ? "text-ink-2" : "font-semibold text-ink"}`}>{title}</span>
                                     {n.body && <span className="block text-sm text-muted line-clamp-2 [overflow-wrap:anywhere]">{n.body}</span>}
                                     <span className="block text-xs text-muted mt-0.5">{timeAgo(n.updatedAt)}</span>
                                 </span>

@@ -126,7 +126,7 @@ export function PlayerPage() {
                                 {player.participations.map(p => (
                                     <tr key={p.id} className="border-b border-canvas last:border-0 hover:bg-canvas transition-colors">
                                         <td className="px-4 py-3">
-                                            <Link to={`/tournament/${p.tournament.id}`} className="text-[#FF4200] hover:underline font-bold">
+                                            <Link to={`/tournament/${p.tournament.id}`} className="text-[#FF4200] hover:underline font-bold [overflow-wrap:anywhere]">
                                                 {p.tournament.name}
                                             </Link>
                                             {p.partnerId && partnerName(p.partnerId) && (

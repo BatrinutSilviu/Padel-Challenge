@@ -52,7 +52,7 @@ function WinnersPanel({ id, compact }: { id: string; compact: boolean }) {
 
     return (
         <section className="min-h-0 flex flex-col">
-            <h2 className={`text-center font-black tracking-tight text-[#9FD2DD] ${compact ? "text-3xl" : "text-4xl"}`}>{tournament.name}</h2>
+            <h2 className={`text-center font-black tracking-tight text-[#9FD2DD] [overflow-wrap:anywhere] ${compact ? "text-3xl" : "text-4xl"}`}>{tournament.name}</h2>
             <div className="flex-1 min-h-0 flex items-end justify-center gap-4 pt-6">
                 {runnerUp && <PodiumColumn place={2} teams={[runnerUp]} compact={compact} />}
                 {champion && <PodiumColumn place={1} teams={[champion]} compact={compact} />}

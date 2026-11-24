@@ -92,7 +92,7 @@ export function TournamentSignupAdmin({ tournament }: { tournament: TournamentDa
                 <div>
                     <Link to="/admin" className="text-sm text-[#FF4200] hover:underline">← Admin</Link>
                     <div className="flex flex-wrap items-center gap-2 mt-1">
-                        <h1 className="text-lg sm:text-xl font-bold text-gray-800">{tournament.name}</h1>
+                        <h1 className="text-lg sm:text-xl font-bold text-gray-800 min-w-0 [overflow-wrap:anywhere]">{tournament.name}</h1>
                         <span className="text-sm text-gray-400">
                             {divisionLabel(tournament.division)} · {tournamentTypeLabel(tournament.type)} · {tournamentWhen(tournament)}
                         </span>

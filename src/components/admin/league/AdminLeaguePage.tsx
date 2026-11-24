@@ -60,7 +60,7 @@ function LeagueHeader({ league }: { league: League }) {
             ) : (
                 <div className="flex flex-wrap items-start justify-between gap-3">
                     <div className="min-w-0">
-                        <h1 className="text-xl font-bold text-gray-900">{league.name}</h1>
+                        <h1 className="text-xl font-bold text-gray-900 min-w-0 [overflow-wrap:anywhere]">{league.name}</h1>
                         <p className="text-sm text-gray-500">
                             Week 1 starts {new Date(league.startDate).toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "long", year: "numeric", timeZone: "UTC" })}
                             {" · "}{league.teams.length} teams

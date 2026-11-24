@@ -33,7 +33,7 @@ function PartnerInvitations() {
                 <Link key={inv.tournament.id} to={`/tournament/${inv.tournament.id}`}
                     className="flex items-center justify-between gap-3 rounded-2xl border border-[#FF4200]/40 bg-surface px-4 py-3 shadow-sm hover:border-[#FF4200]">
                     <span className="text-sm text-ink min-w-0">
-                        🤝 <span className="font-bold">{inv.from}</span> invited you to play together in <span className="font-bold">{inv.tournament.name}</span>
+                        🤝 <span className="font-bold">{inv.from}</span> invited you to play together in <span className="font-bold [overflow-wrap:anywhere]">{inv.tournament.name}</span>
                     </span>
                     <span className="shrink-0 text-sm font-bold text-[#FF4200]">Answer →</span>
                 </Link>

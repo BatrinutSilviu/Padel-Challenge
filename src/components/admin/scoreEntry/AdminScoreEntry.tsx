@@ -131,10 +131,10 @@ export function AdminScoreEntry() {
 
                 {/* Header */}
                 <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-between">
-                    <div>
+                    <div className="min-w-0">
                         <Link to="/admin" className="text-sm text-[#FF4200] hover:underline">← Admin</Link>
-                        <div className="flex items-center gap-2 mt-1">
-                            <h1 className="text-lg sm:text-xl font-bold text-gray-800">{tournament.name}</h1>
+                        <div className="flex flex-wrap items-center gap-x-2 mt-1">
+                            <h1 className="text-lg sm:text-xl font-bold text-gray-800 min-w-0 [overflow-wrap:anywhere]">{tournament.name}</h1>
                             <span className="text-sm text-gray-400">{divisionLabel(tournament.division)}</span>
                         </div>
                     </div>

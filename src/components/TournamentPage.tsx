@@ -46,7 +46,7 @@ export function TournamentPage() {
                 <div className="bg-surface rounded-2xl border border-line p-5 sm:p-6 shadow-sm">
                     <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
-                            <h1 className="text-2xl font-bold text-ink tracking-tight leading-tight">{tournament.name}</h1>
+                            <h1 className="text-2xl font-bold text-ink tracking-tight leading-tight [overflow-wrap:anywhere]">{tournament.name}</h1>
                             <div className="flex items-center gap-1.5 mt-2 flex-wrap">
                                 <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${DIVISION_BADGES[tournament.division]?.className ?? "bg-canvas text-muted"}`}>
                                     {divisionLabel(tournament.division)}

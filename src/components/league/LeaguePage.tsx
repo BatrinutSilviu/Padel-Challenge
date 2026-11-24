@@ -49,7 +49,7 @@ function LeagueView({ league }: { league: League }) {
                 <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                         <p className="font-display text-sm font-semibold uppercase tracking-[0.12em] text-[#FF4200]">Act!ve Padel League</p>
-                        <h1 className="text-2xl font-bold text-ink tracking-tight">{league.name}</h1>
+                        <h1 className="text-2xl font-bold text-ink tracking-tight [overflow-wrap:anywhere]">{league.name}</h1>
                         <p className="text-sm text-muted font-medium mt-1">
                             {weeks > 0 ? `${weeks} weeks · ${formatSeasonRange(league.startDate, weeks)}` : `Starts ${new Date(league.startDate).toLocaleDateString("en-GB", { day: "numeric", month: "long", timeZone: "UTC" })}`}
                             {" · "}{league.teams.length} teams

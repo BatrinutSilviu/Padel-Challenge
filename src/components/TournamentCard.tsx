@@ -66,7 +66,7 @@ export function TournamentCard({ tournament: t, aside, highlight }: {
             <div className="flex-1 min-w-0">
                 <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                        <p className="font-semibold text-ink leading-snug line-clamp-2">{t.name}</p>
+                        <p className="font-semibold text-ink leading-snug line-clamp-2 [overflow-wrap:anywhere]">{t.name}</p>
                         <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
                             <span className={`text-[11px] font-semibold px-1.5 py-0.5 rounded ${badge?.className ?? "bg-canvas text-muted"}`}>
                                 {divisionLabel(t.division)}

@@ -40,7 +40,7 @@ export function PayTo({ accounts, entryFee, advanceFee, tournamentName }: {
         <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5">
             <p className="text-xs text-amber-900">
                 <span className="font-bold">💳 How to pay:</span>{" "}
-                {amount !== null ? <>send <b>{amount} lei</b> to one of these</> : <>pay to one of these</>}, with your name and <i>{tournamentName}</i> in the details.
+                {amount !== null ? <>send <b>{amount} lei</b> to one of these</> : <>pay to one of these</>}, with your name and <i className="[overflow-wrap:anywhere]">{tournamentName}</i> in the details.
             </p>
             <ul className="mt-1.5 divide-y divide-amber-100 bg-surface rounded-lg border border-amber-100">
                 {accounts.map(a => {
