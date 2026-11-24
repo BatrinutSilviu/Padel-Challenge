@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, type ReactNode } from "react";
 import { trpc } from "../../../trpc";
+import { clearScoreDraft, readScoreDraft, writeScoreDraft } from "./scoreDrafts";
 import { formatChallengerScore, isChallengerMatchScored, type ChallengerMatch, type MatchSet } from "../../../lib/challenger";
 import { checkMastersScore, isValidSet, mastersStage } from "../../../lib/masters";
 
@@ -10,12 +11,11 @@ type Cells = [string, string][];
 export type OnMastersSaved = (matchId: string, team1Score: number, team2Score: number, sets: MatchSet[]) => void;
 
 const EMPTY: Cells = [["", ""], ["", ""], ["", ""]];
-const draftKey = (matchId: string) => `padel-masters-score-${matchId}`;
 
+// Kept on the server as { cells } (see scoreDrafts).
 function readDraft(matchId: string): Cells | null {
     try {
-        const raw = localStorage.getItem(draftKey(matchId));
-        const cells = raw ? JSON.parse(raw) : null;
+        const cells = readScoreDraft(matchId)?.cells;
         if (Array.isArray(cells) && cells.length === 3 && cells.every(c => Array.isArray(c) && c.length === 2 && c.every(v => typeof v === "string"))) {
             return cells as Cells;
         }
@@ -24,11 +24,11 @@ function readDraft(matchId: string): Cells | null {
 }
 
 function writeDraft(matchId: string, cells: Cells) {
-    try { localStorage.setItem(draftKey(matchId), JSON.stringify(cells)); } catch { /* storage unavailable */ }
+    writeScoreDraft(matchId, { cells });
 }
 
 function clearDraft(matchId: string) {
-    try { localStorage.removeItem(draftKey(matchId)); } catch { /* storage unavailable */ }
+    clearScoreDraft(matchId);
 }
 
 function cellsFromSets(sets: MatchSet[] | undefined): Cells {

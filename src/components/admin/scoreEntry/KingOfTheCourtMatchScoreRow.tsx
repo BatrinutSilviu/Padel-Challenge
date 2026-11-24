@@ -1,14 +1,15 @@
 import { useState, useEffect, useRef } from "react";
 import { trpc } from "../../../trpc";
+import { clearScoreDraft, readScoreDraft, writeScoreDraft } from "./scoreDrafts";
 import { isKotcMatchScored, isValidKotcScore, type KotcMatch } from "../../../lib/kingOfTheCourt";
 
 type ScoreStatus = "editing" | "confirming" | "saving" | "locked" | "unlock-pending";
 
 function readLocalKotcScore(matchId: string): { s1: string; s2: string; gp: string } | null {
     try {
-        const raw = localStorage.getItem(`padel-kotc-score-${matchId}`);
-        if (!raw) return null;
-        const { s1, s2, gp } = JSON.parse(raw);
+        const draft = readScoreDraft(matchId);
+        if (!draft) return null;
+        const { s1, s2, gp } = draft;
         if (typeof s1 === "string" && typeof s2 === "string") {
             return { s1, s2, gp: typeof gp === "string" ? gp : "" };
         }
@@ -17,11 +18,11 @@ function readLocalKotcScore(matchId: string): { s1: string; s2: string; gp: stri
 }
 
 function writeLocalKotcScore(matchId: string, s1: string, s2: string, gp: string) {
-    try { localStorage.setItem(`padel-kotc-score-${matchId}`, JSON.stringify({ s1, s2, gp })); } catch { /* storage unavailable */ }
+    writeScoreDraft(matchId, { s1, s2, gp });
 }
 
 function clearLocalKotcScore(matchId: string) {
-    try { localStorage.removeItem(`padel-kotc-score-${matchId}`); } catch { /* storage unavailable */ }
+    clearScoreDraft(matchId);
 }
 
 function computeInitial(match: KotcMatch): { s1: string; s2: string; gp: string; status: ScoreStatus } {

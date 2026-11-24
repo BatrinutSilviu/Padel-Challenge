@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { NavBar } from "../../NavBar";
 import { trpc } from "../../../trpc";
@@ -20,6 +20,7 @@ import { AmericanoScoreEntry } from "./AmericanoScoreEntry";
 import { ParticipantsCard } from "./ParticipantsCard";
 import { ScoreProgress } from "./ScoreProgress";
 import { useScoreSaving } from "./useScoreSaving";
+import { seedScoreDrafts } from "./scoreDrafts";
 
 // The admin page for one tournament (/admin/tournament/:id). Before it starts it's the
 // sign-up sheet; once started it's where scores are entered, the knockout stage or next
@@ -32,7 +33,12 @@ export function AdminScoreEntry() {
     const [confirmComplete, setConfirmComplete] = useState(false);
     const [recalcSuccess, setRecalcSuccess] = useState(false);
 
-    const { data: tournament, isPending, error } = trpc.tournament.getById.useQuery({ id: id! });
+    // Checked again every so often, so what another admin (or this admin on another device) changes shows here too.
+    const { data: tournament, isPending, error } = trpc.tournament.getById.useQuery({ id: id! }, {
+        refetchInterval: query => (query.state.data?.status === "COMPLETED" ? false : 20_000),
+    });
+    // The scores typed on any device but not confirmed yet, ready before the score rows read them.
+    useMemo(() => seedScoreDrafts(tournament), [tournament]);
     const { scoredIds, isSaving, onSaveStart, onSaveEnd, onSaved, onMastersSaved, onKotcSaved } = useScoreSaving(id!, tournament);
 
     // Every action changes the tournament; completing or recalculating also changes its results in the list.

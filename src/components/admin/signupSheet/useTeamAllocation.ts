@@ -1,7 +1,15 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { trpc } from "../../../trpc";
 import { isTeamBasedType, type TournamentData } from "../../../lib/tournaments";
 
 type TeamSlot = [string, string];
+
+/** The draft as the server has it: [[playerId, playerId], …] ("" = an empty slot). */
+function asTeamSlots(v: unknown): TeamSlot[] {
+    return Array.isArray(v)
+        ? v.filter((t): t is TeamSlot => Array.isArray(t) && t.length === 2 && t.every(x => typeof x === "string"))
+        : [];
+}
 
 function shuffle<T>(xs: T[]): T[] {
     for (let i = xs.length - 1; i > 0; i--) {
@@ -13,8 +21,9 @@ function shuffle<T>(xs: T[]): T[] {
 
 // The teams a sign-up sheet's confirmed players are put in before the draw, for team
 // formats. Confirming a player doesn't put them in a team or group: the admin allocates
-// everyone at the end, by hand or with a random draw. The draft is kept in this browser so
-// a half-done allocation survives a reload. Partners who signed up together and are both
+// everyone at the end, by hand or with a random draw. The draft is kept on the server
+// (Tournament.teamDraft), so a half-done allocation survives a reload and every device shows
+// the same one. Partners who signed up together and are both
 // confirmed always stay together.
 export function useTeamAllocation(tournament: TournamentData) {
     // Only confirmed players make the draw; the rest are waiting to pay.
@@ -30,24 +39,49 @@ export function useTeamAllocation(tournament: TournamentData) {
     const teamBased = isTeamBasedType(tournament.type);
     const numTeams = Math.floor(registered.length / 2);
 
-    const draftKey = `teamAllocation:${tournament.id}`;
-    const [teamSlots, setTeamSlots] = useState<TeamSlot[]>(() => {
-        try {
-            const saved = JSON.parse(localStorage.getItem(draftKey) ?? "[]");
-            return Array.isArray(saved) ? saved : [];
-        } catch {
-            return [];
-        }
+    const serverDraft = asTeamSlots((tournament as { teamDraft?: unknown }).teamDraft);
+    const serverKey = JSON.stringify(serverDraft);
+    const [teamSlots, setLocalSlots] = useState<TeamSlot[]>(serverDraft);
+
+    // The admin's changes go to the server a moment after the last one. Until they're there, a
+    // reload of the tournament (or one made on another device) doesn't overwrite them.
+    const utils = trpc.useUtils();
+    const saveDraft = trpc.tournament.saveTeamDraft.useMutation({
+        onMutate: ({ id }) => utils.tournament.getById.cancel({ id }),
+        // What's cached is now what the server has, so a reload that set off before this save can't bring the old one back.
+        onSuccess: (_, { id, teams }) => utils.tournament.getById.setData({ id }, old => (old ? { ...old, teamDraft: teams } : old)),
     });
+    const pending = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const sending = useRef(false);
+    const latest = useRef(teamSlots);
+    latest.current = teamSlots;
+    function setTeamSlots(next: TeamSlot[] | ((prev: TeamSlot[]) => TeamSlot[])) {
+        setLocalSlots(prev => {
+            const value = typeof next === "function" ? next(prev) : next;
+            if (pending.current) clearTimeout(pending.current);
+            sending.current = true;
+            pending.current = setTimeout(() => {
+                pending.current = null;
+                saveDraft.mutateAsync({ id: tournament.id, teams: latest.current })
+                    .catch(() => { /* kept on this device; the next change sends it again */ })
+                    .finally(() => { if (!pending.current) sending.current = false; });
+            }, 600);
+            return value;
+        });
+    }
+    useEffect(() => () => { if (pending.current) clearTimeout(pending.current); }, []);
+    // A change made on another device (or by this one, now saved) arrives with the tournament.
     useEffect(() => {
-        try { localStorage.setItem(draftKey, JSON.stringify(teamSlots)); } catch { /* storage unavailable */ }
-    }, [draftKey, teamSlots]);
+        if (!sending.current) setLocalSlots(serverDraft);
+        // serverDraft is a new array every render; serverKey stands in for it.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [serverKey]);
 
     // Keep the grid in step with the confirmed list: one row per team, and anyone
     // who's no longer confirmed leaves their slot empty. Nobody is added here.
     useEffect(() => {
         if (!teamBased) return;
-        setTeamSlots(prev => Array.from({ length: numTeams }, (_, i) => {
+        setLocalSlots(prev => Array.from({ length: numTeams }, (_, i) => {
             const [a, b] = prev[i] ?? ["", ""];
             return [registeredIds.includes(a) ? a : "", registeredIds.includes(b) ? b : ""];
         }));
@@ -113,9 +147,12 @@ export function useTeamAllocation(tournament: TournamentData) {
         placePlayer(team, teamSlots[team][0] ? 1 : 0, id);
     }
 
-    // Once the tournament starts the draft has served its purpose.
+    // Once the tournament starts the draft has served its purpose (the server clears it then);
+    // a change still waiting to be sent mustn't bring it back.
     function forgetDraft() {
-        try { localStorage.removeItem(draftKey); } catch { /* storage unavailable */ }
+        if (pending.current) clearTimeout(pending.current);
+        pending.current = null;
+        sending.current = false;
     }
 
     return {

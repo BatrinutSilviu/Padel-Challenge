@@ -1,14 +1,15 @@
 import { useState, useEffect, useRef } from "react";
 import { trpc } from "../../../trpc";
+import { clearScoreDraft, readScoreDraft, writeScoreDraft } from "./scoreDrafts";
 import { isChallengerMatchScored, isValidChallengerSetScore, type ChallengerMatch } from "../../../lib/challenger";
 
 type ScoreStatus = "editing" | "confirming" | "saving" | "locked" | "unlock-pending";
 
 function readLocalChallengerScore(matchId: string): { g1: string; g2: string; tb1: string; tb2: string } | null {
     try {
-        const raw = localStorage.getItem(`padel-challenger-score-${matchId}`);
-        if (!raw) return null;
-        const { g1, g2, tb1, tb2 } = JSON.parse(raw);
+        const draft = readScoreDraft(matchId);
+        if (!draft) return null;
+        const { g1, g2, tb1, tb2 } = draft;
         if (typeof g1 === "string" && typeof g2 === "string") {
             return { g1, g2, tb1: typeof tb1 === "string" ? tb1 : "", tb2: typeof tb2 === "string" ? tb2 : "" };
         }
@@ -17,11 +18,11 @@ function readLocalChallengerScore(matchId: string): { g1: string; g2: string; tb
 }
 
 function writeLocalChallengerScore(matchId: string, g1: string, g2: string, tb1: string, tb2: string) {
-    try { localStorage.setItem(`padel-challenger-score-${matchId}`, JSON.stringify({ g1, g2, tb1, tb2 })); } catch { /* storage unavailable */ }
+    writeScoreDraft(matchId, { g1, g2, tb1, tb2 });
 }
 
 function clearLocalChallengerScore(matchId: string) {
-    try { localStorage.removeItem(`padel-challenger-score-${matchId}`); } catch { /* storage unavailable */ }
+    clearScoreDraft(matchId);
 }
 
 function computeInitial(match: ChallengerMatch): { g1: string; g2: string; tb1: string; tb2: string; status: ScoreStatus } {

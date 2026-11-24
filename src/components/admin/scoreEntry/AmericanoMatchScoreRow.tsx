@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { trpc } from "../../../trpc";
+import { clearScoreDraft, readScoreDraft, writeScoreDraft } from "./scoreDrafts";
 
 type MatchData = {
     id: string;
@@ -14,9 +15,9 @@ type MatchData = {
 // The draft score kept for a match until it's confirmed (see AmericanoMatchScoreRow).
 function readLocalScore(matchId: string, ppg: number): { s1: number; s2: number } | null {
     try {
-        const raw = localStorage.getItem(`padel-score-${matchId}`);
-        if (!raw) return null;
-        const { s1, s2 } = JSON.parse(raw);
+        const draft = readScoreDraft(matchId);
+        if (!draft) return null;
+        const { s1, s2 } = draft;
         if (typeof s1 === "number" && typeof s2 === "number" && s1 + s2 === ppg && s1 >= 0 && s2 >= 0) {
             return { s1, s2 };
         }
@@ -25,11 +26,11 @@ function readLocalScore(matchId: string, ppg: number): { s1: number; s2: number 
 }
 
 function writeLocalScore(matchId: string, s1: number, s2: number) {
-    try { localStorage.setItem(`padel-score-${matchId}`, JSON.stringify({ s1, s2 })); } catch { /* storage unavailable: the draft just isn't kept */ }
+    writeScoreDraft(matchId, { s1, s2 });
 }
 
 function clearLocalScore(matchId: string) {
-    try { localStorage.removeItem(`padel-score-${matchId}`); } catch { /* storage unavailable */ }
+    clearScoreDraft(matchId);
 }
 
 // A score goes: editing → confirming (both scores typed, waiting for Confirm) → saving →
@@ -38,7 +39,7 @@ type ScoreStatus = 'editing' | 'confirming' | 'saving' | 'locked' | 'unlock-pend
 
 // One Americano match: the two scores add up to the points per game, so typing one fills
 // in the other. On a phone the scores open in a bottom sheet. A score that's typed but not
-// yet confirmed is kept in localStorage, so it survives a reload.
+// yet confirmed is kept on the server (see scoreDrafts), so it survives a reload and shows on every device.
 export function AmericanoMatchScoreRow({
     match,
     courtNumber,
