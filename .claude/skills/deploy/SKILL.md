@@ -1,6 +1,6 @@
 ---
 name: deploy
-description: Push the padel app (frontend and/or backend) and watch the deploy to the VPS until it finishes; if the server step fails, run the deploy script on the VPS directly. Use when the user says "push", "deploy", "ship it" or "put it live" in the padel frontend or backend.
+description: Push the padel app (frontend and/or backend) and let the GitHub Actions deploy put it on the VPS (Claude doesn't watch it). Only if the user says it isn't live: check the run, and if the server step failed, run the deploy script on the VPS directly. Use when the user says "push", "deploy", "ship it" or "put it live" in the padel frontend or backend.
 ---
 
 # Deploy the padel app
@@ -27,9 +27,10 @@ Report in plain words (is it live or not, and what to do), not in CI jargon.
 ## Steps
 
 1. **Commit**, in each repo that has changes. `git fetch -q`, then `git status -sb`.
-   - If there are uncommitted code changes, first run the two passes from CLAUDE.md ("Before every
-     commit"): the `simplify` skill, then the `code-review` skill with args `high --fix`. Let them
-     apply their fixes.
+   - If there are uncommitted code changes, first run the passes from CLAUDE.md ("Before every
+     commit"): the `simplify` skill, the `code-review` skill with args `high --fix`, then the
+     `security-review` skill (skipped for purely visual changes). Let them apply their fixes. A hook
+     runs the tests / type check / lint on `git commit` and blocks it if they fail: fix and commit again.
    - Then stage and commit with a message that says what changed for the people using the app (the
      style of `git log`: one long sentence, no prefix), ending with the attribution lines from the
      system reminder. The frontend is built on the server (its Dockerfile runs `npm run build`), so
@@ -47,27 +48,28 @@ Report in plain words (is it live or not, and what to do), not in CI jargon.
    deploy it with an empty frontend commit: `git commit --allow-empty -m "Redeploy (backend changes)"`
    (plus the attribution lines), then push.
 
-5. **Watch the deploy** in the background (`run_in_background: true`) so the user isn't blocked, and
-   tell them it's running. The frontend repo is public, so the API needs no login (run from the
-   frontend folder):
+5. **Tell the user it's deploying, and stop.** Say it'll be live in a few
+   minutes and to reload the page then. Don't watch the GitHub Actions run or poll its API, not even in
+   the background: the user asked not to (it was slow, noisy and hit GitHub's rate limit).
 
-   ```bash
-   sleep 20; sha=$(git -C ~/Work/padel-challenge rev-parse HEAD); for i in $(seq 1 55); do
-     r=$(curl -s "https://api.github.com/repos/BatrinutSilviu/Padel-Challenge/actions/runs?head_sha=$sha" \
-       | python3 -c "import sys,json;w=json.load(sys.stdin)['workflow_runs'];print(w[0]['status'],w[0]['conclusion'],w[0]['html_url']) if w else print('none')" 2>/dev/null)
-     case "$r" in completed*) echo "$r"; exit 0;; esac; sleep 30
-   done; echo "still: $r"
-   ```
+## Only if the user says it isn't live (or asks how the deploy went)
 
-6. **Report.**
-   - `completed success`: tell the user it's live and to reload the page they were looking at.
-   - `completed failure`: the failing step is the SSH step. The VPS often resets SSH connections from
-     GitHub, and the user has allowed running the deploy on the server directly (see the `vps` skill
-     for the connection):
-     `ssh -o BatchMode=yes active-vps 'bash ~/Projects/deploy.sh > /root/deploy-padel-last.log 2>&1; echo exit=$?; tail -40 /root/deploy-padel-last.log'`
-     If the connection itself is reset, retry it a few times. If the script fails, read its output:
-     the backup, the build, or a backend that never became healthy (its last logs are printed — often a
-     failing migration). Report that to the user.
+Look at the run once (the repo is public, so the API needs no login):
+
+```bash
+curl -s "https://api.github.com/repos/BatrinutSilviu/Padel-Challenge/actions/runs?head_sha=$(git -C ~/Work/padel-challenge rev-parse HEAD)" \
+  | python3 -c "import sys,json;w=json.load(sys.stdin)['workflow_runs'];print(w[0]['status'],w[0]['conclusion'],w[0]['id'],w[0]['html_url']) if w else print('none')"
+```
+
+Which step failed: `curl -s https://api.github.com/repos/BatrinutSilviu/Padel-Challenge/actions/runs/<id>/jobs | python3 -c "import sys,json;[print(s['name'],s['conclusion']) for j in json.load(sys.stdin)['jobs'] for s in j['steps']]"`
+
+- `completed failure`: the failing step is the SSH step. The VPS often resets SSH connections from
+  GitHub, and the user has allowed running the deploy on the server directly (see the `vps` skill
+  for the connection):
+  `ssh -o BatchMode=yes active-vps 'bash ~/Projects/deploy.sh > /root/deploy-padel-last.log 2>&1; echo exit=$?; tail -40 /root/deploy-padel-last.log'`
+  If the connection itself is reset, retry it a few times. If the script fails, read its output:
+  the backup, the build, or a backend that never became healthy (its last logs are printed — often a
+  failing migration). Report that to the user.
 
 ## Don't
 
