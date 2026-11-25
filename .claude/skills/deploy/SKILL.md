@@ -39,11 +39,9 @@ Report in plain words (is it live or not, and what to do), not in CI jargon.
 2. **Catch up with origin.** If a branch is behind `origin/main`, `git rebase origin/main`. On a
    conflict, read both sides and re-apply the local change on top; don't drop either side.
 
-3. **Push the backend first, but only with the user's OK.** The backend repo belongs to catacioba:
-   push it (`timeout 90 git push`) only if the user said so for this change. Otherwise leave the
-   commits local and tell the user they're not live yet. If a frontend change depends on unpushed
-   backend commits, say so and don't deploy the frontend alone (it would call API routes that don't
-   exist yet).
+3. **Push the backend first** (`timeout 90 git push`), automatically: the user wants every finished
+   change pushed without asking (the repo belongs to catacioba, but the user has approved pushing it).
+   A frontend change that needs new backend code only works once both are pushed.
 
 4. **Push the frontend** (`timeout 90 git push`). This starts the deploy. If only the backend changed,
    deploy it with an empty frontend commit: `git commit --allow-empty -m "Redeploy (backend changes)"`
@@ -74,4 +72,4 @@ Report in plain words (is it live or not, and what to do), not in CI jargon.
 ## Don't
 
 - Don't force-push, and never rewrite commits that are already on `origin/main`.
-- Don't push the backend repo without the user's OK (see step 3).
+- Push both repos together when both changed: backend first, then the frontend (which deploys).

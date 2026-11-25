@@ -2,6 +2,11 @@
 
 React + Vite frontend of the padel app (tournaments, leagues, open matches). The backend is ~/Work/padel-challenge-backend; both deploy together.
 
+## Push automatically
+
+When a change is finished (and committed after the two passes below), push it and watch the deploy
+with the `deploy` skill, without asking: the user wants every finished change live.
+
 ## Before every commit: clean up, then review
 
 Every commit Claude makes in this repo goes through two passes over the uncommitted changes first,
